@@ -1,42 +1,49 @@
 package com.example.festunavigator
 
+import android.annotation.SuppressLint
 import android.opengl.Matrix
 import android.util.Log
+import android.widget.TextView
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.festunavigator.common.helpers.DisplayRotationHelper
-import com.example.festunavigator.common.samplerender.SampleRender
 import com.example.festunavigator.common.samplerender.arcore.BackgroundRenderer
 import com.example.festunavigator.ml.classification.DetectedObjectResult
 import com.example.festunavigator.ml.classification.MLKitObjectDetector
 import com.example.festunavigator.ml.render.LabelRender
-import com.google.ar.core.Anchor
-import com.google.ar.core.Coordinates2d
-import com.google.ar.core.Frame
-import com.google.ar.core.TrackingState
+import com.google.ar.core.*
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.NotYetAvailableException
-import com.google.mlkit.vision.objects.ObjectDetector
-import java.util.Collections
+import com.google.ar.sceneform.math.Vector3
+import com.google.ar.sceneform.rendering.ViewRenderable
+import io.github.sceneview.ar.arcore.ArFrame
+import io.github.sceneview.ar.localPosition
+import io.github.sceneview.ar.node.ArNode
+import io.github.sceneview.math.Position
+import io.github.sceneview.model.GLBLoader.loadModelAsync
+import io.github.sceneview.utils.FrameTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import java.util.*
+import java.util.function.Consumer
+
 
 /**
  * Renders the HelloAR application into using our example Renderer.
  */
-class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, SampleRender.Renderer, CoroutineScope by MainScope() {
+class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, CoroutineScope by MainScope() {
     companion object {
         val TAG = "HelloArRenderer"
     }
 
+    //var anchor: Anchor? = null
+
     lateinit var view: MainActivityView
 
     val displayRotationHelper = DisplayRotationHelper(activity)
-    lateinit var backgroundRenderer: BackgroundRenderer
     //val pointCloudRender = PointCloudRender()
-    val labelRenderer = LabelRender()
 
     val viewMatrix = FloatArray(16)
     val projectionMatrix = FloatArray(16)
@@ -44,6 +51,7 @@ class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, Sample
 
     val arLabeledAnchors = Collections.synchronizedList(mutableListOf<ARLabeledAnchor>())
     var scanButtonWasPressed = false
+
 
     val mlKitAnalyzer = MLKitObjectDetector(activity)
     //val gcpAnalyzer = GoogleCloudVisionDetector(activity)
@@ -60,6 +68,24 @@ class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, Sample
 
     fun bindView(view: MainActivityView) {
         this.view = view
+
+//        view.surfaceView.onTouchAr = { _, _ ->
+//            scanButtonWasPressed = true
+//        }
+
+        view.surfaceView.onFrame = { frameTime ->
+            onDrawFrame(frameTime)
+
+        }
+
+        view.place.setOnClickListener {
+            createRenderable(
+                view.x_edit.text.toString().toFloat(),
+                view.y_edit.text.toString().toFloat(),
+                view.z_edit.text.toString().toFloat()
+            )
+        }
+
 //        view.scanButton.setOnClickListener {
 //            // frame.acquireCameraImage is dependent on an ARCore Frame, which is only available in onDrawFrame.
 //            // Use a boolean and check its state in onDrawFrame to interact with the camera image.
@@ -89,41 +115,31 @@ class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, Sample
 //        }
     }
 
-    override fun onSurfaceCreated(render: SampleRender?) {
-        backgroundRenderer = BackgroundRenderer(render).apply {
-            setUseDepthVisualization(render, false)
-        }
-        if (render != null) {
-            labelRenderer.onSurfaceCreated(render)
-        }
-    }
+//    override fun onSurfaceCreated(render: SampleRender?) {
+//        backgroundRenderer = BackgroundRenderer(render).apply {
+//            setUseDepthVisualization(render, false)
+//        }
+//        if (render != null) {
+//            labelRenderer.onSurfaceCreated(render)
+//        }
+//    }
 
-    override fun onSurfaceChanged(render: SampleRender?, width: Int, height: Int) {
-        displayRotationHelper.onSurfaceChanged(width, height)
-    }
+//    override fun onSurfaceChanged(render: SampleRender?, width: Int, height: Int) {
+//        displayRotationHelper.onSurfaceChanged(width, height)
+//    }
 
     var objectResults: List<DetectedObjectResult>? = null
 
-    override fun onDrawFrame(render: SampleRender?) {
-        val session = activity.arCoreSessionHelper.sessionCache ?: return
-        session.setCameraTextureNames(intArrayOf(backgroundRenderer.getCameraColorTexture().getTextureId()))
+    private fun onDrawFrame(frameTime: FrameTime) {
 
-        // Notify ARCore session that the view size changed so that the perspective matrix and
-        // the video background can be properly adjusted.
-        displayRotationHelper.updateSessionIfNeeded(session)
 
-        val frame = try {
-            session.update()
-        } catch (e: CameraNotAvailableException) {
-            Log.e(TAG, "Camera not available during onDrawFrame", e)
-            showSnackbar("Camera not available. Try restarting the app.")
-            return
-        }
+//        backgroundRenderer.updateDisplayGeometry(frame)
+//        if (render != null) {
+//            backgroundRenderer.drawBackground(render)
+//        }
 
-        backgroundRenderer.updateDisplayGeometry(frame)
-        if (render != null) {
-            backgroundRenderer.drawBackground(render)
-        }
+        val session = view.surfaceView.arSession ?: return
+        val frame = session.currentFrame?.frame ?: return
 
         // Get camera and projection matrices.
         val camera = frame.camera
@@ -162,13 +178,53 @@ class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, Sample
         if (objects != null) {
             objectResults = null
             Log.i(TAG, "$currentAnalyzer got objects: $objects")
-            val anchors = objects.mapNotNull { obj ->
+//            val anchors = objects.mapNotNull { obj ->
+//                val (atX, atY) = obj.centerCoordinate
+//                val anchor = createAnchor(atX.toFloat(), atY.toFloat(), frame) ?: return@mapNotNull null
+//                Log.i(TAG, "Created anchor ${anchor.pose} from hit test")
+//                ARLabeledAnchor(anchor, obj.label)
+//            }
+            //arLabeledAnchors.addAll(anchors)
+
+            val anchors = mutableListOf<ARLabeledAnchor>()
+            for (obj in objects) {
                 val (atX, atY) = obj.centerCoordinate
-                val anchor = createAnchor(atX.toFloat(), atY.toFloat(), frame) ?: return@mapNotNull null
-                Log.i(TAG, "Created anchor ${anchor.pose} from hit test")
-                ARLabeledAnchor(anchor, obj.label)
+                val anchor =
+                    createAnchor(atX.toFloat(), atY.toFloat(), frame) ?: continue
+                val existingAnchor =
+                    arLabeledAnchors.find{ it.anchor.pose == anchor.pose}
+                if (existingAnchor == null){
+                    Log.i(TAG, "Created anchor ${anchor.pose} from hit test")
+                    val arLabeledAnchor = ARLabeledAnchor(anchor, obj.label)
+                    anchors.add(arLabeledAnchor)
+                }
             }
+
             arLabeledAnchors.addAll(anchors)
+
+            // Draw labels at their anchor position.
+            for (arDetectedObject in arLabeledAnchors) {
+                val anchor = arDetectedObject.anchor
+                if (anchor.trackingState != TrackingState.TRACKING) continue
+
+                ViewRenderable.builder()
+                    .setView(view.activity, R.layout.text_sign)
+                    .build()
+                    .thenAccept { renderable: ViewRenderable ->
+                        renderable.isShadowCaster = false
+                        renderable.isShadowReceiver = false
+                        val textView = renderable.view as TextView?
+                        textView?.text = arDetectedObject.label
+                        val textNode = ArNode(anchor)
+                        textNode.setModel(
+                            renderable = renderable
+                        )
+                        textNode.modelPosition = Position(3f, 2f, 0f)
+                        view.surfaceView.addChild(textNode)
+                    }
+
+            }
+
             view.post {
                 //view.resetButton.isEnabled = arLabeledAnchors.isNotEmpty()
                 //view.setScanningActive(false)
@@ -185,20 +241,25 @@ class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, Sample
             }
         }
 
-        // Draw labels at their anchor position.
-        for (arDetectedObject in arLabeledAnchors) {
-            val anchor = arDetectedObject.anchor
-            if (anchor.trackingState != TrackingState.TRACKING) continue
-            if (render != null) {
-                labelRenderer.draw(
-                    render,
-                    viewProjectionMatrix,
-                    anchor.pose,
-                    camera.pose,
-                    arDetectedObject.label
+    }
+
+    @SuppressLint("SetTextI18n")
+    fun createRenderable(x: Float, y: Float, z: Float) {
+        ViewRenderable.builder()
+            .setView(view.activity, R.layout.text_sign)
+            .build()
+            .thenAccept { renderable: ViewRenderable ->
+                renderable.isShadowCaster = false
+                renderable.isShadowReceiver = false
+                val textView = renderable.view as TextView?
+                textView?.text = "x: $x y: $y z: $z"
+                val textNode = ArNode()
+                textNode.setModel(
+                    renderable = renderable
                 )
+                textNode.localPosition = Position(x, y, z)
+                view.surfaceView.addChild(textNode)
             }
-        }
     }
 
     /**

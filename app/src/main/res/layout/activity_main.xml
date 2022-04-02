@@ -7,10 +7,53 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <android.opengl.GLSurfaceView
-        android:id="@+id/surfaceview"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <io.github.sceneview.ar.ArSceneView
+        android:id="@+id/sceneView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <Button
+        android:id="@+id/place_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Place"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/z_edit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="z"
+        android:minHeight="48dp"
+        android:text="0"
+        app:layout_constraintBottom_toTopOf="@+id/place_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/y_edit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="y"
+        android:minHeight="48dp"
+        android:text="0"
+        app:layout_constraintBottom_toTopOf="@+id/z_edit"
+        app:layout_constraintEnd_toEndOf="@+id/z_edit"
+        app:layout_constraintStart_toStartOf="@+id/z_edit" />
+
+    <EditText
+        android:id="@+id/x_edit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="x"
+        android:minHeight="48dp"
+        android:text="0"
+        app:layout_constraintBottom_toTopOf="@+id/y_edit"
+        app:layout_constraintStart_toStartOf="@+id/y_edit" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

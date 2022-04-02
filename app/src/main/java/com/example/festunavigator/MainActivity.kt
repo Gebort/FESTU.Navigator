@@ -9,6 +9,7 @@ import com.google.ar.core.CameraConfig
 import com.google.ar.core.CameraConfigFilter
 import com.google.ar.core.Config
 import com.google.ar.core.exceptions.*
+import io.github.sceneview.ar.node.ArModelNode
 
 class MainActivity : AppCompatActivity() {
 
@@ -69,4 +70,5 @@ class MainActivity : AppCompatActivity() {
         //setContentView(R.layout.activity_main)
 
     }
+
 }
