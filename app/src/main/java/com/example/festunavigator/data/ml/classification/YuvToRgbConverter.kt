@@ -1,4 +1,4 @@
-package com.example.festunavigator.ml.classification
+package com.example.festunavigator.data.ml.classification
 
 import android.content.Context
 import android.graphics.Bitmap

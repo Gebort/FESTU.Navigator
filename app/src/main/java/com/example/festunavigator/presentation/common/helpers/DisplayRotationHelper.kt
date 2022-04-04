@@ -1,4 +1,4 @@
-package com.example.festunavigator.common.helpers
+package com.example.festunavigator.presentation.common.helpers
 
 import android.content.Context
 import android.hardware.camera2.CameraAccessException

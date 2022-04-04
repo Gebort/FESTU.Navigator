@@ -1,17 +1,14 @@
-package com.example.festunavigator
+package com.example.festunavigator.presentation
 
 import android.opengl.GLSurfaceView
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
-import androidx.appcompat.widget.AppCompatButton
-import androidx.appcompat.widget.SwitchCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.example.festunavigator.common.helpers.SnackbarHelper
-import com.example.festunavigator.common.samplerender.SampleRender
+import com.example.festunavigator.R
+import com.example.festunavigator.presentation.common.helpers.SnackbarHelper
 import io.github.sceneview.ar.ArSceneView
-import io.github.sceneview.ar.node.ArModelNode
 
 /**
  * Wraps [R.layout.activity_main] and controls lifecycle operations for [GLSurfaceView].
@@ -22,13 +19,11 @@ class MainActivityView(val activity: MainActivity, renderer: AppRenderer) : Defa
         planeRenderer.isVisible = true
         instructions.enabled = false
 
-
     }
     val place = root.findViewById<Button>(R.id.place_button)
     val x_edit = root.findViewById<EditText>(R.id.x_edit)
     val y_edit = root.findViewById<EditText>(R.id.y_edit)
     val z_edit = root.findViewById<EditText>(R.id.z_edit)
-
 
     //val useCloudMlSwitch = root.findViewById<SwitchCompat>(R.id.useCloudMlSwitch)
     //val scanButton = root.findViewById<AppCompatButton>(R.id.scanButton)

@@ -1,4 +1,4 @@
-package com.example.festunavigator.ml.classification
+package com.example.festunavigator.domain.ml
 
 /**
  * A [DetectedObjectResult] describes a single result in a labeled image.

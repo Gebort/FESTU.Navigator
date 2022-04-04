@@ -1,15 +1,14 @@
-package com.example.festunavigator
+package com.example.festunavigator.presentation
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import com.example.festunavigator.ml.classification.ARCoreSessionLifecycleHelper
+import com.example.festunavigator.data.ml.classification.ARCoreSessionLifecycleHelper
 import com.google.ar.core.CameraConfig
 import com.google.ar.core.CameraConfigFilter
 import com.google.ar.core.Config
 import com.google.ar.core.exceptions.*
-import io.github.sceneview.ar.node.ArModelNode
 
 class MainActivity : AppCompatActivity() {
 

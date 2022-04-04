@@ -21,7 +21,7 @@
         android:usesCleartextTraffic="false"
         tools:ignore="GoogleAppIndexingWarning">
         <activity
-            android:name=".MainActivity"
+            android:name=".presentation.MainActivity"
             android:configChanges="orientation|screenSize|screenLayout"
             android:theme="@style/Theme.AppCompat.NoActionBar"
             android:screenOrientation="fullSensor"
