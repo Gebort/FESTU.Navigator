@@ -1,26 +1,22 @@
 package com.example.festunavigator.domain.repository
 
+import dev.romainguy.kotlin.math.Float3
+
 sealed class TreeNode(
     val id: Int,
-    val x: Float,
-    val y: Float,
-    val z: Float,
+    val position: Float3,
     val neighbours: MutableList<TreeNode> = mutableListOf()
 ) {
     class Entry(
         val number: String,
         id: Int,
-        x: Float,
-        y: Float,
-        z: Float,
+        position: Float3,
         neighbours: MutableList<TreeNode> = mutableListOf()
-    ): TreeNode(id, x, y, z, neighbours)
+    ): TreeNode(id, position, neighbours)
 
     class Path(
         id: Int,
-        x: Float,
-        y: Float,
-        z: Float,
+        position: Float3,
         neighbours: MutableList<TreeNode> = mutableListOf()
-    ): TreeNode(id, x, y, z, neighbours)
+    ): TreeNode(id, position, neighbours)
 }

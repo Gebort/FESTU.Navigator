@@ -1,11 +1,13 @@
 package com.example.festunavigator.presentation
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.opengl.Matrix
 import android.util.Log
 import android.widget.TextView
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.example.festunavigator.R
 import com.example.festunavigator.data.ml.classification.MLKitObjectDetector
 import com.example.festunavigator.domain.ml.DetectedObjectResult
@@ -14,13 +16,23 @@ import com.example.festunavigator.domain.repository.TreeNode
 import com.example.festunavigator.presentation.common.helpers.DisplayRotationHelper
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.NotYetAvailableException
+import com.google.ar.sceneform.collision.Ray
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.*
+import com.google.ar.sceneform.ux.TransformableNode
+import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.ArNode
+import io.github.sceneview.ar.node.PlacementMode
+import io.github.sceneview.collision.pickHitTests
 import io.github.sceneview.math.Position
 import io.github.sceneview.math.Rotation
+import io.github.sceneview.math.Scale
+import io.github.sceneview.math.toVector3
+import io.github.sceneview.node.ModelNode
+import io.github.sceneview.node.Node
 import io.github.sceneview.utils.FrameTime
+import io.github.sceneview.utils.TAG
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -34,10 +46,18 @@ import java.util.*
 class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, CoroutineScope by MainScope() {
     companion object {
         val TAG = "HelloArRenderer"
+        val mode = "ADMIN"
     }
 
 
     lateinit var view: MainActivityView
+
+    var selectedNode: Node? = null
+    val tree = Tree()
+    val treeNodesToModels: MutableMap<TreeNode, ArModelNode> = mutableMapOf()
+    val modelsToTreeNode: MutableMap<ArModelNode, TreeNode> = mutableMapOf()
+
+    var linkPlacement = false
 
     val displayRotationHelper = DisplayRotationHelper(activity)
     //val pointCloudRender = PointCloudRender()
@@ -51,7 +71,6 @@ class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, Corout
 
 
     val mlKitAnalyzer = MLKitObjectDetector(activity)
-    //val gcpAnalyzer = GoogleCloudVisionDetector(activity)
 
     var currentAnalyzer: MLKitObjectDetector = mlKitAnalyzer
 
@@ -66,8 +85,42 @@ class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, Corout
     fun bindView(view: MainActivityView) {
         this.view = view
 
-        view.surfaceView.onTouchAr = { _, _ ->
-            scanButtonWasPressed = true
+//        view.surfaceView.onTouchAr = { _, _ ->
+//            //scanButtonWasPressed = true
+//        }
+
+        selectNode(null)
+
+        view.surfaceView.onTouchEvent = {pickHitResult, motionEvent ->
+
+            pickHitResult.node?.let { node ->
+                if (!linkPlacement) {
+                    selectNode(node)
+                }
+                else {
+                    linkNodes(selectedNode!!, node)
+                }
+            }
+            true
+        }
+
+        view.delete.setOnClickListener {
+            modelsToTreeNode[selectedNode]?.let {
+                treeNodesToModels.remove(it)
+                modelsToTreeNode.remove(selectedNode)
+                tree.removeNode(it)
+                selectedNode?.destroy()
+                selectNode(null)
+            }
+
+        }
+
+        view.link.setOnClickListener {
+            linkPlacementMode(!linkPlacement)
+        }
+
+        view.place.setOnClickListener {
+            createPath()
         }
 
         view.surfaceView.onFrame = { frameTime ->
@@ -75,43 +128,7 @@ class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, Corout
 
         }
 
-        view.place.setOnClickListener {
-            val x = 0f
-            val y = 0f
-            val z = 0f
-            val tree = Tree()
-            val entry = TreeNode.Entry("1", 0, x, y, z)
-            tree.addNode(entry)
-            val path = TreeNode.Path(4, x+1, y, z)
-            tree.addNode(path)
-            val path2 = TreeNode.Path(3, x-1, y, z)
 
-            tree.addNode(path2)
-            val path3 = TreeNode.Path(2, x+1, y+1, z)
-            tree.addNode(path3)
-
-            tree.addLink(entry, path)
-            tree.addLink(entry, path2)
-            tree.addLink(path, path3)
-
-            drawAllNodes(tree)
-
-//            drawRenderable(
-//                entry.x,
-//                entry.y,
-//                entry.z
-//            )
-//            entry.neighbours.forEach {
-//                drawRenderable(
-//                    it.x,
-//                    it.y,
-//                    it.z
-//                )
-//                drawLine(entry, it)
-//            }
-
-
-        }
 
 //        view.scanButton.setOnClickListener {
 //            // frame.acquireCameraImage is dependent on an ARCore Frame, which is only available in onDrawFrame.
@@ -215,47 +232,87 @@ class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, Corout
 
     }
 
-
-    fun drawTreeNode(node: TreeNode) {
-        ViewRenderable.builder()
-            .setView(view.activity, R.layout.text_sign)
-            .build()
-            .thenAccept { renderable: ViewRenderable ->
-                renderable.let {
-                    it.isShadowCaster = false
-                    it.isShadowReceiver = false
-                }
-                val textView = renderable.view as TextView?
-                textView?.let {
-                    it.text = if (node is TreeNode.Entry) "Entry ${node.number}" else "Id ${node.id}"
-                }
-                val textNode = ArNode().apply {
-                    setModel(
-                        renderable = renderable
-                    )
-                    position = Position(node.x, node.y, node.y)
-                }
-                view.surfaceView.addChild(textNode)
-            }
+    fun linkPlacementMode(link: Boolean){
+        linkPlacement = link
+        view.link.text = if (link) "Cancel" else "Link"
     }
 
-    fun drawLine(from: TreeNode, to: TreeNode){
+    fun selectNode(node: Node?){
+        selectedNode = node
+        view.link.isEnabled = node != null
+        view.delete.isEnabled = node != null
+    }
 
-        val fromVector = Vector3(from.x, from.y, from.z)
-        val toVector = Vector3(to.x, to.y, to.z)
+    fun linkNodes(node1: Node, node2: Node){
+        val path1: TreeNode? = modelsToTreeNode[node1]
+        val path2: TreeNode? = modelsToTreeNode[node2]
+
+        if (path1 == null && path2 == null)
+            return
+
+        tree.addLink(path1!!, path2!!)
+        drawLine(node1, node2)
+    }
+
+    fun createPath(){
+        val modelNode = ArModelNode()
+        modelNode.loadModelAsync(context = view.activity.applicationContext,
+            coroutineScope = view.activity.lifecycleScope,
+            glbFileLocation = "models/cylinder.glb",
+        )
+        modelNode.position = Position(0f, 0f, 0f)
+        modelNode.modelScale = Scale(0.1f)
+        modelNode.autoAnchor = true
+
+        val pathTreeNode = TreeNode.Path(tree.size, modelNode.position)
+        tree.addNode(pathTreeNode)
+        treeNodesToModels[pathTreeNode] = modelNode
+        modelsToTreeNode[modelNode] = pathTreeNode
+
+        view.surfaceView.addChild(modelNode)
+
+    }
+
+//    fun drawTreeNode(node: TreeNode) {
+//        ViewRenderable.builder()
+//            .setView(view.activity, R.layout.text_sign)
+//            .build()
+//            .thenAccept { renderable: ViewRenderable ->
+//                renderable.let {
+//                    it.isShadowCaster = false
+//                    it.isShadowReceiver = false
+//                }
+//                val textView = renderable.view as TextView?
+//                textView?.let {
+//                    it.text = if (node is TreeNode.Entry) "Entry ${node.number}" else "Id ${node.id}"
+//                }
+//                val textNode = ArNode().apply {
+//                    setModel(
+//                        renderable = renderable
+//                    )
+//                    position = Position(node.x, node.y, node.y)
+//                }
+//                view.surfaceView.addChild(textNode)
+//            }
+//    }
+
+    fun drawLine(from: Node, to: Node){
+
+        val fromVector = from.position.toVector3()
+        val toVector = to.position.toVector3()
 
         // Compute a line's length
         val lineLength = Vector3.subtract(fromVector, toVector).length()
 
         // Prepare a color
-        val colorOrange = Color(android.graphics.Color.parseColor("#ffa71c"))
+        val colorOrange = Color(android.graphics.Color.parseColor("#ffffff"))
 
         // 1. make a material by the color
         MaterialFactory.makeOpaqueWithColor(view.activity.applicationContext, colorOrange)
             .thenAccept { material: Material? ->
                 // 2. make a model by the material
                 val model = ShapeFactory.makeCylinder(
-                    0.0025f, lineLength,
+                    0.01f, lineLength,
                     Vector3(0f, lineLength / 2, 0f), material
                 )
 
@@ -288,20 +345,20 @@ class AppRenderer(val activity: MainActivity) : DefaultLifecycleObserver, Corout
                     rotation.z,
                     rotation.w
                 )
-                node.position = Position(from.x, from.y, from.z)
+                node.position = from.position
             }
     }
 
-    fun drawAllNodes(tree: Tree){
-        tree.allPoints.values.forEach { node ->
-           drawTreeNode(node)
-        }
-        tree.links.keys.forEach { node1 ->
-            tree.links[node1]!!.forEach { node2 ->
-                drawLine(node1, node2)
-            }
-        }
-    }
+//    fun drawAllNodes(tree: Tree){
+//        tree.allPoints.values.forEach { node ->
+//           drawTreeNode(node)
+//        }
+//        tree.links.keys.forEach { node1 ->
+//            tree.links[node1]!!.forEach { node2 ->
+//                drawLine(node1, node2)
+//            }
+//        }
+//    }
 
     /**
      * Utility method for [Frame.acquireCameraImage] that maps [NotYetAvailableException] to `null`.

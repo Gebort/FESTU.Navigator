@@ -21,9 +21,8 @@ class MainActivityView(val activity: MainActivity, renderer: AppRenderer) : Defa
 
     }
     val place = root.findViewById<Button>(R.id.place_button)
-    val x_edit = root.findViewById<EditText>(R.id.x_edit)
-    val y_edit = root.findViewById<EditText>(R.id.y_edit)
-    val z_edit = root.findViewById<EditText>(R.id.z_edit)
+    val delete = root.findViewById<Button>(R.id.delete_button)
+    val link = root.findViewById<Button>(R.id.link_button)
 
     //val useCloudMlSwitch = root.findViewById<SwitchCompat>(R.id.useCloudMlSwitch)
     //val scanButton = root.findViewById<AppCompatButton>(R.id.scanButton)

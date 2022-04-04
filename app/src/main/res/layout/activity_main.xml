@@ -10,50 +10,42 @@
     <io.github.sceneview.ar.ArSceneView
         android:id="@+id/sceneView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        tools:layout_editor_absoluteX="50dp"
+        tools:layout_editor_absoluteY="84dp" />
 
-    <Button
-        android:id="@+id/place_button"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Place"
+        android:layout_marginEnd="8dp"
+        app:cardCornerRadius="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <EditText
-        android:id="@+id/z_edit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="z"
-        android:minHeight="48dp"
-        android:text="0"
-        app:layout_constraintBottom_toTopOf="@+id/place_button"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <EditText
-        android:id="@+id/y_edit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="y"
-        android:minHeight="48dp"
-        android:text="0"
-        app:layout_constraintBottom_toTopOf="@+id/z_edit"
-        app:layout_constraintEnd_toEndOf="@+id/z_edit"
-        app:layout_constraintStart_toStartOf="@+id/z_edit" />
+            <Button
+                android:id="@+id/place_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Place" />
 
-    <EditText
-        android:id="@+id/x_edit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="x"
-        android:minHeight="48dp"
-        android:text="0"
-        app:layout_constraintBottom_toTopOf="@+id/y_edit"
-        app:layout_constraintStart_toStartOf="@+id/y_edit" />
+            <Button
+                android:id="@+id/delete_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Delete" />
+
+            <Button
+                android:id="@+id/link_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="link" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
