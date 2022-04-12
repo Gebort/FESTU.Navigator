@@ -2,5 +2,6 @@
     <string name="app_name">FESTU Navigator</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="place">Place</string>
+    <string name="initialize">Initialize the graph please</string>
+
 </resources>

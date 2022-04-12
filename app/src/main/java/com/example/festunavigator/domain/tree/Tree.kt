@@ -23,9 +23,6 @@ class Tree(
     var initialized = false
         private set
 
-    var preloaded = false
-        private set
-
     var translocation = Float3(0f, 0f, 0f)
         private set
 
@@ -58,40 +55,41 @@ class Tree(
                 .toMutableList()
             _links[allPoints[nodeDto.id]!!] = allPoints[nodeDto.id]!!.neighbours
         }
-
-        preloaded = true
-
     }
 
     suspend fun initialize(entryNumber: String, position: Float3): Result<Unit> {
 
-        val entry = entryPoints[entryNumber]
-        if (entry != null) {
-            translocation = Float3(
-                entry.position.x - position.x,
-                entry.position.y - position.y,
-                entry.position.z - position.z,
-            )
+        if (entryPoints.isNotEmpty()) {
 
-            for (node in allPoints.values){
-                node.position.apply {
-                    x -= translocation.x
-                    y -= translocation.y
-                    z -= translocation.z
+            val entry = entryPoints[entryNumber]
+            if (entry != null) {
+                translocation = Float3(
+                    entry.position.x - position.x,
+                    entry.position.y - position.y,
+                    entry.position.z - position.z,
+                )
+
+                for (node in allPoints.values) {
+                    node.position.apply {
+                        x -= translocation.x
+                        y -= translocation.y
+                        z -= translocation.z
+                    }
                 }
+
+                initialized = true
+
+                return Result.success(Unit)
+            } else {
+                return Result.failure(
+                    exception = WrongEntryException(entryPoints.keys)
+                )
             }
-
-            initialized = true
-
-            return Result.success(Unit)
         }
         else {
-            if (allPoints.isEmpty()){
-                initialized = true
-                return Result.success(Unit)
-            }
-            return Result.failure(
-                exception = Exception("Failed to initialize graph"))
+            clearTree()
+            initialized = true
+            return Result.success(Unit)
         }
     }
 
@@ -167,6 +165,14 @@ class Tree(
         node.neighbours.clear()
         _links[node] = node.neighbours
 
+    }
+
+    private fun clearTree(){
+        _links.clear()
+        _allPoints.clear()
+        _entryPoints.clear()
+        size = 0
+        translocation = Float3(0f, 0f, 0f)
     }
 
 }

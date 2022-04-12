@@ -69,6 +69,7 @@ class MainActivity : AppCompatActivity() {
         val pathfinder = AStarImpl()
         val findWay = FindWay(pathfinder)
         val getTree = GetTree(repository)
+        val hitTest = HitTest()
 
 
         renderer = com.example.festunavigator.presentation.AppRenderer(
@@ -77,7 +78,8 @@ class MainActivity : AppCompatActivity() {
             getTree,
             insertNodes,
             updateNodes,
-            findWay
+            findWay,
+            hitTest
         )
         lifecycle.addObserver(renderer)
         view = MainActivityView(this, renderer)

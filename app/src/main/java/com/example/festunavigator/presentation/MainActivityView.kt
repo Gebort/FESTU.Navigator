@@ -28,6 +28,8 @@ class MainActivityView(val activity: MainActivity, renderer: AppRenderer) : Defa
     val init: Button = root.findViewById(R.id.init_button)
     val pathfind: Button = root.findViewById(R.id.pathfind_button)
     val rend: Button = root.findViewById(R.id.rend_button)
+    val initText: TextView = root.findViewById(R.id.init_text)
+
 
 
 

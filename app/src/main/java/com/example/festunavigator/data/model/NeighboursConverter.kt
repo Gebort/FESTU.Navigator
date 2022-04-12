@@ -6,7 +6,6 @@ class NeighboursConverter {
     companion object {
         @TypeConverter
         @JvmStatic
-        //TODO если строка пустая, то в map происходит ошибка
         fun storedStringToNeighbours(value: String): MutableList<Int> {
             return value
                 .split(",")

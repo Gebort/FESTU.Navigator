@@ -2,9 +2,11 @@ package com.example.festunavigator.presentation
 
 import android.annotation.SuppressLint
 import android.opengl.Matrix
+import android.opengl.Visibility
 import android.util.Log
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.core.view.isVisible
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -12,9 +14,11 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
 import com.example.festunavigator.R
 import com.example.festunavigator.data.ml.classification.MLKitObjectDetector
+import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.ml.DetectedObjectResult
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
+import com.example.festunavigator.domain.tree.WrongEntryException
 import com.example.festunavigator.domain.use_cases.*
 import com.example.festunavigator.presentation.common.helpers.DisplayRotationHelper
 import com.google.ar.core.Frame
@@ -46,6 +50,7 @@ class AppRenderer(
     val insertNodes: InsertNodes,
     val updateNodes: UpdateNodes,
     val findWay: FindWay,
+    val hitTest: HitTest
     ) : DefaultLifecycleObserver, CoroutineScope by MainScope() {
 
     companion object {
@@ -259,9 +264,10 @@ class AppRenderer(
 
     fun rendTest(){
         view.activity.lifecycleScope.launch {
-            val pos = hitTestPosition()
-            if (pos != null){
-                placeRend(pos)
+            val result = hitTest(view.surfaceView)
+            val position = result.getOrNull()
+            if (position != null){
+                placeRend(position)
             }
             else {
                 showSnackbar("Null pos")
@@ -324,62 +330,6 @@ class AppRenderer(
 
     }
 
-    fun hitTestPosition(): OrientatedPosition?{
-
-        val result1 = view.surfaceView.arSession?.currentFrame?.hitTest(view.surfaceView.width/2f, view.surfaceView.height/2f)
-        val result2 = view.surfaceView.arSession?.currentFrame?.hitTest(view.surfaceView.width/2f-5, view.surfaceView.height/2f)
-        val result3 = view.surfaceView.arSession?.currentFrame?.hitTest(view.surfaceView.width/2f, view.surfaceView.height/2f+5)
-        if (result1 != null && result2 != null && result3 != null) {
-            val startDistance = view.surfaceView.camera.worldPosition
-            val translation1 = result1.hitPose.translation
-            val pos1 = Position(
-                startDistance.x + translation1[0],
-                startDistance.y + translation1[1],
-                startDistance.z + translation1[2]
-            )
-
-            val translation2 = result2.hitPose.translation
-            val pos2 = Position(
-                startDistance.x + translation2[0],
-                startDistance.y + translation2[1],
-                startDistance.z + translation2[2]
-            )
-
-            val translation3 = result3.hitPose.translation
-            val pos3 = Position(
-                startDistance.x + translation3[0],
-                startDistance.y + translation3[1],
-                startDistance.z + translation3[2]
-            )
-
-            val vector1 = Vector3().apply {
-                x = pos1.x - pos2.x
-                y = pos1.y - pos2.y
-                z = pos1.z - pos2.z
-                normalized()
-            }
-            val vector2 = Vector3().apply {
-                x = pos1.x - pos3.x
-                y = pos1.y - pos3.y
-                z = pos1.z - pos3.z
-                normalized()
-            }
-
-            val vectorForward = Vector3.cross(vector1, vector2).normalized()
-            val vectorUp = vector2
-
-            val orientation = Quaternion.lookRotation(
-                vectorForward,
-                vectorUp
-            ).toNewQuaternion()
-
-            return OrientatedPosition(pos1, orientation)
-        }
-        else {
-            return null
-        }
-    }
-
     fun selectNode(node: Node?){
         selectedNode = node
         view.link.isEnabled = node != null
@@ -402,7 +352,7 @@ class AppRenderer(
     fun createPath(){
         view.activity.lifecycleScope.launch {
 
-            hitTestPosition()?.let { position ->
+            hitTest(view.surfaceView).getOrNull()?.let { position ->
 
                 val pathTreeNode = TreeNode.Path(tree.size, position.position)
                 tree.addNode(pathTreeNode)
@@ -444,11 +394,14 @@ class AppRenderer(
 
     @SuppressLint("CheckResult")
     fun initializeByDialog(){
+        val activityView = view
         MaterialDialog(view.activity).show {
             title(text = "Initialize tree")
             input(hint = "Number") { _, text ->
-                hitTestPosition()?.let { position ->
-                    initialize(text.toString(), position.position)
+                activityView.activity.lifecycleScope.launch {
+                    hitTest(activityView.surfaceView).getOrNull()?.let { position ->
+                        initialize(text.toString(), position.position)
+                    }
                 }
             }
             positiveButton(text = "Place")
@@ -513,7 +466,7 @@ class AppRenderer(
     fun createEntry(number: String) {
         view.activity.lifecycleScope.launch {
 
-            hitTestPosition()?.let { position ->
+            hitTest(view.surfaceView).getOrNull()?.let { position ->
 
                 val entryTreeNode = TreeNode.Entry(number, tree.size, position.position)
                 tree.addNode(entryTreeNode)
@@ -668,10 +621,21 @@ class AppRenderer(
         }
     }
 
-    private fun initialize(entryNumber: String, position: Float3){
-        view.activity.lifecycleScope.launch {
-            tree.initialize(entryNumber, position)
+    private suspend fun initialize(entryNumber: String, position: Float3){
+        val result = tree.initialize(entryNumber, position)
+        if (result.isFailure){
+            result.exceptionOrNull()?.message?.let{ showSnackbar(it) }
+        }
+        else {
             drawTree()
+            view.initText.isVisible = false
+            view.delete.isEnabled = true
+            view.link.isEnabled = true
+            view.entry.isEnabled = true
+            view.pathfind.isEnabled = true
+            view.place.isEnabled = true
+            view.rend.isEnabled = true
+
         }
     }
 
@@ -709,6 +673,3 @@ class AppRenderer(
 
 //data class ARLabeledAnchor(val anchor: Anchor, val label: String)
 
-//TODO ВЫНЕСТИ ХИТ ТЕСТ В USE CASE
-
-data class OrientatedPosition(val position: Float3, val orientation: dev.romainguy.kotlin.math.Quaternion)
