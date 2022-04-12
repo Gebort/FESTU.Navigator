@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import com.example.festunavigator.data.ml.classification.ARCoreSessionLifecycleHelper
+import com.example.festunavigator.data.pathfinding.AStarImpl
+import com.example.festunavigator.data.repository.GraphImpl
+import com.example.festunavigator.domain.use_cases.*
 import com.google.ar.core.CameraConfig
 import com.google.ar.core.CameraConfigFilter
 import com.google.ar.core.Config
@@ -59,7 +62,23 @@ class MainActivity : AppCompatActivity() {
 
         lifecycle.addObserver(arCoreSessionHelper)
 
-        renderer = AppRenderer(this)
+        val repository = GraphImpl()
+        val insertNodes = InsertNodes(repository)
+        val deleteNodes = DeleteNodes(repository)
+        val updateNodes = UpdateNodes(repository)
+        val pathfinder = AStarImpl()
+        val findWay = FindWay(pathfinder)
+        val getTree = GetTree(repository)
+
+
+        renderer = com.example.festunavigator.presentation.AppRenderer(
+            this,
+            deleteNodes,
+            getTree,
+            insertNodes,
+            updateNodes,
+            findWay
+        )
         lifecycle.addObserver(renderer)
         view = MainActivityView(this, renderer)
         setContentView(view.root)

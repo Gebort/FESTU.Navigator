@@ -29,10 +29,34 @@
             android:orientation="vertical">
 
             <Button
+                android:id="@+id/rend_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Rend " />
+
+            <Button
+                android:id="@+id/pathfind_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Find way" />
+
+            <Button
+                android:id="@+id/init_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=" Init" />
+
+            <Button
+                android:id="@+id/entry_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Entry" />
+
+            <Button
                 android:id="@+id/place_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Place" />
+                android:text="Path" />
 
             <Button
                 android:id="@+id/delete_button"

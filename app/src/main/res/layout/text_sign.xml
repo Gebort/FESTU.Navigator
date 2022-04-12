@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/signTextView"
+    android:id="@+id/signCardView"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="TextView"
-    android:textColor="#910C0C"
+    app:cardBackgroundColor="#00BCD4"
+    app:cardCornerRadius="5dp"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
+    app:layout_constraintTop_toTopOf="parent">
+
+    <TextView
+        android:id="@+id/signTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="5dp"
+        android:text="433"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp" />
+</androidx.cardview.widget.CardView>

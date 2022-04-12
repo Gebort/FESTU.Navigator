@@ -4,6 +4,7 @@ import android.opengl.GLSurfaceView
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.festunavigator.R
@@ -20,9 +21,15 @@ class MainActivityView(val activity: MainActivity, renderer: AppRenderer) : Defa
         instructions.enabled = false
 
     }
-    val place = root.findViewById<Button>(R.id.place_button)
-    val delete = root.findViewById<Button>(R.id.delete_button)
-    val link = root.findViewById<Button>(R.id.link_button)
+    val place: Button = root.findViewById(R.id.place_button)
+    val delete: Button = root.findViewById(R.id.delete_button)
+    val link: Button = root.findViewById(R.id.link_button)
+    val entry: Button = root.findViewById(R.id.entry_button)
+    val init: Button = root.findViewById(R.id.init_button)
+    val pathfind: Button = root.findViewById(R.id.pathfind_button)
+    val rend: Button = root.findViewById(R.id.rend_button)
+
+
 
     //val useCloudMlSwitch = root.findViewById<SwitchCompat>(R.id.useCloudMlSwitch)
     //val scanButton = root.findViewById<AppCompatButton>(R.id.scanButton)
