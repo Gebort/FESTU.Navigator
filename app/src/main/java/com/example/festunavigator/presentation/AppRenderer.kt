@@ -320,8 +320,9 @@ class AppRenderer(
         treeNodesToModels.inverse[node]?.let { node1 ->
             view.activity.lifecycleScope.launch {
                 treeNodesToModels.remove(node1)
+                val nodesForUpdate = node1.neighbours.toMutableList()
                 tree.removeNode(node1)
-                updateNodes(node1.neighbours, tree.translocation)
+                updateNodes(nodesForUpdate, tree.translocation)
                 deleteNodes(listOf(node1))
                 node?.destroy()
                 selectNode(null)
@@ -354,8 +355,7 @@ class AppRenderer(
 
             hitTest(view.surfaceView).getOrNull()?.let { position ->
 
-                val pathTreeNode = TreeNode.Path(tree.size, position.position)
-                tree.addNode(pathTreeNode)
+                val pathTreeNode = tree.addNode(position.position)
                 drawNode(pathTreeNode)
                 insertNodes(listOf(pathTreeNode), tree.translocation)
                 }
@@ -468,8 +468,7 @@ class AppRenderer(
 
             hitTest(view.surfaceView).getOrNull()?.let { position ->
 
-                val entryTreeNode = TreeNode.Entry(number, tree.size, position.position)
-                tree.addNode(entryTreeNode)
+                val entryTreeNode = tree.addNode(position.position, number)
                 drawNode(entryTreeNode)
                 insertNodes(listOf(entryTreeNode), tree.translocation)
             }

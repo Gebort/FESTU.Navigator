@@ -94,19 +94,28 @@ class Tree(
     }
 
     suspend fun addNode(
-        node: TreeNode
-    ) {
-        when (node){
-            is TreeNode.Path -> {
-                _allPoints[node.id] = node
-                size++
-            }
-            is TreeNode.Entry -> {
-                _entryPoints[node.number] = node
-                _allPoints[node.id] = node
-                size++
-            }
+        position: Float3,
+        number: String? = null
+    ): TreeNode {
+        val newNode: TreeNode
+        if (number == null){
+            newNode = TreeNode.Path(
+                size,
+                position
+            )
         }
+        else {
+            newNode = TreeNode.Entry(
+                number,
+                size,
+                position
+            )
+            _entryPoints[newNode.number] = newNode
+        }
+
+        _allPoints[newNode.id] = newNode
+        size++
+        return newNode
     }
 
     suspend fun removeNode(
