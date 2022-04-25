@@ -16,6 +16,7 @@ import com.example.festunavigator.domain.ml.DetectedText
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.domain.use_cases.*
+import com.example.festunavigator.presentation.common.helpers.AnimationHelper
 import com.example.festunavigator.presentation.common.helpers.DisplayRotationHelper
 import com.google.ar.core.Anchor
 import com.google.ar.core.Frame
@@ -61,7 +62,7 @@ class AppRenderer(
     }
 
     lateinit var view: MainActivityView
-    private var state: MainState = MainState.ScanningState.Initialize()
+    private var state: MainState = MainState.Starting
 
     var selectedNode: Node? = null
     var tree = Tree()
@@ -75,6 +76,7 @@ class AppRenderer(
     var linkPlacementMode = false
 
     val displayRotationHelper = DisplayRotationHelper(activity)
+    val animationHelper = AnimationHelper()
 
     val viewMatrix = FloatArray(16)
     val projectionMatrix = FloatArray(16)
@@ -95,7 +97,10 @@ class AppRenderer(
 
         preload()
 
-        changeState(MainState.ScanningState.Initialize(), false)
+        animationHelper.placeViewOut(view.confirmLayout)
+        animationHelper.placeViewOut(view.routeLayout)
+
+        changeState(MainState.ScanningState.Initialize())
 
         view.surfaceView.onTouchEvent = {pickHitResult, motionEvent ->
 
@@ -314,6 +319,12 @@ class AppRenderer(
                             }
                         }
                         true -> {
+                            view.activity.lifecycleScope.launch {
+                                initialize(
+                                    state.confirmationObject.label,
+                                    state.confirmationObject.pos.position
+                                )
+                            }
                             changeState(MainState.Routing)
                         }
                         else -> {
@@ -431,35 +442,35 @@ class AppRenderer(
         this.state = state
         when (state) {
             is MainState.ScanningState.Initialize -> {
-                //view.routeLayout.isGone = true
-                view.confirmLayout.isGone = true
-                view.scanImage.isGone = false
-                view.scanText.isGone = false
+                animationHelper.slideViewDown(view.routeLayout)
+                animationHelper.slideViewDown(view.confirmLayout)
+                animationHelper.fadeShow(view.scanImage)
+                animationHelper.fadeShow(view.scanText)
             }
             is MainState.ConfirmingState.InitializeConfirm -> {
-                //view.routeLayout.isGone = true
-                view.confirmLayout.isGone = false
-                view.scanImage.isGone = true
-                view.scanText.isGone = true
+                animationHelper.slideViewDown(view.routeLayout)
+                animationHelper.slideViewUp(view.confirmLayout)
+                animationHelper.fadeHide(view.scanImage)
+                animationHelper.fadeHide(view.scanText)
             }
             is MainState.ScanningState.EntryCreation -> {
-                //view.routeLayout.isGone = true
-                view.confirmLayout.isGone = true
-                view.scanImage.isGone = false
-                view.scanText.isGone = false
+                animationHelper.slideViewDown(view.routeLayout)
+                animationHelper.slideViewDown(view.confirmLayout)
+                animationHelper.fadeShow(view.scanImage)
+                animationHelper.fadeShow(view.scanText)
 
             }
             is MainState.ConfirmingState.EntryConfirm -> {
-                //view.routeLayout.isGone = true
-                view.confirmLayout.isGone = false
-                view.scanImage.isGone = true
-                view.scanText.isGone = true
+                animationHelper.slideViewDown(view.routeLayout)
+                animationHelper.slideViewUp(view.confirmLayout)
+                animationHelper.fadeHide(view.scanImage)
+                animationHelper.fadeHide(view.scanText)
             }
             is MainState.Routing -> {
-                //view.routeLayout.isGone = false
-                view.confirmLayout.isGone = true
-                view.scanImage.isGone = true
-                view.scanText.isGone = true
+                animationHelper.slideViewUp(view.routeLayout)
+                animationHelper.slideViewDown(view.confirmLayout)
+                animationHelper.fadeHide(view.scanImage)
+                animationHelper.fadeHide(view.scanText)
 
             }
             else -> {

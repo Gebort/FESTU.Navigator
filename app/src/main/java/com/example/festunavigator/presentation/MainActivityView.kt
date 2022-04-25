@@ -30,7 +30,7 @@ class MainActivityView(val activity: MainActivity, renderer: AppRenderer) : Defa
     val scanText: TextView = root.findViewById(R.id.scan_text)
     val scanImage: ImageView = root.findViewById(R.id.borders_image)
     val confirmLayout: FrameLayout = root.findViewById(R.id.confirm_layout)
-    //val routeLayout: ConstraintLayout = root.findViewById(R.id.route_layout)
+    val routeLayout: FrameLayout = root.findViewById(R.id.route_layout)
     val acceptButton: ImageButton = root.findViewById(R.id.accept_button)
     val rejectButton: ImageButton = root.findViewById(R.id.reject_button)
 

@@ -32,5 +32,6 @@ sealed class MainState(
     }
 
     object Routing: MainState()
+    object Starting: MainState()
 }
 
