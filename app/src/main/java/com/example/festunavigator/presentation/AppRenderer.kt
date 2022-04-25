@@ -2,41 +2,38 @@ package com.example.festunavigator.presentation
 
 import android.annotation.SuppressLint
 import android.opengl.Matrix
-import android.opengl.Visibility
-import android.util.Log
 import android.widget.TextView
 import androidx.cardview.widget.CardView
-import androidx.core.view.isVisible
+import androidx.core.view.isGone
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
 import com.example.festunavigator.R
-import com.example.festunavigator.data.ml.classification.MLKitObjectDetector
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
-import com.example.festunavigator.domain.ml.DetectedObjectResult
+import com.example.festunavigator.domain.ml.DetectedText
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
-import com.example.festunavigator.domain.tree.WrongEntryException
 import com.example.festunavigator.domain.use_cases.*
 import com.example.festunavigator.presentation.common.helpers.DisplayRotationHelper
+import com.google.ar.core.Anchor
 import com.google.ar.core.Frame
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
-import com.google.ar.sceneform.math.Vector3Evaluator
 import com.google.ar.sceneform.rendering.*
 import com.uchuhimo.collections.MutableBiMap
 import com.uchuhimo.collections.mutableBiMapOf
+import dev.romainguy.kotlin.math.Float2
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.ar.node.ArNode
 import io.github.sceneview.math.*
 import io.github.sceneview.node.Node
 import io.github.sceneview.utils.FrameTime
-import io.github.sceneview.utils.TAG
 import kotlinx.coroutines.*
+import kotlinx.coroutines.future.await
 import java.util.*
 
 
@@ -44,7 +41,8 @@ import java.util.*
  * Renders the HelloAR application into using our example Renderer.
  */
 class AppRenderer(
-    val activity: MainActivity,
+    private val activity: MainActivity,
+    val analyzeImage: AnalyzeImage,
     val deleteNodes: DeleteNodes,
     val getTree: GetTree,
     val insertNodes: InsertNodes,
@@ -56,32 +54,31 @@ class AppRenderer(
     companion object {
         val TAG = "HelloArRenderer"
         val mode = "ADMIN"
+        //image crop for recognition
+        val DESIRED_CROP = Pair(8, 72)
+        //delay in seconds for detected object to settle in
+        val smoothDelay = 0.5
     }
 
     lateinit var view: MainActivityView
+    private var state: MainState = MainState.ScanningState.Initialize()
 
     var selectedNode: Node? = null
     var tree = Tree()
     val treeNodesToModels: MutableBiMap<TreeNode, Node> = mutableBiMapOf()
     val modelsToLinkModels: MutableBiMap<Pair<Node, Node>, Node> = mutableBiMapOf()
     val linksToWayModels: MutableBiMap<Pair<Node, Node>, Node> = mutableBiMapOf()
+    val labelsNodes = mutableListOf<Node>()
 
-    var linkPlacement = false
+    var lastPlacedLabel: ArNode? = null
+
+    var linkPlacementMode = false
 
     val displayRotationHelper = DisplayRotationHelper(activity)
-    //val pointCloudRender = PointCloudRender()
 
     val viewMatrix = FloatArray(16)
     val projectionMatrix = FloatArray(16)
     val viewProjectionMatrix = FloatArray(16)
-
-   // val arLabeledAnchors = Collections.synchronizedList(mutableListOf<ARLabeledAnchor>())
-    var scanButtonWasPressed = false
-
-
-    val mlKitAnalyzer = MLKitObjectDetector(activity)
-
-    var currentAnalyzer: MLKitObjectDetector = mlKitAnalyzer
 
     override fun onResume(owner: LifecycleOwner) {
         displayRotationHelper.onResume()
@@ -94,28 +91,37 @@ class AppRenderer(
     fun bindView(view: MainActivityView) {
         this.view = view
 
-//        view.surfaceView.onTouchAr = { _, _ ->
-//            //scanButtonWasPressed = true
-//
-//        }
-
         selectNode(null)
 
         preload()
 
+        changeState(MainState.ScanningState.Initialize(), false)
+
         view.surfaceView.onTouchEvent = {pickHitResult, motionEvent ->
 
             pickHitResult.node?.let { node ->
-                if (!linkPlacement) {
+                if (!linkPlacementMode) {
                     selectNode(node)
 
                 }
                 else {
                     linkNodes(selectedNode!!, node)
-                    linkPlacementMode(false)
+                    changeLinkPlacementMode(false)
                 }
             }
             true
+        }
+
+        view.acceptButton.setOnClickListener {
+            if (state is MainState.ConfirmingState){
+                (state as MainState.ConfirmingState).result = true
+            }
+        }
+
+        view.rejectButton.setOnClickListener {
+            if (state is MainState.ConfirmingState){
+                (state as MainState.ConfirmingState).result = false
+            }
         }
 
         view.delete.setOnClickListener {
@@ -123,15 +129,18 @@ class AppRenderer(
         }
 
         view.link.setOnClickListener {
-            linkPlacementMode(!linkPlacement)
+            changeLinkPlacementMode(!linkPlacementMode)
         }
 
         view.place.setOnClickListener {
-            createPath()
+            view.activity.lifecycleScope.launch {
+                createNode()
+            }
         }
 
         view.entry.setOnClickListener {
-            createEntryByDialog()
+//            createEntryByDialog()
+            changeState(MainState.ScanningState.EntryCreation())
 
         }
 
@@ -153,27 +162,59 @@ class AppRenderer(
             }
         }
 
-        view.rend.setOnClickListener {
-            rendTest()
-        }
-
-
-
-//        view.scanButton.setOnClickListener {
-//            // frame.acquireCameraImage is dependent on an ARCore Frame, which is only available in onDrawFrame.
-//            // Use a boolean and check its state in onDrawFrame to interact with the camera image.
-//            scanButtonWasPressed = true
-//            view.setScanningActive(true)
-//            hideSnackbar()
-//        }
-
-
-
     }
 
+    private fun initializeByScan(){
+            changeState(MainState.ScanningState.Initialize(), false)
+    }
 
+   private suspend fun tryGetDetectedObject(): DetectedText? {
+           val session = view.surfaceView.arSession ?: return null
+           val frame = session.currentFrame?.frame ?: return null
+           val camera = frame.camera
+           camera.getViewMatrix(viewMatrix, 0)
+           camera.getProjectionMatrix(projectionMatrix, 0, 0.01f, 100.0f)
+           Matrix.multiplyMM(viewProjectionMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
+           if (camera.trackingState != TrackingState.TRACKING) {
+               return null
+           }
+           val cameraImage = frame.tryAcquireCameraImage()
+           if (cameraImage != null) {
+               val cameraId = session.cameraConfig.cameraId
+               val imageRotation =
+                   displayRotationHelper.getCameraSensorToDisplayRotation(cameraId)
+               val displaySize = Pair(
+                   view.surfaceView.arSession!!.displayWidth,
+                   view.surfaceView.arSession!!.displayHeight
+               )
+               val detectedResult = analyzeImage(
+                   cameraImage,
+                   imageRotation,
+                   DESIRED_CROP,
+                   displaySize
+               )
 
-    var objectResults: List<DetectedObjectResult>? = null
+               cameraImage.close()
+
+               detectedResult.getOrNull()?.let {
+                   return DetectedText(it, frame)
+               }
+               return null
+           }
+       cameraImage?.close()
+       return null
+
+   }
+
+    private fun hitTestDetectedObject(detectedText: DetectedText): OrientatedPosition? {
+
+        val detectedObject = detectedText.detectedObjectResult
+        return useHitTest(
+            detectedObject.centerCoordinate.x,
+            detectedObject.centerCoordinate.y,
+        )
+            .getOrNull()
+    }
 
     private fun onDrawFrame(frameTime: FrameTime) {
 
@@ -191,91 +232,102 @@ class AppRenderer(
             return
         }
 
-        // Frame.acquireCameraImage must be used on the GL thread.
-        // Check if the button was pressed last frame to start processing the camera image.
-        if (scanButtonWasPressed) {
-            scanButtonWasPressed = false
-            val cameraImage = frame.tryAcquireCameraImage()
-            if (cameraImage != null) {
-                // Call our ML model on an IO thread.
-                launch(Dispatchers.IO) {
-                    val cameraId = session.cameraConfig.cameraId
-                    val imageRotation = displayRotationHelper.getCameraSensorToDisplayRotation(cameraId)
-                    objectResults = currentAnalyzer.analyze(cameraImage, imageRotation)
-                    cameraImage.close()
+        if (state is MainState.ScanningState) {
+            (state as MainState.ScanningState).let { state ->
+                if (state.currentScanSmoothDelay > 0) {
+                    state.currentScanSmoothDelay -= frameTime.intervalSeconds
+                }
+
+                if (!state.scanningNow) {
+                    if (state.scanningJob?.isActive != true) {
+                        state.scanningJob =
+                            view.activity.lifecycleScope.launch {
+                                if (state.currentScanSmoothDelay <= 0 && state.lastDetectedObject != null) {
+
+                                    val orientatedPos = hitTestDetectedObject(state.lastDetectedObject!!)
+                                    if (orientatedPos != null){
+                                        val node = placeLabel(
+                                            state.lastDetectedObject!!.detectedObjectResult.label,
+                                            orientatedPos
+                                        )
+                                        val confirmationObject = ConfirmationObject(
+                                            label = state.lastDetectedObject!!.detectedObjectResult.label,
+                                            pos = orientatedPos,
+                                            node = node
+                                        )
+                                        when (state) {
+                                            is MainState.ScanningState.Initialize -> {
+                                                changeState(MainState.ConfirmingState.InitializeConfirm(confirmationObject))
+                                            }
+                                            is MainState.ScanningState.EntryCreation -> {
+                                                changeState(MainState.ConfirmingState.EntryConfirm(confirmationObject))
+                                            }
+                                            else -> {
+                                                throw Exception("Unknown state")
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        state.currentScanSmoothDelay = smoothDelay
+                                    }
+
+                                } else {
+                                    state.scanningNow = true
+                                    val detectedObject = tryGetDetectedObject()
+                                    if (state.lastDetectedObject == null) {
+                                        state.lastDetectedObject = detectedObject
+                                        state.currentScanSmoothDelay = smoothDelay
+                                    } else if (detectedObject == null) {
+                                        state.currentScanSmoothDelay = smoothDelay
+                                    } else {
+                                        if (state.lastDetectedObject!!.detectedObjectResult.label !=
+                                            detectedObject.detectedObjectResult.label
+                                        ) {
+                                            state.currentScanSmoothDelay = smoothDelay
+                                        }
+                                        state.lastDetectedObject = detectedObject
+                                    }
+                                    state.scanningNow = false
+                                }
+                            }
+                    }
+                }
+            }
+        }
+        if (state is MainState.ConfirmingState){
+            (state as MainState.ConfirmingState).let { state ->
+                if (state.result != null) {
+                    when (state.result) {
+                        false -> {
+                            lastPlacedLabel?.destroy()
+                            lastPlacedLabel = null
+                            when (state.previous){
+                                is MainState.ScanningState.Initialize -> {
+                                    changeState(MainState.ScanningState.Initialize())
+                                }
+                                is MainState.ScanningState.EntryCreation -> {
+                                    changeState(MainState.ScanningState.EntryCreation())
+                                }
+                                else -> {
+                                    throw Exception("Unknown state")
+                                }
+                            }
+                        }
+                        true -> {
+                            changeState(MainState.Routing)
+                        }
+                        else -> {
+                            throw Exception ("Unexpected null state result")
+                        }
+                    }
                 }
             }
         }
 
-        /** If results were completed this frame, create [Anchor]s from model results. */
-        val objects = objectResults
-        if (objects != null) {
-            objectResults = null
-            Log.i(TAG, "$currentAnalyzer got objects: $objects")
-//            val anchors = objects.mapNotNull { obj ->
-//                val (atX, atY) = obj.centerCoordinate
-//                val anchor = createAnchor(atX.toFloat(), atY.toFloat(), frame) ?: return@mapNotNull null
-//                Log.i(TAG, "Created anchor ${anchor.pose} from hit test")
-//                ARLabeledAnchor(anchor, obj.label)
-//            }
-            //arLabeledAnchors.addAll(anchors)
-
-//            val anchors = mutableListOf<ARLabeledAnchor>()
-//            for (obj in objects) {
-//                val (atX, atY) = obj.centerCoordinate
-//                val anchor =
-//                    createAnchor(atX.toFloat(), atY.toFloat(), frame) ?: continue
-//                val existingAnchor =
-//                    arLabeledAnchors.find { it.anchor.pose == anchor.pose }
-//                if (existingAnchor == null) {
-//                    Log.i(TAG, "Created anchor ${anchor.pose} from hit test")
-//                    val arLabeledAnchor =
-//                        com.example.festunavigator.presentation.ARLabeledAnchor(anchor, obj.label)
-//                    anchors.add(arLabeledAnchor)
-//                }
-//            }
-
-//            arLabeledAnchors.addAll(anchors)
-
-//            // Draw labels at their anchor position.
-//            for (arDetectedObject in arLabeledAnchors) {
-//                val anchor = arDetectedObject.anchor
-//                if (anchor.trackingState != TrackingState.TRACKING) continue
-//
-//                // createRenderable(arDetectedObject.label)
-//
-//            }
-
-//            view.post {
-//                when {
-//                    objects.isEmpty() && currentAnalyzer == mlKitAnalyzer && !mlKitAnalyzer.hasCustomModel() ->
-//                        showSnackbar("Default ML Kit classification model returned no results. " +
-//                                "For better classification performance, see the README to configure a custom model.")
-//                    objects.isEmpty() ->
-//                        showSnackbar("Classification model returned no results.")
-//                    anchors.size != objects.size ->
-//                        showSnackbar("Objects were classified, but could not be attached to an anchor. " +
-//                                "Try moving your device around to obtain a better understanding of the environment.")
-//                }
-//            }
         }
 
-    }
-
-    fun rendTest(){
-        view.activity.lifecycleScope.launch {
-            val result = hitTest(view.surfaceView)
-            val position = result.getOrNull()
-            if (position != null){
-                placeRend(position)
-            }
-            else {
-                showSnackbar("Null pos")
-            }
-        }
-    }
-
-    fun placeRend(pos: OrientatedPosition){
+    private suspend fun placeLabel(label: String, pos: OrientatedPosition): ArNode {
+        var node: ArNode? = null
         ViewRenderable.builder()
             .setView(view.activity, R.layout.text_sign)
             .build()
@@ -284,31 +336,55 @@ class AppRenderer(
                     it.isShadowCaster = false
                     it.isShadowReceiver = false
                 }
-                val cardView = renderable.view as CardView?
-                cardView?.let {
-//                    val textView: TextView = cardView.findViewById(R.id.signTextView)
-//                    textView.text =
-//                        if (node is TreeNode.Entry) "Entry ${node.number}" else "Id ${node.id}"
-                    val textNode = ArNode().apply {
-                        setModel(
-                            renderable = renderable
-                        )
-                        position = Position(pos.position.x, pos.position.y, pos.position.z)
-                        quaternion = pos.orientation
+                val cardView = renderable.view as CardView
+                val textView: TextView = cardView.findViewById(R.id.signTextView)
+                textView.text = label
+                val textNode = ArNode().apply {
+                    setModel(
+                        renderable = renderable
+                    )
+                    modelPosition = Float3(0f, 0f, 0f)
+                    position = Position(pos.position.x, pos.position.y, pos.position.z)
+                    quaternion = pos.orientation
 
-                        anchor = this.createAnchor()
-                    }
-                    view.surfaceView.addChild(textNode)
+                      //  anchor = pos.hitResult.createAnchor()
                 }
+
+                lastPlacedLabel?.destroy()
+                lastPlacedLabel = textNode
+
+                view.surfaceView.addChild(textNode)
+                node = textNode
             }
+            .await()
+
+        return node!!
     }
 
-    fun linkPlacementMode(link: Boolean){
-        linkPlacement = link
+    private suspend fun proceedConfirmationObject(){
+        when (state) {
+            is MainState.ConfirmingState.InitializeConfirm -> {
+                (state as MainState.ConfirmingState).confirmationObject.let {
+                    initialize(it.label, it.node.position)
+                }
+            }
+            is MainState.ConfirmingState.EntryConfirm -> {
+                (state as MainState.ConfirmingState).confirmationObject.let {
+                    createNode(it.label, it.node.position, it.pos.orientation.toRotation().toVector3())
+                }
+            }
+            else -> {
+                throw Exception("State is not 'confirm', cant proceed placed label")
+            }
+        }
+    }
+
+    private fun changeLinkPlacementMode(link: Boolean){
+        linkPlacementMode = link
         view.link.text = if (link) "Cancel" else "Link"
     }
 
-    fun removeNode(node: Node?){
+    private fun removeNode(node: Node?){
         modelsToLinkModels.keys
             .filter { pair ->
                 pair.first == node || pair.second == node
@@ -331,13 +407,77 @@ class AppRenderer(
 
     }
 
-    fun selectNode(node: Node?){
+    private fun selectNode(node: Node?){
         selectedNode = node
         view.link.isEnabled = node != null
         view.delete.isEnabled = node != null
     }
 
-    fun linkNodes(node1: Node, node2: Node){
+    private fun setConfirmClickListeners(onAccept: () -> Unit, onReject: () -> Unit){
+        view.acceptButton.setOnClickListener {
+            onAccept()
+        }
+        view.rejectButton.setOnClickListener {
+            onReject()
+
+        }
+
+    }
+
+    private fun changeState(state: MainState, addToStack: Boolean = true){
+        if (addToStack){
+            state.previous = this.state
+        }
+        this.state = state
+        when (state) {
+            is MainState.ScanningState.Initialize -> {
+                //view.routeLayout.isGone = true
+                view.confirmLayout.isGone = true
+                view.scanImage.isGone = false
+                view.scanText.isGone = false
+            }
+            is MainState.ConfirmingState.InitializeConfirm -> {
+                //view.routeLayout.isGone = true
+                view.confirmLayout.isGone = false
+                view.scanImage.isGone = true
+                view.scanText.isGone = true
+            }
+            is MainState.ScanningState.EntryCreation -> {
+                //view.routeLayout.isGone = true
+                view.confirmLayout.isGone = true
+                view.scanImage.isGone = false
+                view.scanText.isGone = false
+
+            }
+            is MainState.ConfirmingState.EntryConfirm -> {
+                //view.routeLayout.isGone = true
+                view.confirmLayout.isGone = false
+                view.scanImage.isGone = true
+                view.scanText.isGone = true
+            }
+            is MainState.Routing -> {
+                //view.routeLayout.isGone = false
+                view.confirmLayout.isGone = true
+                view.scanImage.isGone = true
+                view.scanText.isGone = true
+
+            }
+            else -> {
+                throw Exception("Unknown state")
+            }
+        }
+    }
+
+    private fun rollbackState(){
+        if (state.previous != null){
+            changeState(state.previous!!, false)
+        }
+        else {
+            throw Exception("Null previous state")
+        }
+    }
+
+    private fun linkNodes(node1: Node, node2: Node){
         view.activity.lifecycleScope.launch {
             val path1: TreeNode? = treeNodesToModels.inverse[node1]
             val path2: TreeNode? = treeNodesToModels.inverse[node2]
@@ -350,19 +490,7 @@ class AppRenderer(
         }
     }
 
-    fun createPath(){
-        view.activity.lifecycleScope.launch {
-
-            hitTest(view.surfaceView).getOrNull()?.let { position ->
-
-                val pathTreeNode = tree.addNode(position.position)
-                drawNode(pathTreeNode)
-                insertNodes(listOf(pathTreeNode), tree.translocation)
-                }
-            }
-        }
-
-    suspend fun drawNode(treeNode: TreeNode){
+    private suspend fun drawNode(treeNode: TreeNode, anchor: Anchor? = null){
         val modelNode = ArNode()
         modelNode.loadModel(
             context = view.activity.applicationContext,
@@ -371,6 +499,9 @@ class AppRenderer(
         modelNode.position = treeNode.position
         modelNode.modelScale = Scale(0.1f)
         modelNode.anchor = modelNode.createAnchor()
+//        anchor?.let {
+//            modelNode.anchor = it
+//        }
         modelNode.model?.let {
             it.isShadowCaster = false
             it.isShadowReceiver = false
@@ -383,10 +514,13 @@ class AppRenderer(
 
     @SuppressLint("CheckResult")
     fun createEntryByDialog(){
+        val activity = view.activity
         MaterialDialog(view.activity).show {
             title(text = "Place new entry")
             input(hint = "Number") { _, text ->
-               createEntry(text.toString())
+                activity.lifecycleScope.launch {
+                    createNode(text.toString())
+                }
             }
             positiveButton(text = "Place")
         }
@@ -399,9 +533,9 @@ class AppRenderer(
             title(text = "Initialize tree")
             input(hint = "Number") { _, text ->
                 activityView.activity.lifecycleScope.launch {
-                    hitTest(activityView.surfaceView).getOrNull()?.let { position ->
-                        initialize(text.toString(), position.position)
-                    }
+                        useHitTest().getOrNull()?.let { position ->
+                            initialize(text.toString(), position.position)
+                        }
                 }
             }
             positiveButton(text = "Place")
@@ -444,7 +578,7 @@ class AppRenderer(
         }
     }
 
-    fun drawWay(nodes: List<TreeNode>){
+    private fun drawWay(nodes: List<TreeNode>){
         linksToWayModels.values.forEach { it.destroy() }
         linksToWayModels.clear()
 
@@ -462,23 +596,33 @@ class AppRenderer(
 
     }
 
-    //TODO объединить createEntry и createPAth
-    fun createEntry(number: String) {
-        view.activity.lifecycleScope.launch {
-
-            hitTest(view.surfaceView).getOrNull()?.let { position ->
-
-                val entryTreeNode = tree.addNode(position.position, number)
-                drawNode(entryTreeNode)
-                insertNodes(listOf(entryTreeNode), tree.translocation)
+    private suspend fun createNode(
+        number: String? = null,
+        position: Float3? = null,
+        forwardVector3: Vector3? = null
+    ) {
+            val treeNode = if (position == null) {
+                val result = useHitTest().getOrNull()
+                if (result != null) {
+                    tree.addNode(result.position, number, forwardVector3)
+                } else {
+                    null
+                }
+            } else {
+                tree.addNode(position, number, forwardVector3)
             }
-        }
+
+            treeNode?.let {
+                insertNodes(listOf(treeNode), tree.translocation)
+                drawNode(treeNode)
+
+            }
     }
 
     fun drawTree(){
         view.activity.lifecycleScope.launch {
             for (node in tree.allPoints.values){
-                drawNode(node)
+            drawNode(node)
             }
             for (treenode1 in tree.links.keys){
                 val node1 = treeNodesToModels[treenode1]!!
@@ -606,7 +750,7 @@ class AppRenderer(
     /**
      * Utility method for [Frame.acquireCameraImage] that maps [NotYetAvailableException] to `null`.
      */
-    fun Frame.tryAcquireCameraImage() = try {
+    private fun Frame.tryAcquireCameraImage() = try {
         acquireCameraImage()
     } catch (e: NotYetAvailableException) {
         null
@@ -626,47 +770,47 @@ class AppRenderer(
             result.exceptionOrNull()?.message?.let{ showSnackbar(it) }
         }
         else {
+            val rotationVector = result.getOrNull()
+            rotationVector?.let {
+                view.surfaceView.camera.rotation = it.toFloat3()
+            }
+            view.surfaceView.camera.worldRotation
             drawTree()
-            view.initText.isVisible = false
+
             view.delete.isEnabled = true
             view.link.isEnabled = true
             view.entry.isEnabled = true
             view.pathfind.isEnabled = true
             view.place.isEnabled = true
-            view.rend.isEnabled = true
 
         }
+
+    }
+
+    private fun useHitTest(
+        x: Float = view.surfaceView.arSession!!.displayWidth / 2f,
+        y: Float = view.surfaceView.arSession!!.displayHeight / 2f,
+        currentFrame: Frame? = null
+    ): Result<OrientatedPosition> {
+        val frame = currentFrame ?:
+            view.surfaceView.currentFrame?.frame ?: return Result.failure(Exception("Frame null"))
+        val cameraPos = view.surfaceView.camera.worldPosition
+        val result = hitTest(frame, Float2(x, y), cameraPos, view.surfaceView)
+//        result.getOrNull()?.let {
+//            val node1 = ArNode()
+//            node1.position = cameraPos
+//            val node2 = ArNode()
+//            node2.position = it.position
+//            drawLine(node1, node2)
+//        }
+        return result
     }
 
         private fun showSnackbar(message: String): Unit =
             activity.view.snackbarHelper.showError(activity, message)
 
-        private fun hideSnackbar() = activity.view.snackbarHelper.hide(activity)
-
-    /**
-     * Temporary arrays to prevent allocations in [createAnchor].
-     */
-//    private val convertFloats = FloatArray(4)
-//    private val convertFloatsOut = FloatArray(4)
-
-    /** Create an anchor using (x, y) coordinates in the [Coordinates2d.IMAGE_PIXELS] coordinate space. */
-//    fun createAnchor(xImage: Float, yImage: Float, frame: Frame): Anchor? {
-//        // IMAGE_PIXELS -> VIEW
-//        convertFloats[0] = xImage
-//        convertFloats[1] = yImage
-//        frame.transformCoordinates2d(
-//            Coordinates2d.IMAGE_PIXELS,
-//            convertFloats,
-//            Coordinates2d.VIEW,
-//            convertFloatsOut
-//        )
-//
-//        // Conduct a hit test using the VIEW coordinates
-//        val hits = frame.hitTest(convertFloatsOut[0], convertFloatsOut[1])
-//        val result = hits.getOrNull(0) ?: return null
-//        return result.trackable.createAnchor(result.hitPose)
-//    }
 }
+
 
 
 

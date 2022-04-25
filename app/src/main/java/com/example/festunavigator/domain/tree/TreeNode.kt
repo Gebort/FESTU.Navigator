@@ -1,5 +1,6 @@
 package com.example.festunavigator.domain.tree
 
+import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Float3
 
 sealed class TreeNode(
@@ -9,22 +10,25 @@ sealed class TreeNode(
 ) {
     class Entry(
         val number: String,
+        val forwardVector: Vector3,
         id: Int,
         position: Float3,
-        neighbours: MutableList<TreeNode> = mutableListOf()
+        neighbours: MutableList<TreeNode> = mutableListOf(),
     ): TreeNode(id, position, neighbours){
 
         fun copy(
             number: String = this.number,
             id: Int = this.id,
             position: Float3 = this.position,
-            neighbours: MutableList<TreeNode> = this.neighbours
+            neighbours: MutableList<TreeNode> = this.neighbours,
+            forwardVector: Vector3 = this.forwardVector
         ): Entry {
             return Entry(
                 number,
+                forwardVector,
                 id,
                 position,
-                neighbours
+                neighbours,
             )
         }
     }

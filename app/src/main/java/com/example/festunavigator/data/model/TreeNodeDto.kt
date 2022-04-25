@@ -2,6 +2,7 @@ package com.example.festunavigator.data.model
 
 import androidx.room.*
 import com.example.festunavigator.domain.tree.TreeNode
+import com.google.ar.sceneform.math.Vector3
 
 @Entity
 class TreeNodeDto(
@@ -11,7 +12,8 @@ class TreeNodeDto(
     val z: Float,
     val type: String = TYPE_PATH,
     val number: String? = null,
-    val neighbours: MutableList<Int> = mutableListOf()
+    val neighbours: MutableList<Int> = mutableListOf(),
+    val forwardVector: Vector3? = null
 ) {
 
 
@@ -25,6 +27,7 @@ class TreeNodeDto(
                 x = node.position.x,
                 y = node.position.y,
                 z = node.position.z,
+                forwardVector = if (node is TreeNode.Entry) node.forwardVector else null,
                 type = if (node is TreeNode.Entry) TYPE_ENTRY else TYPE_PATH,
                 number = if (node is TreeNode.Entry) node.number else null,
                 neighbours = node.neighbours

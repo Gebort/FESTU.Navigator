@@ -34,6 +34,9 @@ android {
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/INDEX.LIST'
     }
+    aaptOptions {
+        noCompress "tflite"
+    }
 }
 
 dependencies {
@@ -56,6 +59,7 @@ dependencies {
     implementation 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
     implementation 'androidx.lifecycle:lifecycle-common-java8:2.4.1'
 
+    //TODO убрать лишние зависимости
     // MLKit
     implementation 'com.google.mlkit:object-detection:17.0.0'
     implementation 'com.google.mlkit:object-detection-custom:17.0.0'
@@ -82,4 +86,8 @@ dependencies {
     //Dialog with editText
     implementation 'com.afollestad.material-dialogs:core:3.3.0'
     implementation 'com.afollestad.material-dialogs:input:3.3.0'
+
+    // Add ML Kit dependencies
+    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:18.0.0'
+
 }

@@ -1,6 +1,7 @@
 package com.example.festunavigator.domain.tree
 
 import com.example.festunavigator.data.model.TreeNodeDto
+import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.math.Position
 
@@ -29,9 +30,12 @@ class Tree(
     constructor(rawNodesList: List<TreeNodeDto>) : this() {
         for (nodeDto in rawNodesList) {
             var node: TreeNode
-            if (nodeDto.type == TreeNodeDto.TYPE_ENTRY && nodeDto.number != null){
+            if (nodeDto.type == TreeNodeDto.TYPE_ENTRY
+                && nodeDto.number != null
+                && nodeDto.forwardVector != null){
                 node = TreeNode.Entry(
                     number = nodeDto.number,
+                    forwardVector = nodeDto.forwardVector,
                     id = nodeDto.id,
                     position = Float3(nodeDto.x, nodeDto.y, nodeDto.z)
                 )
@@ -57,7 +61,7 @@ class Tree(
         }
     }
 
-    suspend fun initialize(entryNumber: String, position: Float3): Result<Unit> {
+    suspend fun initialize(entryNumber: String, position: Float3): Result<Vector3> {
 
         if (entryPoints.isNotEmpty()) {
 
@@ -77,9 +81,11 @@ class Tree(
                     }
                 }
 
+                val rotationVector = entry.forwardVector
+
                 initialized = true
 
-                return Result.success(Unit)
+                return Result.success(rotationVector)
             } else {
                 return Result.failure(
                     exception = WrongEntryException(entryPoints.keys)
@@ -89,13 +95,14 @@ class Tree(
         else {
             clearTree()
             initialized = true
-            return Result.success(Unit)
+            return Result.success(Vector3())
         }
     }
 
     suspend fun addNode(
         position: Float3,
-        number: String? = null
+        number: String? = null,
+        forwardVector: Vector3? = null
     ): TreeNode {
         val newNode: TreeNode
         if (number == null){
@@ -105,8 +112,12 @@ class Tree(
             )
         }
         else {
+            if (forwardVector == null){
+                throw Exception("Null forward vector")
+            }
             newNode = TreeNode.Entry(
                 number,
+                forwardVector,
                 size,
                 position
             )

@@ -1,63 +1,65 @@
 package com.example.festunavigator.domain.use_cases
 
+import com.example.festunavigator.data.model.DetectedObjectResult
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
+import com.google.ar.core.Frame
+import com.google.ar.sceneform.collision.Ray
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
+import dev.romainguy.kotlin.math.Float2
+import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.ar.ArSceneView
-import io.github.sceneview.math.Position
-import io.github.sceneview.math.toNewQuaternion
+import io.github.sceneview.ar.arcore.ArFrame
+import io.github.sceneview.collision.pickHitTest
+import io.github.sceneview.math.*
 
 class HitTest {
 
-    suspend operator fun invoke(surfaceView: ArSceneView): Result<OrientatedPosition> {
+    /**
+     * A [HitTest] converts 2d frame coordinates into 3d world coordinates with a plane alignment using rays.
+     * @property targetPos the object coordinates on the frame
+     * @property cameraPos the camera world position. The ray casting starting point
+     */
+      operator fun invoke(frame: Frame, targetPos: Float2, cameraPos: Float3, sceneView: ArSceneView): Result<OrientatedPosition> {
 
-            val result1 = surfaceView.arSession?.currentFrame?.hitTest(surfaceView.width/2f, surfaceView.height/2f)
-            val result2 = surfaceView.arSession?.currentFrame?.hitTest(surfaceView.width/2f-5, surfaceView.height/2f)
-            val result3 = surfaceView.arSession?.currentFrame?.hitTest(surfaceView.width/2f, surfaceView.height/2f+5)
-            if (result1 != null && result2 != null && result3 != null) {
-                val startDistance = surfaceView.camera.worldPosition
-                val translation1 = result1.hitPose.translation
-                val pos1 = Position(
-                    startDistance.x + translation1[0],
-                    startDistance.y + translation1[1],
-                    startDistance.z + translation1[2]
+            val hitResult1 = frame.hitTest(targetPos.x, targetPos.y)
+            val hitResult2 = frame.hitTest(targetPos.x-5, targetPos.y)
+            val hitResult3 = frame.hitTest(targetPos.x, targetPos.y+5)
+
+            if (hitResult1.isNotEmpty() && hitResult2.isNotEmpty() && hitResult3.isNotEmpty() ) {
+                val result1 = hitResult1.first()
+                val result2 = hitResult2.first()
+                val result3 = hitResult3.first()
+
+                val pos1 = Vector3(
+                    result1.hitPose.tx(),
+                    result1.hitPose.ty(),
+                    result1.hitPose.tz()
                 )
 
-                val translation2 = result2.hitPose.translation
-                val pos2 = Position(
-                    startDistance.x + translation2[0],
-                    startDistance.y + translation2[1],
-                    startDistance.z + translation2[2]
+                val pos2 = Vector3(
+                    result2.hitPose.tx(),
+                    result2.hitPose.ty(),
+                    result2.hitPose.tz()
                 )
 
-                val translation3 = result3.hitPose.translation
-                val pos3 = Position(
-                    startDistance.x + translation3[0],
-                    startDistance.y + translation3[1],
-                    startDistance.z + translation3[2]
+                val pos3 = Vector3(
+                    result3.hitPose.tx(),
+                    result3.hitPose.ty(),
+                    result3.hitPose.tz()
                 )
 
-                val vector1 = Vector3().apply {
-                    x = pos1.x - pos2.x
-                    y = pos1.y - pos2.y
-                    z = pos1.z - pos2.z
-                    normalized()
-                }
-                val vector2 = Vector3().apply {
-                    x = pos1.x - pos3.x
-                    y = pos1.y - pos3.y
-                    z = pos1.z - pos3.z
-                    normalized()
-                }
+                val vector1 = Vector3.subtract(pos1, pos2).normalized()
+                val vector2 = Vector3.subtract(pos1, pos3).normalized()
 
                 val vectorForward = Vector3.cross(vector1, vector2).normalized()
 
                 val orientation = Quaternion.lookRotation(
                     vectorForward,
-                    vector2
+                    Vector3.up()
                 ).toNewQuaternion()
 
-                return Result.success(OrientatedPosition(pos1, orientation))
+                return Result.success(OrientatedPosition(pos1.toFloat3(), orientation, result1))
             }
             else {
                 return Result.failure(Exception("Null hit result"))

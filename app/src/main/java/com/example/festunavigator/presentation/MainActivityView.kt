@@ -1,10 +1,10 @@
 package com.example.festunavigator.presentation
 
 import android.opengl.GLSurfaceView
+import android.text.Layout
 import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
+import android.widget.*
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.festunavigator.R
@@ -27,10 +27,12 @@ class MainActivityView(val activity: MainActivity, renderer: AppRenderer) : Defa
     val entry: Button = root.findViewById(R.id.entry_button)
     val init: Button = root.findViewById(R.id.init_button)
     val pathfind: Button = root.findViewById(R.id.pathfind_button)
-    val rend: Button = root.findViewById(R.id.rend_button)
-    val initText: TextView = root.findViewById(R.id.init_text)
-
-
+    val scanText: TextView = root.findViewById(R.id.scan_text)
+    val scanImage: ImageView = root.findViewById(R.id.borders_image)
+    val confirmLayout: FrameLayout = root.findViewById(R.id.confirm_layout)
+    //val routeLayout: ConstraintLayout = root.findViewById(R.id.route_layout)
+    val acceptButton: ImageButton = root.findViewById(R.id.accept_button)
+    val rejectButton: ImageButton = root.findViewById(R.id.reject_button)
 
 
     //val useCloudMlSwitch = root.findViewById<SwitchCompat>(R.id.useCloudMlSwitch)

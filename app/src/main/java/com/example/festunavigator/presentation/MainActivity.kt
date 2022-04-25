@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import com.example.festunavigator.data.ml.classification.ARCoreSessionLifecycleHelper
+import com.example.festunavigator.data.ml.classification.TextAnalyzer
 import com.example.festunavigator.data.pathfinding.AStarImpl
 import com.example.festunavigator.data.repository.GraphImpl
 import com.example.festunavigator.domain.use_cases.*
@@ -70,10 +71,13 @@ class MainActivity : AppCompatActivity() {
         val findWay = FindWay(pathfinder)
         val getTree = GetTree(repository)
         val hitTest = HitTest()
+        val objectDetector = TextAnalyzer(this)
+        val analyzeImage = AnalyzeImage(objectDetector)
 
 
-        renderer = com.example.festunavigator.presentation.AppRenderer(
+        renderer = AppRenderer(
             this,
+            analyzeImage,
             deleteNodes,
             getTree,
             insertNodes,
