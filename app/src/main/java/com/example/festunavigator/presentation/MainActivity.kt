@@ -1,9 +1,9 @@
 package com.example.festunavigator.presentation
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.example.festunavigator.data.ml.classification.ARCoreSessionLifecycleHelper
 import com.example.festunavigator.data.ml.classification.TextAnalyzer
 import com.example.festunavigator.data.pathfinding.AStarImpl
@@ -93,6 +93,10 @@ class MainActivity : AppCompatActivity() {
 
         //setContentView(R.layout.activity_main)
 
+    }
+
+    override fun onBackPressed() {
+        renderer.backPressed()
     }
 
 }

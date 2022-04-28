@@ -62,7 +62,6 @@ class Tree(
     }
 
     suspend fun initialize(entryNumber: String, position: Float3): Result<Vector3> {
-
         if (entryPoints.isNotEmpty()) {
 
             val entry = entryPoints[entryNumber]

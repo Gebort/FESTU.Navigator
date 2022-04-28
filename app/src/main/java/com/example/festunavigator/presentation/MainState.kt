@@ -9,6 +9,7 @@ sealed class MainState(
 
     sealed class ConfirmingState(
         var confirmationObject: ConfirmationObject,
+        var confirmationJob: Job? = null,
         var result: Boolean? = null
     ): MainState(){
 
@@ -31,7 +32,22 @@ sealed class MainState(
         class EntryCreation: ScanningState()
     }
 
-    object Routing: MainState()
+    sealed class Routing(
+        var startNumber: String? = null,
+        var endNumber: String? = null
+    ): MainState() {
+        class Going(
+            startNumber: String? = null,
+            endNumber: String? = null
+        ): Routing(startNumber, endNumber)
+        class Choosing(
+            val choosingStart: Boolean,
+            var done: Boolean = false,
+            startNumber: String? = null,
+            endNumber: String? = null,
+        ): Routing(startNumber, endNumber)
+    }
+
     object Starting: MainState()
 }
 

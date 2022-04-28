@@ -1,56 +1,54 @@
 package com.example.festunavigator.presentation.common.helpers
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
+import android.content.Context
 import android.view.View
-import android.view.animation.TranslateAnimation
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.Interpolator
+import android.view.inputmethod.InputMethodManager
 import androidx.core.view.isGone
+import androidx.core.view.isInvisible
+
 
 class AnimationHelper {
 
+    private val interpolator: Interpolator = AccelerateInterpolator()
     private val smallSlidingDuration = 200L
-    private val fadeDuration = 100L
+    private val bigSlidingDuration = 500L
+    private val fadeDuration = 200L
 
-    fun slideViewDown(view: View) {
-        if (!view.isGone) {
-            view.isGone = true
-            val animate = TranslateAnimation(
-                0F,
-                0F,
-                0F,
-                view.height.toFloat()
-            )
-
-            animate.duration = smallSlidingDuration
-            animate.fillAfter = true
-            view.startAnimation(animate)
+    fun slideViewDown(view: View, fast: Boolean = true, onEnd: (() -> Unit)? = null) {
+        if (!view.isInvisible) {
+            view.animate()
+                .translationY(view.height.toFloat())
+                .setDuration(
+                    if (fast) smallSlidingDuration else bigSlidingDuration
+                )
+                .withEndAction {
+                    view.isInvisible = true
+                    onEnd?.let { onEnd() }
+                }
+                .interpolator = interpolator
         }
     }
 
-    fun slideViewUp(view: View) {
-        if (view.isGone) {
-            view.isGone = false
-            val animate = TranslateAnimation(
-                0F,
-                0F,
-                view.height.toFloat(),
-                0F
-            )
-
-            animate.duration = smallSlidingDuration
-            animate.fillAfter = true
-            view.startAnimation(animate)
+    fun slideViewUp(view: View, fast: Boolean = true, onEnd: (() -> Unit)? = null) {
+        if (view.isInvisible) {
+            view.isInvisible = false
+            view.animate()
+                .translationY(0f)
+                .setDuration(
+                    if (fast) smallSlidingDuration else bigSlidingDuration
+                )
+                .withEndAction {
+                    onEnd?.let { onEnd() }
+                }
+                .interpolator = interpolator
         }
     }
 
     fun placeViewOut(view: View) {
-        view.isGone = true
-        view.layout(
-            0,
-            view.height + view.y.toInt(),
-            view.width,
-            0
-        )
+        view.translationY = view.height.toFloat()
+        view.isInvisible = true
     }
 
     fun fadeShow(view: View) {
@@ -66,7 +64,7 @@ class AnimationHelper {
                 animate()
                     .alpha(1f)
                     .setDuration(fadeDuration)
-                    .setListener(null)
+                    .start()
             }
         }
     }
@@ -76,12 +74,25 @@ class AnimationHelper {
             view.animate()
                 .alpha(0f)
                 .setDuration(fadeDuration)
-                .setListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        view.isGone = true
-                    }
-                })
+                .withEndAction { view.isGone = true }
+                .start()
 
         }
+    }
+
+    fun viewRequestInput(view: View, context: Context) {
+        view.isActivated = true
+        val hasFocus = view.requestFocus()
+        hasFocus.let {
+            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE)
+                    as InputMethodManager
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+        }
+    }
+
+    fun viewHideInput(view: View, context: Context) {
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE)
+                as InputMethodManager
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 }

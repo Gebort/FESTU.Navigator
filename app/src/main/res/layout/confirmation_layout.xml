@@ -25,7 +25,9 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:text="@string/confirm_place"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -40,6 +42,8 @@
                     android:layout_marginLeft="5dp"
                     android:layout_marginRight="5dp"
                     android:layout_weight="1"
+                    android:backgroundTint="#B21E851B"
+                    android:tint="#FFFFFF"
                     app:srcCompat="@drawable/ic_accept" />
 
                 <ImageButton
@@ -49,6 +53,8 @@
                     android:layout_marginLeft="5dp"
                     android:layout_marginRight="5dp"
                     android:layout_weight="1"
+                    android:backgroundTint="#C4D84949"
+                    android:tint="#FFFFFF"
                     app:srcCompat="@drawable/ic_reject" />
             </LinearLayout>
         </LinearLayout>

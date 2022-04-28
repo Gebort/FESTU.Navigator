@@ -1,14 +1,20 @@
 <resources>
     <string name="app_name">FESTU Navigator</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="initialize">Initialize the graph please</string>
     <string name="scan">Point your camera at the nearest auditory number</string>
     <string name="link">:Link</string>
     <string name="cancel">Cancel</string>
     <string name="confirm_place">Text was placed correctly?</string>
-    <string name="from">From</string>
-    <string name="to">To</string>
+    <string name="from">Start</string>
+    <string name="to">End</string>
+    <string name="main">Main building</string>
+    <string name="lab">Laboratory</string>
+    <string name="first_tower">Tower №1</string>
+    <string name="second_tower">Tower №2</string>
+    <string name="second_building">Second building</string>
+    <string name="floor">floor №</string>
+    <string name="incorrect_number">Can`t find that number</string>
+    <string name="no_path">No route</string>
 
 
 </resources>

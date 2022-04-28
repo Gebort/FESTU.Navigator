@@ -2,12 +2,16 @@ package com.example.festunavigator.presentation
 
 import android.annotation.SuppressLint
 import android.opengl.Matrix
+import android.view.inputmethod.EditorInfo
 import android.widget.TextView
+import android.widget.TextView.OnEditorActionListener
 import androidx.cardview.widget.CardView
-import androidx.core.view.isGone
+import androidx.core.view.doOnLayout
+import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.input.input
 import com.example.festunavigator.R
@@ -16,8 +20,13 @@ import com.example.festunavigator.domain.ml.DetectedText
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.domain.use_cases.*
+import com.example.festunavigator.presentation.common.adapters.EntriesAdapter
+import com.example.festunavigator.presentation.common.adapters.EntryItem
 import com.example.festunavigator.presentation.common.helpers.AnimationHelper
 import com.example.festunavigator.presentation.common.helpers.DisplayRotationHelper
+import com.example.festunavigator.presentation.common.helpers.DrawerHelper
+import com.example.festunavigator.presentation.common.helpers.NumberLocationHelper
+import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.Anchor
 import com.google.ar.core.Frame
 import com.google.ar.core.TrackingState
@@ -35,7 +44,6 @@ import io.github.sceneview.node.Node
 import io.github.sceneview.utils.FrameTime
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.await
-import java.util.*
 
 
 /**
@@ -58,7 +66,7 @@ class AppRenderer(
         //image crop for recognition
         val DESIRED_CROP = Pair(8, 72)
         //delay in seconds for detected object to settle in
-        val smoothDelay = 0.5
+        const val smoothDelay = 0.5
     }
 
     lateinit var view: MainActivityView
@@ -66,17 +74,24 @@ class AppRenderer(
 
     var selectedNode: Node? = null
     var tree = Tree()
-    val treeNodesToModels: MutableBiMap<TreeNode, Node> = mutableBiMapOf()
-    val modelsToLinkModels: MutableBiMap<Pair<Node, Node>, Node> = mutableBiMapOf()
-    val linksToWayModels: MutableBiMap<Pair<Node, Node>, Node> = mutableBiMapOf()
-    val labelsNodes = mutableListOf<Node>()
 
     var lastPlacedLabel: ArNode? = null
 
     var linkPlacementMode = false
 
+    private var adapter: EntriesAdapter = EntriesAdapter(){ number ->
+        processSearchResult(number)
+    }
+
+    val drawerHelper = DrawerHelper(activity)
     val displayRotationHelper = DisplayRotationHelper(activity)
     val animationHelper = AnimationHelper()
+    val numberLocationHelper = NumberLocationHelper(activity.applicationContext)
+
+    val linksToWayModels: MutableBiMap<Pair<Node, Node>, Node> = mutableBiMapOf()
+    val treeNodesToModels: MutableBiMap<TreeNode, Node> = mutableBiMapOf()
+    val modelsToLinkModels: MutableBiMap<Pair<Node, Node>, Node> = mutableBiMapOf()
+    val labelsNodes = mutableListOf<Node>()
 
     val viewMatrix = FloatArray(16)
     val projectionMatrix = FloatArray(16)
@@ -93,14 +108,7 @@ class AppRenderer(
     fun bindView(view: MainActivityView) {
         this.view = view
 
-        selectNode(null)
-
-        preload()
-
-        animationHelper.placeViewOut(view.confirmLayout)
-        animationHelper.placeViewOut(view.routeLayout)
-
-        changeState(MainState.ScanningState.Initialize())
+        changeState(MainState.Starting)
 
         view.surfaceView.onTouchEvent = {pickHitResult, motionEvent ->
 
@@ -144,7 +152,6 @@ class AppRenderer(
         }
 
         view.entry.setOnClickListener {
-//            createEntryByDialog()
             changeState(MainState.ScanningState.EntryCreation())
 
         }
@@ -155,7 +162,7 @@ class AppRenderer(
         }
 
         view.init.setOnClickListener {
-            initializeByDialog()
+            initializeByScan()
         }
 
         view.pathfind.setOnClickListener {
@@ -167,13 +174,64 @@ class AppRenderer(
             }
         }
 
+        view.fromInput.setOnFocusChangeListener { _, b ->
+            if (b) {
+                (state as? MainState.Routing.Going)?.let {
+                    view.fromInput.isActivated = false
+                    view.fromInput.clearFocus()
+                    changeState(MainState.Routing.Choosing(
+                        true,
+                        startNumber = it.startNumber,
+                        endNumber = it.endNumber
+                    ))
+                }
+                }
+
+        }
+
+        view.toInput.setOnFocusChangeListener { _, b ->
+            if (b) {
+                (state as? MainState.Routing.Going)?.let {
+                    view.toInput.isActivated = false
+                    view.toInput.clearFocus()
+                    changeState(MainState.Routing.Choosing(
+                        false,
+                        startNumber = it.startNumber,
+                        endNumber = it.endNumber
+                    ))
+                }
+            }
+        }
+
+        view.searchInput.doOnTextChanged { text, _, _, _ ->
+            adapter.applyFilter(text.toString())
+        }
+
+        view.searchInput.setOnEditorActionListener(OnEditorActionListener { v, actionId, event ->
+            var handled = false
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                processSearchResult(view.searchInput.text.toString())
+                handled = true
+            }
+            handled
+        })
+
+    }
+
+    fun backPressed(){
+        if (state.previous != null){
+            rollbackState()
+        }
+        else {
+            view.activity.finish()
+        }
     }
 
     private fun initializeByScan(){
-            changeState(MainState.ScanningState.Initialize(), false)
+            changeState(MainState.ScanningState.Initialize())
     }
 
-   private suspend fun tryGetDetectedObject(): DetectedText? {
+    private suspend fun tryGetDetectedObject(): DetectedText? {
            val session = view.surfaceView.arSession ?: return null
            val frame = session.currentFrame?.frame ?: return null
            val camera = frame.camera
@@ -306,26 +364,47 @@ class AppRenderer(
                         false -> {
                             lastPlacedLabel?.destroy()
                             lastPlacedLabel = null
-                            when (state.previous){
-                                is MainState.ScanningState.Initialize -> {
-                                    changeState(MainState.ScanningState.Initialize())
-                                }
-                                is MainState.ScanningState.EntryCreation -> {
-                                    changeState(MainState.ScanningState.EntryCreation())
-                                }
-                                else -> {
-                                    throw Exception("Unknown state")
-                                }
-                            }
+                            rollbackState()
                         }
                         true -> {
-                            view.activity.lifecycleScope.launch {
-                                initialize(
-                                    state.confirmationObject.label,
-                                    state.confirmationObject.pos.position
-                                )
+                            when (state) {
+                                is MainState.ConfirmingState.InitializeConfirm -> {
+                                    if (state.confirmationJob == null ||
+                                        state.confirmationJob!!.isCompleted)
+                                        {
+                                        state.confirmationJob =
+                                            view.activity.lifecycleScope.launch {
+                                                val isInit = initialize(
+                                                    state.confirmationObject.label,
+                                                    state.confirmationObject.pos.position
+                                                )
+                                                if (isInit) {
+                                                    changeState(MainState.Routing.Going(
+                                                        startNumber = state.confirmationObject.label
+                                                    ))
+                                                } else {
+                                                    lastPlacedLabel?.destroy()
+                                                    lastPlacedLabel = null
+                                                    rollbackState()
+                                                }
+                                            }
+                                    }
+                                }
+                                is MainState.ConfirmingState.EntryConfirm -> {
+                                    view.activity.lifecycleScope.launch {
+                                        val entry = state.confirmationObject
+                                        createNode(
+                                            entry.label,
+                                            entry.pos.position,
+                                            entry.pos.orientation.toRotation().toVector3()
+                                        )
+                                        changeState(MainState.Routing.Going())
+                                    }
+                                }
+                                else -> {
+                                    throw Exception("Unknown confirming state")
+                                }
                             }
-                            changeState(MainState.Routing)
                         }
                         else -> {
                             throw Exception ("Unexpected null state result")
@@ -372,24 +451,6 @@ class AppRenderer(
         return node!!
     }
 
-    private suspend fun proceedConfirmationObject(){
-        when (state) {
-            is MainState.ConfirmingState.InitializeConfirm -> {
-                (state as MainState.ConfirmingState).confirmationObject.let {
-                    initialize(it.label, it.node.position)
-                }
-            }
-            is MainState.ConfirmingState.EntryConfirm -> {
-                (state as MainState.ConfirmingState).confirmationObject.let {
-                    createNode(it.label, it.node.position, it.pos.orientation.toRotation().toVector3())
-                }
-            }
-            else -> {
-                throw Exception("State is not 'confirm', cant proceed placed label")
-            }
-        }
-    }
-
     private fun changeLinkPlacementMode(link: Boolean){
         linkPlacementMode = link
         view.link.text = if (link) "Cancel" else "Link"
@@ -424,54 +485,115 @@ class AppRenderer(
         view.delete.isEnabled = node != null
     }
 
-    private fun setConfirmClickListeners(onAccept: () -> Unit, onReject: () -> Unit){
-        view.acceptButton.setOnClickListener {
-            onAccept()
-        }
-        view.rejectButton.setOnClickListener {
-            onReject()
-
-        }
-
-    }
-
-    private fun changeState(state: MainState, addToStack: Boolean = true){
-        if (addToStack){
+    private fun changeState(state: MainState, clearStack: Boolean = false){
+        if (!clearStack){
             state.previous = this.state
         }
         this.state = state
         when (state) {
+            is MainState.Starting -> {
+                selectNode(null)
+                preload()
+                view.confirmLayout.doOnLayout { animationHelper.placeViewOut(view.confirmLayout) }
+                view.routeLayout.doOnLayout { animationHelper.placeViewOut(view.routeLayout) }
+                view.routeBigLayout.doOnLayout { animationHelper.placeViewOut(view.routeBigLayout) }
+                view.entryRecyclerView.adapter = adapter
+                view.entryRecyclerView.layoutManager = LinearLayoutManager(
+                    view.activity.applicationContext
+                )
+                changeState(MainState.ScanningState.Initialize(), true)
+            }
             is MainState.ScanningState.Initialize -> {
-                animationHelper.slideViewDown(view.routeLayout)
-                animationHelper.slideViewDown(view.confirmLayout)
-                animationHelper.fadeShow(view.scanImage)
-                animationHelper.fadeShow(view.scanText)
+                animationHelper.let {
+                    it.viewHideInput(view.searchInput, view.activity.applicationContext)
+                    it.slideViewDown(view.routeBigLayout, false)
+                    it.slideViewDown(view.routeLayout)
+                    it.slideViewDown(view.confirmLayout)
+                    it.fadeShow(view.scanImage)
+                    it.fadeShow(view.scanText)
+                }
+
             }
             is MainState.ConfirmingState.InitializeConfirm -> {
-                animationHelper.slideViewDown(view.routeLayout)
-                animationHelper.slideViewUp(view.confirmLayout)
-                animationHelper.fadeHide(view.scanImage)
-                animationHelper.fadeHide(view.scanText)
+                animationHelper.let {
+                    it.viewHideInput(view.searchInput, view.activity.applicationContext)
+                    it.slideViewDown(view.routeBigLayout, false)
+                    it.slideViewDown(view.routeLayout)
+                    it.slideViewUp(view.confirmLayout)
+                    it.fadeHide(view.scanImage)
+                    it.fadeHide(view.scanText)
+                }
+
             }
             is MainState.ScanningState.EntryCreation -> {
-                animationHelper.slideViewDown(view.routeLayout)
-                animationHelper.slideViewDown(view.confirmLayout)
-                animationHelper.fadeShow(view.scanImage)
-                animationHelper.fadeShow(view.scanText)
-
+                animationHelper.let {
+                    it.viewHideInput(view.searchInput, view.activity.applicationContext)
+                    it.slideViewDown(view.routeBigLayout, false)
+                    it.slideViewDown(view.routeLayout)
+                    it.slideViewDown(view.confirmLayout)
+                    it.fadeShow(view.scanImage)
+                    it.fadeShow(view.scanText)
+                }
             }
             is MainState.ConfirmingState.EntryConfirm -> {
-                animationHelper.slideViewDown(view.routeLayout)
-                animationHelper.slideViewUp(view.confirmLayout)
-                animationHelper.fadeHide(view.scanImage)
-                animationHelper.fadeHide(view.scanText)
+                animationHelper.let {
+                    it.viewHideInput(view.searchInput, view.activity.applicationContext)
+                    it.slideViewDown(view.routeBigLayout, false)
+                    it.slideViewDown(view.routeLayout)
+                    it.slideViewUp(view.confirmLayout)
+                    it.fadeHide(view.scanImage)
+                    it.fadeHide(view.scanText)
+                }
             }
-            is MainState.Routing -> {
-                animationHelper.slideViewUp(view.routeLayout)
-                animationHelper.slideViewDown(view.confirmLayout)
-                animationHelper.fadeHide(view.scanImage)
-                animationHelper.fadeHide(view.scanText)
+            is MainState.Routing.Going -> {
+                animationHelper.let {
+                    it.viewHideInput(view.searchInput, view.activity.applicationContext)
+                    it.slideViewDown(view.routeBigLayout, false)
+                    it.slideViewUp(view.routeLayout)
+                    it.slideViewDown(view.confirmLayout)
+                    it.fadeHide(view.scanImage)
+                    it.fadeHide(view.scanText)
+                }
+                view.fromInput.setText(state.startNumber)
+                view.toInput.setText(state.endNumber)
 
+                if (state.startNumber != null && state.endNumber != null){
+                    if (state.startNumber == state.endNumber){
+                        state.endNumber = null
+                    }
+                    else {
+                        pathfind(state.startNumber!!, state.endNumber!!)
+                    }
+                }
+
+            }
+            is MainState.Routing.Choosing -> {
+                view.searchInput.setText("")
+                view.searchLayout.error = null
+                view.searchLayout.hint =
+                    if (state.choosingStart) view.activity.getString(R.string.from)
+                    else view.activity.getString(R.string.to)
+                animationHelper.let {
+                    it.slideViewDown(view.routeLayout)
+                    it.slideViewDown(view.confirmLayout)
+                    it.fadeHide(view.scanImage)
+                    it.fadeHide(view.scanText)
+                    it.slideViewUp(view.routeBigLayout, false){
+                        animationHelper.viewRequestInput(
+                            view.searchInput,
+                            view.activity.applicationContext
+                        )
+                        view.activity.lifecycleScope.launch {
+                            var entriesList = listOf<EntryItem>()
+                            withContext(Dispatchers.IO){
+                                entriesList = tree.entryPoints.keys.map { number ->
+                                    EntryItem(number, numberLocationHelper(number))
+                                }
+                            }
+                            adapter.changeList(entriesList)
+                        }
+                    }
+                }
             }
             else -> {
                 throw Exception("Unknown state")
@@ -481,7 +603,50 @@ class AppRenderer(
 
     private fun rollbackState(){
         if (state.previous != null){
-            changeState(state.previous!!, false)
+            val newState = when (state.previous) {
+                is MainState.Routing.Choosing -> {
+                    state.previous!!
+                }
+                is MainState.Routing.Going -> {
+                    if (state is MainState.Routing.Choosing){
+                        (state as MainState.Routing.Choosing).let {
+                            if (it.done){
+                                MainState.Routing.Going(
+                                    startNumber = it.startNumber,
+                                    endNumber = it.endNumber
+                                )
+                            }
+                            else {
+                                state.previous!!
+                            }
+                        }
+                    }
+                    else {
+                        state.previous!!
+                    }
+                }
+                is MainState.ScanningState.EntryCreation-> {
+                    MainState.ScanningState.EntryCreation()
+                }
+                is MainState.ScanningState.Initialize-> {
+                    MainState.ScanningState.Initialize()
+                }
+                is MainState.ConfirmingState.InitializeConfirm-> {
+                    MainState.ConfirmingState.InitializeConfirm(
+                        (state.previous as MainState.ConfirmingState.InitializeConfirm).confirmationObject
+                    )
+                }
+                is MainState.ConfirmingState.EntryConfirm-> {
+                    MainState.ConfirmingState.EntryConfirm(
+                        (state.previous as MainState.ConfirmingState.EntryConfirm).confirmationObject
+                    )
+                }
+                else -> {
+                    throw Exception("Rolling back to starting state")
+                }
+            }
+            newState.previous = if (state.previous == null) null else state.previous!!.previous
+            changeState(newState, true)
         }
         else {
             throw Exception("Null previous state")
@@ -493,65 +658,19 @@ class AppRenderer(
             val path1: TreeNode? = treeNodesToModels.inverse[node1]
             val path2: TreeNode? = treeNodesToModels.inverse[node2]
 
-            if (path1 != null || path2 != null){
-                tree.addLink(path1!!, path2!!)
-                drawLine(node1, node2)
+            if (path1 != null && path2 != null){
+                tree.addLink(path1, path2)
+                drawerHelper.drawLine(
+                    node1,
+                    node2,
+                    modelsToLinkModels,
+                    view.surfaceView
+                )
                 updateNodes(listOf(path1, path2), tree.translocation)
             }
         }
     }
 
-    private suspend fun drawNode(treeNode: TreeNode, anchor: Anchor? = null){
-        val modelNode = ArNode()
-        modelNode.loadModel(
-            context = view.activity.applicationContext,
-            glbFileLocation = if (treeNode is TreeNode.Entry) "models/cylinder_green.glb" else "models/cylinder.glb",
-        )
-        modelNode.position = treeNode.position
-        modelNode.modelScale = Scale(0.1f)
-        modelNode.anchor = modelNode.createAnchor()
-//        anchor?.let {
-//            modelNode.anchor = it
-//        }
-        modelNode.model?.let {
-            it.isShadowCaster = false
-            it.isShadowReceiver = false
-        }
-
-        treeNodesToModels[treeNode] = modelNode
-
-        view.surfaceView.addChild(modelNode)
-    }
-
-    @SuppressLint("CheckResult")
-    fun createEntryByDialog(){
-        val activity = view.activity
-        MaterialDialog(view.activity).show {
-            title(text = "Place new entry")
-            input(hint = "Number") { _, text ->
-                activity.lifecycleScope.launch {
-                    createNode(text.toString())
-                }
-            }
-            positiveButton(text = "Place")
-        }
-    }
-
-    @SuppressLint("CheckResult")
-    fun initializeByDialog(){
-        val activityView = view
-        MaterialDialog(view.activity).show {
-            title(text = "Initialize tree")
-            input(hint = "Number") { _, text ->
-                activityView.activity.lifecycleScope.launch {
-                        useHitTest().getOrNull()?.let { position ->
-                            initialize(text.toString(), position.position)
-                        }
-                }
-            }
-            positiveButton(text = "Place")
-        }
-    }
 
     @SuppressLint("CheckResult")
     fun pathfindByDialog(){
@@ -578,7 +697,12 @@ class AppRenderer(
             view.activity.lifecycleScope.launch {
                 val path = findWay(from, to, tree)
                 if (path != null) {
-                    drawWay(path)
+                    drawerHelper.drawWay(
+                        path,
+                        linksToWayModels,
+                        treeNodesToModels,
+                        view.surfaceView
+                    )
                 } else {
                     showSnackbar("No path found")
                 }
@@ -589,23 +713,7 @@ class AppRenderer(
         }
     }
 
-    private fun drawWay(nodes: List<TreeNode>){
-        linksToWayModels.values.forEach { it.destroy() }
-        linksToWayModels.clear()
 
-
-        if (nodes.size > 1){
-            for (i in 1 until nodes.size) {
-                val node1 = treeNodesToModels[nodes[i-1]]
-                val node2 = treeNodesToModels[nodes[i]]
-
-                if (node1 != null && node2 != null) {
-                    drawWayLine(node1, node2)
-                }
-            }
-        }
-
-    }
 
     private suspend fun createNode(
         number: String? = null,
@@ -625,136 +733,12 @@ class AppRenderer(
 
             treeNode?.let {
                 insertNodes(listOf(treeNode), tree.translocation)
-                drawNode(treeNode)
-
-            }
-    }
-
-    fun drawTree(){
-        view.activity.lifecycleScope.launch {
-            for (node in tree.allPoints.values){
-            drawNode(node)
-            }
-            for (treenode1 in tree.links.keys){
-                val node1 = treeNodesToModels[treenode1]!!
-                val others = tree.links[treenode1]!!
-                for (treenode2 in others) {
-                    val node2 = treeNodesToModels[treenode2]!!
-                    if (modelsToLinkModels[Pair(node1, node2)] == null ){
-                        drawLine(node1, node2)
-                    }
-                }
-            }
-        }
-    }
-
-    fun drawLine(from: Node, to: Node){
-
-        val fromVector = from.position.toVector3()
-        val toVector = to.position.toVector3()
-
-        // Compute a line's length
-        val lineLength = Vector3.subtract(fromVector, toVector).length()
-
-        // Prepare a color
-        val colorOrange = Color(android.graphics.Color.parseColor("#ffffff"))
-
-        // 1. make a material by the color
-        MaterialFactory.makeOpaqueWithColor(view.activity.applicationContext, colorOrange)
-            .thenAccept { material: Material? ->
-                // 2. make a model by the material
-                val model = ShapeFactory.makeCylinder(
-                    0.01f, lineLength,
-                    Vector3(0f, lineLength / 2, 0f), material
+                drawerHelper.drawNode(
+                    treeNode,
+                    treeNodesToModels,
+                    view.surfaceView
                 )
 
-                model.isShadowCaster = false
-                model.isShadowReceiver = false
-
-                // 3. make node
-                val node = ArNode()
-                node.setModel(model)
-                node.parent = from
-                view.surfaceView.addChild(node)
-
-                // 4. set rotation
-                val difference = Vector3.subtract(toVector, fromVector)
-                val directionFromTopToBottom = difference.normalized()
-                val rotationFromAToB: Quaternion =
-                    Quaternion.lookRotation(
-                        directionFromTopToBottom,
-                        Vector3.up()
-                    )
-
-                val rotation = Quaternion.multiply(
-                    rotationFromAToB,
-                    Quaternion.axisAngle(Vector3(1.0f, 0.0f, 0.0f), 270f)
-                )
-
-                node.modelQuaternion = dev.romainguy.kotlin.math.Quaternion(
-                    rotation.x,
-                    rotation.y,
-                    rotation.z,
-                    rotation.w
-                )
-                node.position = from.position
-
-                modelsToLinkModels[Pair(from, to)] = node
-            }
-    }
-
-    fun drawWayLine(from: Node, to: Node){
-
-        val fromVector = from.position.toVector3()
-        val toVector = to.position.toVector3()
-
-        // Compute a line's length
-        val lineLength = Vector3.subtract(fromVector, toVector).length()
-
-        // Prepare a color
-        val colorOrange = Color(android.graphics.Color.parseColor("#7cfc00"))
-
-        // 1. make a material by the color
-        MaterialFactory.makeOpaqueWithColor(view.activity.applicationContext, colorOrange)
-            .thenAccept { material: Material? ->
-                // 2. make a model by the material
-                val model = ShapeFactory.makeCylinder(
-                    0.015f, lineLength,
-                    Vector3(0f, lineLength / 2, 0f), material
-                )
-
-                model.isShadowCaster = false
-                model.isShadowReceiver = false
-
-                // 3. make node
-                val node = ArNode()
-                node.setModel(model)
-                node.parent = from
-                view.surfaceView.addChild(node)
-
-                // 4. set rotation
-                val difference = Vector3.subtract(toVector, fromVector)
-                val directionFromTopToBottom = difference.normalized()
-                val rotationFromAToB: Quaternion =
-                    Quaternion.lookRotation(
-                        directionFromTopToBottom,
-                        Vector3.up()
-                    )
-
-                val rotation = Quaternion.multiply(
-                    rotationFromAToB,
-                    Quaternion.axisAngle(Vector3(1.0f, 0.0f, 0.0f), 270f)
-                )
-
-                node.modelQuaternion = dev.romainguy.kotlin.math.Quaternion(
-                    rotation.x,
-                    rotation.y,
-                    rotation.z,
-                    rotation.w
-                )
-                node.position = from.position
-
-                linksToWayModels[Pair(from, to)] = node
             }
     }
 
@@ -769,16 +753,51 @@ class AppRenderer(
         throw e
     }
 
+    private fun processSearchResult(number: String) {
+        (state as? MainState.Routing.Choosing)?.let {
+            if (tree.entryPoints.containsKey(number)){
+                view.searchLayout.error = null
+            }
+            else {
+                view.searchLayout.error = view.activity.getString(R.string.incorrect_number)
+                animationHelper.viewHideInput(
+                    view.searchInput,
+                    view.activity.applicationContext
+                )
+                animationHelper.viewRequestInput(
+                    view.searchInput,
+                    view.activity.applicationContext
+                )
+                return
+            }
+            if (it.choosingStart) {
+                it.startNumber = number
+                if (it.startNumber == it.endNumber)
+                    it.endNumber = null
+            }
+            else
+                it.endNumber = number
+            if (it.startNumber == it.endNumber)
+                it.startNumber = null
+            it.done = true
+            rollbackState()
+        }
+    }
+
     private fun preload(){
         view.activity.lifecycleScope.launch {
             tree = getTree()
         }
     }
 
-    private suspend fun initialize(entryNumber: String, position: Float3){
-        val result = tree.initialize(entryNumber, position)
+    private suspend fun initialize(entryNumber: String, position: Float3): Boolean{
+        var result: Result<Vector3>
+        withContext(Dispatchers.IO) {
+            result = tree.initialize(entryNumber, position)
+        }
         if (result.isFailure){
             result.exceptionOrNull()?.message?.let{ showSnackbar(it) }
+            return false
         }
         else {
             val rotationVector = result.getOrNull()
@@ -786,14 +805,19 @@ class AppRenderer(
                 view.surfaceView.camera.rotation = it.toFloat3()
             }
             view.surfaceView.camera.worldRotation
-            drawTree()
+            drawerHelper.drawTree(
+                tree,
+                treeNodesToModels,
+                modelsToLinkModels,
+                view.surfaceView
+            )
 
             view.delete.isEnabled = true
             view.link.isEnabled = true
             view.entry.isEnabled = true
             view.pathfind.isEnabled = true
             view.place.isEnabled = true
-
+            return true
         }
 
     }
@@ -807,23 +831,18 @@ class AppRenderer(
             view.surfaceView.currentFrame?.frame ?: return Result.failure(Exception("Frame null"))
         val cameraPos = view.surfaceView.camera.worldPosition
         val result = hitTest(frame, Float2(x, y), cameraPos, view.surfaceView)
-//        result.getOrNull()?.let {
-//            val node1 = ArNode()
-//            node1.position = cameraPos
-//            val node2 = ArNode()
-//            node2.position = it.position
-//            drawLine(node1, node2)
-//        }
         return result
     }
 
-        private fun showSnackbar(message: String): Unit =
-            activity.view.snackbarHelper.showError(activity, message)
+        private fun showSnackbar(message: String) {
+            val anchorView = when (state) {
+                is MainState.ConfirmingState -> view.confirmLayout
+                is MainState.Routing.Going -> view.routeLayout
+                else -> null
+            }
+            Snackbar.make(view.surfaceView, message, Snackbar.LENGTH_SHORT)
+                .setAnchorView(anchorView)
+                .show()
+        }
 
 }
-
-
-
-
-//data class ARLabeledAnchor(val anchor: Anchor, val label: String)
-

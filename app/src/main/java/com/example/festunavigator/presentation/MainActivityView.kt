@@ -1,14 +1,14 @@
 package com.example.festunavigator.presentation
 
 import android.opengl.GLSurfaceView
-import android.text.Layout
 import android.view.View
 import android.widget.*
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.recyclerview.widget.RecyclerView
 import com.example.festunavigator.R
-import com.example.festunavigator.presentation.common.helpers.SnackbarHelper
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import io.github.sceneview.ar.ArSceneView
 
 /**
@@ -31,17 +31,14 @@ class MainActivityView(val activity: MainActivity, renderer: AppRenderer) : Defa
     val scanImage: ImageView = root.findViewById(R.id.borders_image)
     val confirmLayout: FrameLayout = root.findViewById(R.id.confirm_layout)
     val routeLayout: FrameLayout = root.findViewById(R.id.route_layout)
+    val routeBigLayout: FrameLayout = root.findViewById(R.id.route_big_layout)
     val acceptButton: ImageButton = root.findViewById(R.id.accept_button)
     val rejectButton: ImageButton = root.findViewById(R.id.reject_button)
-
-
-    //val useCloudMlSwitch = root.findViewById<SwitchCompat>(R.id.useCloudMlSwitch)
-    //val scanButton = root.findViewById<AppCompatButton>(R.id.scanButton)
-    //val resetButton = root.findViewById<AppCompatButton>(R.id.clearButton)
-    val snackbarHelper = SnackbarHelper().apply {
-        setParentView(root.findViewById(R.id.con_layout))
-        setMaxLines(6)
-    }
+    val fromInput: TextInputEditText = root.findViewById(R.id.from_input)
+    val toInput: TextInputEditText = root.findViewById(R.id.to_input)
+    val searchInput: TextInputEditText = root.findViewById(R.id.search_input)
+    val searchLayout: TextInputLayout = root.findViewById(R.id.search_layout)
+    val entryRecyclerView: RecyclerView = root.findViewById(R.id.entry_recyclerView)
 
     override fun onResume(owner: LifecycleOwner) {
         surfaceView.onResume(owner)
