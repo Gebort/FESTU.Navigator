@@ -51,7 +51,14 @@ class AStarImpl: Pathfinder {
         finalNode: AStarNode
     ) {
         currentNode.node.neighbours.forEach { treeNode ->
-            checkNode(currentNode, AStarNode(treeNode, finalNode), openList, closedSet)
+            val nodeClosed = closedSet.find { it.node.id == treeNode.id }
+            val nodeOpen = openList.find { it.node.id == treeNode.id }
+            if ( nodeClosed == null && nodeOpen == null) {
+                checkNode(currentNode, AStarNode(treeNode, finalNode), openList, closedSet)
+            }
+            else if (nodeOpen != null && nodeClosed == null) {
+                checkNode(currentNode, nodeOpen, openList, closedSet)
+            }
         }
     }
 

@@ -1,6 +1,5 @@
 package com.example.festunavigator.presentation.common.helpers
 
-import android.app.Activity
 import android.graphics.Color
 import androidx.lifecycle.lifecycleScope
 import com.example.festunavigator.domain.tree.Tree
@@ -23,6 +22,8 @@ import kotlinx.coroutines.launch
 class DrawerHelper(
     private val activity: MainActivity
 ) {
+
+    val step = 1f
 
     suspend fun drawNode(
         treeNode: TreeNode,

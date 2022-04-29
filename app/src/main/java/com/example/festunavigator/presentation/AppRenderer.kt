@@ -91,7 +91,7 @@ class AppRenderer(
     val linksToWayModels: MutableBiMap<Pair<Node, Node>, Node> = mutableBiMapOf()
     val treeNodesToModels: MutableBiMap<TreeNode, Node> = mutableBiMapOf()
     val modelsToLinkModels: MutableBiMap<Pair<Node, Node>, Node> = mutableBiMapOf()
-    val labelsNodes = mutableListOf<Node>()
+    val routeLabels = mutableListOf<Node>()
 
     val viewMatrix = FloatArray(16)
     val projectionMatrix = FloatArray(16)
@@ -112,14 +112,16 @@ class AppRenderer(
 
         view.surfaceView.onTouchEvent = {pickHitResult, motionEvent ->
 
-            pickHitResult.node?.let { node ->
-                if (!linkPlacementMode) {
-                    selectNode(node)
+            if (mode == "ADMIN") {
 
-                }
-                else {
-                    linkNodes(selectedNode!!, node)
-                    changeLinkPlacementMode(false)
+                pickHitResult.node?.let { node ->
+                    if (!linkPlacementMode) {
+                        selectNode(node)
+
+                    } else {
+                        linkNodes(selectedNode!!, node)
+                        changeLinkPlacementMode(false)
+                    }
                 }
             }
             true
@@ -391,14 +393,19 @@ class AppRenderer(
                                     }
                                 }
                                 is MainState.ConfirmingState.EntryConfirm -> {
-                                    view.activity.lifecycleScope.launch {
-                                        val entry = state.confirmationObject
-                                        createNode(
-                                            entry.label,
-                                            entry.pos.position,
-                                            entry.pos.orientation.toRotation().toVector3()
-                                        )
-                                        changeState(MainState.Routing.Going())
+                                    if (state.confirmationJob == null ||
+                                        state.confirmationJob!!.isCompleted)
+                                        {
+                                        state.confirmationJob =
+                                            view.activity.lifecycleScope.launch {
+                                                val entry = state.confirmationObject
+                                                createNode(
+                                                    entry.label,
+                                                    entry.pos.position,
+                                                    entry.pos.orientation.toRotation().toVector3()
+                                                )
+                                                changeState(MainState.Routing.Going())
+                                            }
                                     }
                                 }
                                 else -> {
@@ -463,7 +470,11 @@ class AppRenderer(
             }
             .forEach { pair ->
                 modelsToLinkModels[pair]?.destroy()
+                modelsToLinkModels.remove(pair)
             }
+
+        val b = treeNodesToModels.inverse[node]
+        showSnackbar((b?.id ?: -1).toString())
 
         treeNodesToModels.inverse[node]?.let { node1 ->
             view.activity.lifecycleScope.launch {
@@ -481,6 +492,12 @@ class AppRenderer(
 
     private fun selectNode(node: Node?){
         selectedNode = node
+        val treeNode = treeNodesToModels.inverse[node]
+        //TODO убрать
+        treeNode?.let {
+            showSnackbar(it.id.toString())
+        }
+
         view.link.isEnabled = node != null
         view.delete.isEnabled = node != null
     }
@@ -659,14 +676,18 @@ class AppRenderer(
             val path2: TreeNode? = treeNodesToModels.inverse[node2]
 
             if (path1 != null && path2 != null){
-                tree.addLink(path1, path2)
-                drawerHelper.drawLine(
-                    node1,
-                    node2,
-                    modelsToLinkModels,
-                    view.surfaceView
-                )
-                updateNodes(listOf(path1, path2), tree.translocation)
+                val ok = tree.addLink(path1, path2)
+                if (ok) {
+                    drawerHelper.drawLine(
+                        node1,
+                        node2,
+                        modelsToLinkModels,
+                        view.surfaceView
+                    )
+                    updateNodes(listOf(path1, path2), tree.translocation)
+                    //TODO убрать
+                    showSnackbar("Link created: ${path1.id} -> ${path2.id}")
+                }
             }
         }
     }
@@ -738,6 +759,8 @@ class AppRenderer(
                     treeNodesToModels,
                     view.surfaceView
                 )
+                //TODO убрать
+                showSnackbar("Created node, id: ${treeNode.id}")
 
             }
     }
@@ -835,13 +858,7 @@ class AppRenderer(
     }
 
         private fun showSnackbar(message: String) {
-            val anchorView = when (state) {
-                is MainState.ConfirmingState -> view.confirmLayout
-                is MainState.Routing.Going -> view.routeLayout
-                else -> null
-            }
             Snackbar.make(view.surfaceView, message, Snackbar.LENGTH_SHORT)
-                .setAnchorView(anchorView)
                 .show()
         }
 
