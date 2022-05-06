@@ -2,6 +2,7 @@ package com.example.festunavigator.data.model
 
 import androidx.room.TypeConverter
 import com.google.ar.sceneform.math.Vector3
+import dev.romainguy.kotlin.math.Quaternion
 
 class NeighboursConverter {
     companion object {
@@ -27,20 +28,20 @@ class NeighboursConverter {
 
         @TypeConverter
         @JvmStatic
-        fun storedStringtoVector3(value: String): Vector3? {
+        fun storedStringtoQuaternion(value: String): Quaternion? {
             return if (value == ""){
                 null
             }
             else {
                 val data = value.split(" ").map { it.toFloat() }
-                Vector3(data[0], data[1], data[2])
+                Quaternion(data[0], data[1], data[2], data[3])
             }
         }
 
         @TypeConverter
         @JvmStatic
-        fun vector3ToString(value: Vector3?): String {
-            return if (value == null) "" else "${value.x} ${value.y} ${value.z}"
+        fun quaternionToString(value: Quaternion?): String {
+            return if (value == null) "" else "${value.x} ${value.y} ${value.z} ${value.w}"
         }
     }
 }

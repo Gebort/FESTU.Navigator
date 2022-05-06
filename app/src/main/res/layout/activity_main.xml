@@ -133,28 +133,28 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.36" />
 
-    <include
-        android:id="@+id/confirm_layout"
-        layout="@layout/confirmation_layout"
-        android:layout_width="fill_parent"
-        android:layout_height="100dp"
-        android:theme="@style/CustomCardViewStyle"
-        android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent" />
+        <include
+            android:id="@+id/confirm_layout"
+            layout="@layout/confirmation_layout"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/CustomCardViewStyle"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent" />
 
-    <include
-        android:id="@+id/route_layout"
-        layout="@layout/route_small_layout"
-        android:layout_width="fill_parent"
-        android:layout_height="100dp"
-        android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent" />
+        <include
+            android:id="@+id/route_layout"
+            layout="@layout/route_small_layout"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent" />
 
     <include
         android:id="@+id/route_big_layout"

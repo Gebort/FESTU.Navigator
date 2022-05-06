@@ -39,6 +39,7 @@ class MainActivityView(val activity: MainActivity, renderer: AppRenderer) : Defa
     val searchInput: TextInputEditText = root.findViewById(R.id.search_input)
     val searchLayout: TextInputLayout = root.findViewById(R.id.search_layout)
     val entryRecyclerView: RecyclerView = root.findViewById(R.id.entry_recyclerView)
+    val destinationText: TextView = root.findViewById(R.id.destination_text)
 
     override fun onResume(owner: LifecycleOwner) {
         surfaceView.onResume(owner)

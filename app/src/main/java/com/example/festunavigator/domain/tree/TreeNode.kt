@@ -2,6 +2,7 @@ package com.example.festunavigator.domain.tree
 
 import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Float3
+import dev.romainguy.kotlin.math.Quaternion
 
 sealed class TreeNode(
     val id: Int,
@@ -9,8 +10,8 @@ sealed class TreeNode(
     var neighbours: MutableList<TreeNode> = mutableListOf()
 ) {
     class Entry(
-        val number: String,
-        val forwardVector: Vector3,
+        var number: String,
+        var forwardVector: Quaternion,
         id: Int,
         position: Float3,
         neighbours: MutableList<TreeNode> = mutableListOf(),
@@ -21,7 +22,7 @@ sealed class TreeNode(
             id: Int = this.id,
             position: Float3 = this.position,
             neighbours: MutableList<TreeNode> = this.neighbours,
-            forwardVector: Vector3 = this.forwardVector
+            forwardVector: Quaternion = this.forwardVector
         ): Entry {
             return Entry(
                 number,

@@ -3,6 +3,7 @@ package com.example.festunavigator.data.model
 import androidx.room.*
 import com.example.festunavigator.domain.tree.TreeNode
 import com.google.ar.sceneform.math.Vector3
+import dev.romainguy.kotlin.math.Quaternion
 
 @Entity
 class TreeNodeDto(
@@ -13,7 +14,7 @@ class TreeNodeDto(
     val type: String = TYPE_PATH,
     val number: String? = null,
     val neighbours: MutableList<Int> = mutableListOf(),
-    val forwardVector: Vector3? = null
+    val forwardVector: Quaternion? = null
 ) {
 
 

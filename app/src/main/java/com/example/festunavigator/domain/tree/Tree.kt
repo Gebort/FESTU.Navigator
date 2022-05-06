@@ -2,12 +2,17 @@ package com.example.festunavigator.domain.tree
 
 import android.util.Log
 import com.example.festunavigator.data.model.TreeNodeDto
+import com.example.festunavigator.domain.use_cases.ConvertPosition
+import com.example.festunavigator.domain.use_cases.ConvertQuaternion
+import com.example.festunavigator.domain.use_cases.inverted
 import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Float3
-import io.github.sceneview.math.Position
+import dev.romainguy.kotlin.math.Quaternion
+import io.github.sceneview.math.*
 
 class Tree(
-
+    private val convertPosition: ConvertPosition = ConvertPosition(),
+    private val convertQuaternion: ConvertQuaternion = ConvertQuaternion()
 ) {
 
     private val _entryPoints: MutableMap<String, TreeNode.Entry> = mutableMapOf()
@@ -28,8 +33,15 @@ class Tree(
     var translocation = Float3(0f, 0f, 0f)
         private set
 
+    var pivotPosition = Float3(0f, 0f, 0f)
+        private set
+
+    var rotation = Float3(0f, 0f, 0f).toQuaternion()
+        private set
+
     constructor(rawNodesList: List<TreeNodeDto>) : this() {
         Log.d(TAG, "Preload start")
+
         for (nodeDto in rawNodesList) {
             var node: TreeNode
             if (nodeDto.type == TreeNodeDto.TYPE_ENTRY
@@ -51,7 +63,9 @@ class Tree(
             }
             _allPoints[node.id] = node
             size++
+            Log.d(TAG, "========")
             Log.d(TAG, "Preload: loaded node, id: ${node.id}, number: ${nodeDto.number}")
+            Log.d(TAG, "Pos: ${node.position}")
         }
 
         for (nodeDto in rawNodesList){
@@ -67,32 +81,60 @@ class Tree(
 
     }
 
-    suspend fun initialize(entryNumber: String, position: Float3): Result<Vector3> {
+    suspend fun initialize(entryNumber: String, position: Float3, newRotation: Quaternion): Result<Unit?> {
         Log.d(TAG, "Initialization start")
         if (entryPoints.isNotEmpty()) {
             Log.d(TAG, "Initialization: entry number $entryNumber")
             val entry = entryPoints[entryNumber]
             if (entry != null) {
-                translocation = Float3(
-                    entry.position.x - position.x,
-                    entry.position.y - position.y,
-                    entry.position.z - position.z,
-                )
+
+                pivotPosition= entry.position
+                translocation = entry.position - position
+
+
+                Log.d(TAG, "Initialization: translocation ${translocation}")
+
+                val oldRotation = entry.forwardVector
+                //val invertedOldRotation = oldRotation.inverted()
+                rotation = convertQuaternion(oldRotation, newRotation.inverted()) * -1f
+                rotation.w *= -1f
+               // rotation = Quaternion.multiply(newRotation, oldRotation.toOldQuaternion().inverted())
+
+                Log.d(TAG, "Initialization: old rotation ${oldRotation}")
+                Log.d(TAG, "Initialization: new rotation ${newRotation}")
+                Log.d(TAG, "Initialization: rotation ${rotation}")
+
 
                 for (node in allPoints.values) {
-                    node.position.apply {
-                        x -= translocation.x
-                        y -= translocation.y
-                        z -= translocation.z
+                    Log.d(TAG, "Initialization: new node =======")
+
+                    //val newPosition = rotation.toNewQuaternion() * (node.position - pivotPosition) + pivotPosition - translocation
+                    Log.d(TAG, "Initialization: node ${node.id}")
+                    //val y = node.position.y - translocation.y
+                    val newPosition = convertPosition(node.position, translocation, rotation, pivotPosition)
+                    //val newPosition = node.position - translocation
+                   // newPosition.y = y
+                    Log.d(TAG, "Initialization: position ${node.position.toVector3()} -> ${newPosition - translocation}")
+                    node.position = newPosition
+
+                    if (node is TreeNode.Entry){
+                        val newOrientation = convertQuaternion(node.forwardVector, rotation)
+                        //val newOrientation = node.forwardVector * rotation.toNewQuaternion()
+                        //val newForwardVector = Quaternion.rotateVector(rotation, node.forwardVector)
+                        //val newForwardVector = Vector3.up()
+
+                        Log.d(TAG, "Initialization: rotation: ${node.forwardVector} -> ${newOrientation}")
+                        node.forwardVector = newOrientation
                     }
                 }
 
-                val rotationVector = entry.forwardVector
+                //entry.forwardVector = newRotation.toRotation().toVector3()
 
                 initialized = true
+               // Log.d(TAG, "Initialization: rotation vector $rotationVector")
                 Log.d(TAG, "Initialization success")
 
-                return Result.success(rotationVector)
+                return Result.success(null)
             } else {
                 Log.d(TAG, "Initialization: null entry")
                 return Result.failure(
@@ -104,15 +146,16 @@ class Tree(
             clearTree()
             initialized = true
             Log.d(TAG, "Initialization: empty entry list, tree cleared")
+            Log.d(TAG, "Initialization: rotation vector ${Vector3()}")
             Log.d(TAG, "Initialization success")
-            return Result.success(Vector3())
+            return Result.success(null)
         }
     }
 
     suspend fun addNode(
         position: Float3,
         number: String? = null,
-        forwardVector: Vector3? = null
+        forwardVector: Quaternion? = null
     ): TreeNode {
         Log.d(TAG, "Node creation start")
         if (_allPoints.values.find { it.position == position } != null) {
@@ -145,6 +188,7 @@ class Tree(
             )
             _entryPoints[newNode.number] = newNode
             Log.d(TAG, "Node creation: entry added to map, number ${newNode.number}")
+            Log.d(TAG, "Node creation: rotation vector ${newNode.forwardVector}")
         }
 
         _allPoints[newNode.id] = newNode
@@ -247,6 +291,8 @@ class Tree(
         _entryPoints.clear()
         size = 0
         translocation = Float3(0f, 0f, 0f)
+        rotation = Float3(0f, 0f, 0f).toQuaternion()
+        pivotPosition = Float3(0f, 0f, 0f)
     }
 
     companion object {

@@ -1,14 +1,16 @@
 package com.example.festunavigator.presentation
 
 import com.example.festunavigator.domain.ml.DetectedText
+import io.github.sceneview.ar.node.ArNode
 import kotlinx.coroutines.Job
 
 sealed class MainState(
-    var previous: MainState? = null
+    var previous: MainState? = null,
 ) {
 
     sealed class ConfirmingState(
         var confirmationObject: ConfirmationObject,
+        var confirmationObjectJob: Job? = null,
         var confirmationJob: Job? = null,
         var result: Boolean? = null
     ): MainState(){
@@ -37,6 +39,8 @@ sealed class MainState(
         var endNumber: String? = null
     ): MainState() {
         class Going(
+            val wayNodes: MutableList<ArNode>? = null,
+            val wayBuildingJob: Job? = null,
             startNumber: String? = null,
             endNumber: String? = null
         ): Routing(startNumber, endNumber)

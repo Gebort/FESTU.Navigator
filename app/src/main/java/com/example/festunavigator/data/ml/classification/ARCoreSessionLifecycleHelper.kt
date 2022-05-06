@@ -58,7 +58,7 @@ class ARCoreSessionLifecycleHelper(
 
     override fun onResume(owner: LifecycleOwner) {
         if (!CameraPermissionHelper.hasCameraPermission(activity)) {
-            CameraPermissionHelper.requestCameraPermission(activity)
+            //CameraPermissionHelper.requestCameraPermission(activity)
             return
         }
 

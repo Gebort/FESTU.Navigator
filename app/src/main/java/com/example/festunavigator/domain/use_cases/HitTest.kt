@@ -1,6 +1,8 @@
 package com.example.festunavigator.domain.use_cases
 
+import android.util.Log
 import com.example.festunavigator.data.model.DetectedObjectResult
+import com.example.festunavigator.domain.hit_test.HitTestResult
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.google.ar.core.Frame
 import com.google.ar.sceneform.collision.Ray
@@ -20,7 +22,7 @@ class HitTest {
      * @property targetPos the object coordinates on the frame
      * @property cameraPos the camera world position. The ray casting starting point
      */
-      operator fun invoke(frame: Frame, targetPos: Float2, cameraPos: Float3, sceneView: ArSceneView): Result<OrientatedPosition> {
+      operator fun invoke(frame: Frame, targetPos: Float2, cameraPos: Float3, sceneView: ArSceneView): Result<HitTestResult> {
 
             val hitResult1 = frame.hitTest(targetPos.x, targetPos.y)
             val hitResult2 = frame.hitTest(targetPos.x-5, targetPos.y)
@@ -53,13 +55,18 @@ class HitTest {
                 val vector2 = Vector3.subtract(pos1, pos3).normalized()
 
                 val vectorForward = Vector3.cross(vector1, vector2).normalized()
+                vectorForward.y = 0f
 
                 val orientation = Quaternion.lookRotation(
                     vectorForward,
                     Vector3.up()
                 ).toNewQuaternion()
 
-                return Result.success(OrientatedPosition(pos1.toFloat3(), orientation, result1))
+                val orientatedPosition = OrientatedPosition(pos1.toFloat3(), orientation)
+                Log.d("HIT TEST", "Hit test success")
+                Log.d("HIT TEST", "Hit test position: ${pos1.toFloat3()}")
+                Log.d("HIT TEST", "Hit test orientation: ${orientation}")
+                return Result.success(HitTestResult(orientatedPosition, result1))
             }
             else {
                 return Result.failure(Exception("Null hit result"))

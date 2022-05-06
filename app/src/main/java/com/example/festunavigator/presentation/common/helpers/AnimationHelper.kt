@@ -18,6 +18,7 @@ class AnimationHelper {
 
     fun slideViewDown(view: View, fast: Boolean = true, onEnd: (() -> Unit)? = null) {
         if (!view.isInvisible) {
+            view.setLayerType(View.LAYER_TYPE_HARDWARE, null)
             view.animate()
                 .translationY(view.height.toFloat())
                 .setDuration(
@@ -25,6 +26,7 @@ class AnimationHelper {
                 )
                 .withEndAction {
                     view.isInvisible = true
+                    view.setLayerType(View.LAYER_TYPE_NONE, null)
                     onEnd?.let { onEnd() }
                 }
                 .interpolator = interpolator
@@ -34,12 +36,14 @@ class AnimationHelper {
     fun slideViewUp(view: View, fast: Boolean = true, onEnd: (() -> Unit)? = null) {
         if (view.isInvisible) {
             view.isInvisible = false
+            view.setLayerType(View.LAYER_TYPE_HARDWARE, null)
             view.animate()
                 .translationY(0f)
                 .setDuration(
                     if (fast) smallSlidingDuration else bigSlidingDuration
                 )
                 .withEndAction {
+                    view.setLayerType(View.LAYER_TYPE_NONE, null)
                     onEnd?.let { onEnd() }
                 }
                 .interpolator = interpolator

@@ -15,6 +15,6 @@
     <string name="floor">floor №</string>
     <string name="incorrect_number">Can`t find that number</string>
     <string name="no_path">No route</string>
-
+    <string name="going">Going to</string>
 
 </resources>

@@ -6,10 +6,10 @@
 
     <ImageView
         android:id="@+id/arrow_image"
-        android:layout_width="41dp"
+        android:layout_width="40dp"
         android:layout_height="40dp"
         android:cropToPadding="false"
         android:scaleType="fitCenter"
-        app:tint="#30811D"
-        app:srcCompat="@drawable/ic_up_arrow" />
+        app:srcCompat="@drawable/ic_up_arrow"
+        app:tint="#30811D" />
 </FrameLayout>

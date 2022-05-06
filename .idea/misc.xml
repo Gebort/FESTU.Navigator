@@ -4,6 +4,7 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_accept.xml" value="0.155" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_app_icon.xml" value="0.158" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_borders.xml" value="0.1525" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/activity_main.xml" value="0.22" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/confirm_layout.xml" value="0.6" />
@@ -12,8 +13,8 @@
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/fragment_ar.xml" value="0.3523550724637681" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/route_big_layout.xml" value="0.16666666666666666" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/route_node.xml" value="0.7333333333333334" />
-        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/route_small_layout.xml" value="0.3333333333333333" />
-        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/text_sign.xml" value="4.0" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/route_small_layout.xml" value="1.0" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/text_sign.xml" value="1.0" />
       </map>
     </option>
   </component>

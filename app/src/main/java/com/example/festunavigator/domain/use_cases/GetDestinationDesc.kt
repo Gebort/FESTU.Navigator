@@ -1,13 +1,12 @@
-package com.example.festunavigator.presentation.common.helpers
+package com.example.festunavigator.domain.use_cases
 
 import android.content.Context
 import com.example.festunavigator.R
 
-class NumberLocationHelper(
-    private val context: Context
-) {
+class GetDestinationDesc {
 
-    operator fun invoke(number: String): String {
+    operator fun invoke(number: String, context: Context): String {
+
         var building = ""
         var floor = 0
         val floorStr = context.getString(R.string.floor)

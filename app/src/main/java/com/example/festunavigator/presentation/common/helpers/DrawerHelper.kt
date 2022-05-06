@@ -1,7 +1,11 @@
 package com.example.festunavigator.presentation.common.helpers
 
 import android.graphics.Color
+import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.lifecycle.lifecycleScope
+import com.example.festunavigator.R
+import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.presentation.MainActivity
@@ -11,19 +15,26 @@ import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.Material
 import com.google.ar.sceneform.rendering.MaterialFactory
 import com.google.ar.sceneform.rendering.ShapeFactory
+import com.google.ar.sceneform.rendering.ViewRenderable
 import com.uchuhimo.collections.MutableBiMap
+import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
-import io.github.sceneview.math.Scale
-import io.github.sceneview.math.toVector3
+import io.github.sceneview.math.*
 import io.github.sceneview.node.Node
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 
 class DrawerHelper(
     private val activity: MainActivity
 ) {
 
-    val step = 1f
+    private val routeStep = 0.2f
+    private var labelScale = Scale(0.15f, 0.075f, 0.15f)
+    private var arrowScale = Scale(0.5f, 0.5f, 0.5f)
+    private var wayDrawingJob: Job? = null
+    private var treeDrawingJob: Job? = null
 
     suspend fun drawNode(
         treeNode: TreeNode,
@@ -31,14 +42,39 @@ class DrawerHelper(
         surfaceView: ArSceneView,
         anchor: Anchor? = null
     ){
+        when (treeNode){
+            is TreeNode.Path -> {
+                drawPath(treeNode, treeNodesToModels, surfaceView, anchor)
+            }
+            is TreeNode.Entry -> {
+                drawEntry(treeNode, treeNodesToModels, surfaceView, anchor)
+            }
+            else -> {
+                throw Exception("Unknown treeNode type")
+            }
+        }
+
+    }
+
+    private suspend fun drawPath(
+        treeNode: TreeNode.Path,
+        treeNodesToModels: MutableBiMap<TreeNode, Node>,
+        surfaceView: ArSceneView,
+        anchor: Anchor? = null
+    ){
         val modelNode = ArNode()
         modelNode.loadModel(
             context = activity.applicationContext,
-            glbFileLocation = if (treeNode is TreeNode.Entry) "models/cylinder_green.glb" else "models/cylinder.glb",
+            glbFileLocation = "models/cylinder.glb",
         )
         modelNode.position = treeNode.position
         modelNode.modelScale = Scale(0.1f)
-        modelNode.anchor = modelNode.createAnchor()
+        if (anchor != null){
+            modelNode.anchor = anchor
+        }
+        else {
+            modelNode.anchor = modelNode.createAnchor()
+        }
 //        anchor?.let {
 //            modelNode.anchor = it
 //        }
@@ -52,32 +88,18 @@ class DrawerHelper(
         surfaceView.addChild(modelNode)
     }
 
-    fun drawWay(
-        nodes: List<TreeNode>,
-        linksToWayModels: MutableBiMap<Pair<Node, Node>, Node>,
+    private suspend fun drawEntry(
+        treeNode: TreeNode.Entry,
         treeNodesToModels: MutableBiMap<TreeNode, Node>,
-        surfaceView: ArSceneView
+        surfaceView: ArSceneView,
+        anchor: Anchor? = null
     ){
-        linksToWayModels.values.forEach { it.destroy() }
-        linksToWayModels.clear()
-
-
-        if (nodes.size > 1){
-            for (i in 1 until nodes.size) {
-                val node1 = treeNodesToModels[nodes[i-1]]
-                val node2 = treeNodesToModels[nodes[i]]
-
-                if (node1 != null && node2 != null) {
-                    drawWayLine(
-                        node1,
-                        node2,
-                        linksToWayModels,
-                        surfaceView
-                    )
-                }
-            }
-        }
-
+        val modelNode = placeLabel(
+            treeNode.number,
+            OrientatedPosition(treeNode.position, treeNode.forwardVector),
+            surfaceView
+        )
+        treeNodesToModels[treeNode] = modelNode
     }
 
     fun drawTree(
@@ -86,7 +108,8 @@ class DrawerHelper(
         modelsToLinkModels: MutableBiMap<Pair<Node, Node>, Node>,
         surfaceView: ArSceneView
     ){
-        activity.lifecycleScope.launch {
+        treeDrawingJob?.cancel()
+        treeDrawingJob = activity.lifecycleScope.launch {
             for (node in tree.allPoints.values){
                 drawNode(
                     node,
@@ -112,12 +135,45 @@ class DrawerHelper(
         }
     }
 
-    fun drawWayLine(
-        from: Node,
-        to: Node,
-        linksToWayModels: MutableBiMap<Pair<Node, Node>, Node>,
+    fun drawWay(
+        nodes: List<TreeNode>,
+        treeNodesToModels: MutableBiMap<TreeNode, Node>,
+        routeLabels: MutableList<Node>,
         surfaceView: ArSceneView
     ){
+
+        wayDrawingJob?.cancel()
+        wayDrawingJob = activity.lifecycleScope.launch {
+            routeLabels.forEach { it.destroy() }
+            routeLabels.clear()
+
+
+            if (nodes.size > 3){
+                for (i in 1 until nodes.size-2) {
+                    val node1 = treeNodesToModels[nodes[i]]
+                    val node2 = treeNodesToModels[nodes[i+1]]
+
+                    if (node1 != null && node2 != null) {
+                        drawWayLine(
+                            node1,
+                            node2,
+                            routeLabels,
+                            surfaceView
+                        )
+                    }
+                }
+            }
+        }
+
+
+    }
+
+    private suspend fun drawWayLine(
+        from: Node,
+        to: Node,
+        routeLabels: MutableList<Node>,
+        surfaceView: ArSceneView
+    ): Boolean {
 
         val fromVector = from.position.toVector3()
         val toVector = to.position.toVector3()
@@ -125,51 +181,113 @@ class DrawerHelper(
         // Compute a line's length
         val lineLength = Vector3.subtract(fromVector, toVector).length()
 
-        // Prepare a color
-        val colorOrange = com.google.ar.sceneform.rendering.Color(Color.parseColor("#7cfc00"))
+        if (lineLength < routeStep){
+            return false
+        }
 
-        // 1. make a material by the color
-        MaterialFactory.makeOpaqueWithColor(activity.applicationContext, colorOrange)
-            .thenAccept { material: Material? ->
-                // 2. make a model by the material
-                val model = ShapeFactory.makeCylinder(
-                    0.015f, lineLength,
-                    Vector3(0f, lineLength / 2, 0f), material
-                )
+        val nodesAmount = (lineLength / routeStep).toInt()
 
-                model.isShadowCaster = false
-                model.isShadowReceiver = false
+        val dx = (toVector.x - fromVector.x) / nodesAmount
+        val dy = (toVector.y - fromVector.y) / nodesAmount
+        val dz = (toVector.z - fromVector.z) / nodesAmount
 
-                // 3. make node
-                val node = ArNode()
-                node.setModel(model)
-                node.parent = from
-                surfaceView.addChild(node)
+        val difference = Vector3.subtract(toVector, fromVector)
+        val directionFromTopToBottom = difference.normalized()
+        val rotationFromAToB: Quaternion =
+            Quaternion.lookRotation(
+                directionFromTopToBottom,
+                Vector3.up()
+            )
 
-                // 4. set rotation
-                val difference = Vector3.subtract(toVector, fromVector)
-                val directionFromTopToBottom = difference.normalized()
-                val rotationFromAToB: Quaternion =
-                    Quaternion.lookRotation(
-                        directionFromTopToBottom,
-                        Vector3.up()
+        val rotation = Quaternion.multiply(
+            rotationFromAToB,
+            Quaternion.axisAngle(Vector3(1.0f, 0.0f, 0.0f), 270f)
+        ).toNewQuaternion()
+
+        for (i in 0 until nodesAmount-1){
+            val position = Float3(
+                fromVector.x + dx*i,
+                fromVector.y + dy*i,
+                fromVector.z + dz*i
+            )
+
+            val node = placeArrow(
+                OrientatedPosition(position, rotation),
+                surfaceView
+            )
+            routeLabels.add(node)
+
+        }
+
+        return true
+
+    }
+
+    suspend fun placeLabel(
+        label: String,
+        pos: OrientatedPosition,
+        surfaceView: ArSceneView,
+        anchor: Anchor? = null
+    ): ArNode = placeRend(
+        label = label,
+        pos = pos,
+        surfaceView = surfaceView,
+        scale = labelScale,
+        anchor = anchor
+    )
+
+    private suspend fun placeArrow(
+        pos: OrientatedPosition,
+        surfaceView: ArSceneView
+    ): ArNode = placeRend(
+        pos = pos,
+        surfaceView = surfaceView,
+        scale = arrowScale
+    )
+
+    private suspend fun placeRend(
+        label: String? = null,
+        pos: OrientatedPosition,
+        surfaceView: ArSceneView,
+        scale: Scale,
+        anchor: Anchor? = null
+    ): ArNode {
+        var node: ArNode? = null
+        ViewRenderable.builder()
+            .setView(activity, if (label != null) R.layout.text_sign else R.layout.route_node)
+            .setSizer { scale.toVector3() }
+            .build()
+            .thenAccept { renderable: ViewRenderable ->
+                renderable.let {
+                    it.isShadowCaster = false
+                    it.isShadowReceiver = false
+                }
+                if (label != null) {
+                    val cardView = renderable.view as CardView
+                    val textView: TextView = cardView.findViewById(R.id.signTextView)
+                    textView.text = label
+                }
+                val textNode = ArNode().apply {
+                    setModel(
+                        renderable = renderable
                     )
+                    modelPosition = Float3(0f, 0f, 0f)
+                    position = Position(pos.position.x, pos.position.y, pos.position.z)
+                    quaternion = pos.orientation
+                    if (anchor != null){
+                        this.anchor = anchor
+                    }
+                    else {
+                        this.anchor = this.createAnchor()
+                    }
+                }
 
-                val rotation = Quaternion.multiply(
-                    rotationFromAToB,
-                    Quaternion.axisAngle(Vector3(1.0f, 0.0f, 0.0f), 270f)
-                )
-
-                node.modelQuaternion = dev.romainguy.kotlin.math.Quaternion(
-                    rotation.x,
-                    rotation.y,
-                    rotation.z,
-                    rotation.w
-                )
-                node.position = from.position
-
-                linksToWayModels[Pair(from, to)] = node
+                surfaceView.addChild(textNode)
+                node = textNode
             }
+            .await()
+
+        return node!!
     }
 
     fun drawLine(
@@ -220,12 +338,7 @@ class DrawerHelper(
                     Quaternion.axisAngle(Vector3(1.0f, 0.0f, 0.0f), 270f)
                 )
 
-                node.modelQuaternion = dev.romainguy.kotlin.math.Quaternion(
-                    rotation.x,
-                    rotation.y,
-                    rotation.z,
-                    rotation.w
-                )
+                node.modelQuaternion = rotation.toNewQuaternion()
                 node.position = from.position
 
                 modelsToLinkModels[Pair(from, to)] = node
