@@ -9,19 +9,19 @@ sealed class MainState(
 ) {
 
     sealed class ConfirmingState(
-        var confirmationObject: ConfirmationObject,
+        var labelObject: LabelObject,
         var confirmationObjectJob: Job? = null,
         var confirmationJob: Job? = null,
         var result: Boolean? = null
     ): MainState(){
 
         class InitializeConfirm(
-            confirmationObject: ConfirmationObject
-        ): ConfirmingState(confirmationObject)
+            labelObject: LabelObject
+        ): ConfirmingState(labelObject)
 
         class EntryConfirm(
-            confirmationObject: ConfirmationObject
-        ): ConfirmingState(confirmationObject)
+            labelObject: LabelObject
+        ): ConfirmingState(labelObject)
     }
 
     sealed class ScanningState(
@@ -35,21 +35,24 @@ sealed class MainState(
     }
 
     sealed class Routing(
-        var startNumber: String? = null,
-        var endNumber: String? = null
+        var startLabel: LabelObject? = null,
+        var endLabel: LabelObject? = null
     ): MainState() {
         class Going(
-            val wayNodes: MutableList<ArNode>? = null,
-            val wayBuildingJob: Job? = null,
-            startNumber: String? = null,
-            endNumber: String? = null
-        ): Routing(startNumber, endNumber)
+            val wayNodes: MutableList<ArNode> = mutableListOf(),
+            var wayBuildingJob: Job? = null,
+            startLabel: LabelObject? = null,
+            endLabel: LabelObject? = null,
+            var startPlacingJob: Job? = null,
+            var endPlacingJob: Job? = null
+
+        ): Routing(startLabel, endLabel)
         class Choosing(
             val choosingStart: Boolean,
             var done: Boolean = false,
-            startNumber: String? = null,
-            endNumber: String? = null,
-        ): Routing(startNumber, endNumber)
+            startLabel: LabelObject? = null,
+            endLabel: LabelObject? = null,
+        ): Routing(startLabel, endLabel)
     }
 
     object Starting: MainState()

@@ -32,8 +32,6 @@ class TreeNodeDto(
                 type = if (node is TreeNode.Entry) TYPE_ENTRY else TYPE_PATH,
                 number = if (node is TreeNode.Entry) node.number else null,
                 neighbours = node.neighbours
-                    .map { it.id }
-                    .toMutableList()
             )
         }
 

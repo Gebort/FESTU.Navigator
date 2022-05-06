@@ -3,6 +3,7 @@ package com.example.festunavigator.presentation
 import android.opengl.GLSurfaceView
 import android.view.View
 import android.widget.*
+import androidx.cardview.widget.CardView
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
@@ -25,8 +26,6 @@ class MainActivityView(val activity: MainActivity, renderer: AppRenderer) : Defa
     val delete: Button = root.findViewById(R.id.delete_button)
     val link: Button = root.findViewById(R.id.link_button)
     val entry: Button = root.findViewById(R.id.entry_button)
-    val init: Button = root.findViewById(R.id.init_button)
-    val pathfind: Button = root.findViewById(R.id.pathfind_button)
     val scanText: TextView = root.findViewById(R.id.scan_text)
     val scanImage: ImageView = root.findViewById(R.id.borders_image)
     val confirmLayout: FrameLayout = root.findViewById(R.id.confirm_layout)
@@ -40,6 +39,8 @@ class MainActivityView(val activity: MainActivity, renderer: AppRenderer) : Defa
     val searchLayout: TextInputLayout = root.findViewById(R.id.search_layout)
     val entryRecyclerView: RecyclerView = root.findViewById(R.id.entry_recyclerView)
     val destinationText: TextView = root.findViewById(R.id.destination_text)
+    val adminPanel: CardView = root.findViewById(R.id.admin_panel)
+
 
     override fun onResume(owner: LifecycleOwner) {
         surfaceView.onResume(owner)

@@ -25,6 +25,7 @@ import io.github.sceneview.node.Node
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 
 class DrawerHelper(
     private val activity: MainActivity
@@ -33,7 +34,6 @@ class DrawerHelper(
     private val routeStep = 0.2f
     private var labelScale = Scale(0.15f, 0.075f, 0.15f)
     private var arrowScale = Scale(0.5f, 0.5f, 0.5f)
-    private var wayDrawingJob: Job? = null
     private var treeDrawingJob: Job? = null
 
     suspend fun drawNode(
@@ -110,16 +110,17 @@ class DrawerHelper(
     ){
         treeDrawingJob?.cancel()
         treeDrawingJob = activity.lifecycleScope.launch {
-            for (node in tree.allPoints.values){
+            for (node in tree.getAllNodes()){
                 drawNode(
                     node,
                     treeNodesToModels,
                     surfaceView
                 )
+                yield()
             }
-            for (treenode1 in tree.links.keys){
+            for (treenode1 in tree.getNodesWithLinks()){
                 val node1 = treeNodesToModels[treenode1]!!
-                val others = tree.links[treenode1]!!
+                val others = tree.getNodeLinks(treenode1)!!
                 for (treenode2 in others) {
                     val node2 = treeNodesToModels[treenode2]!!
                     if (modelsToLinkModels[Pair(node1, node2)] == null ){
@@ -131,47 +132,41 @@ class DrawerHelper(
                         )
                     }
                 }
+                yield()
             }
         }
     }
 
-    fun drawWay(
+    suspend fun drawWay(
         nodes: List<TreeNode>,
-        treeNodesToModels: MutableBiMap<TreeNode, Node>,
-        routeLabels: MutableList<Node>,
+        routeLabels: MutableList<ArNode>,
         surfaceView: ArSceneView
     ){
 
-        wayDrawingJob?.cancel()
-        wayDrawingJob = activity.lifecycleScope.launch {
             routeLabels.forEach { it.destroy() }
             routeLabels.clear()
 
 
             if (nodes.size > 3){
                 for (i in 1 until nodes.size-2) {
-                    val node1 = treeNodesToModels[nodes[i]]
-                    val node2 = treeNodesToModels[nodes[i+1]]
+                    val node1 = nodes[i]
+                    val node2 = nodes[i+1]
 
-                    if (node1 != null && node2 != null) {
                         drawWayLine(
                             node1,
                             node2,
                             routeLabels,
                             surfaceView
                         )
-                    }
                 }
             }
-        }
-
 
     }
 
     private suspend fun drawWayLine(
-        from: Node,
-        to: Node,
-        routeLabels: MutableList<Node>,
+        from: TreeNode,
+        to: TreeNode,
+        routeLabels: MutableList<ArNode>,
         surfaceView: ArSceneView
     ): Boolean {
 
@@ -204,7 +199,7 @@ class DrawerHelper(
             Quaternion.axisAngle(Vector3(1.0f, 0.0f, 0.0f), 270f)
         ).toNewQuaternion()
 
-        for (i in 0 until nodesAmount-1){
+        for (i in -1 until nodesAmount-1){
             val position = Float3(
                 fromVector.x + dx*i,
                 fromVector.y + dy*i,
@@ -216,6 +211,8 @@ class DrawerHelper(
                 surfaceView
             )
             routeLabels.add(node)
+            //give time to the ui thread for update
+            yield()
 
         }
 

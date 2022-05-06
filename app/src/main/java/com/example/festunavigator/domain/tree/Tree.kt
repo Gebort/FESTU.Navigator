@@ -16,16 +16,17 @@ class Tree(
 ) {
 
     private val _entryPoints: MutableMap<String, TreeNode.Entry> = mutableMapOf()
-    val entryPoints: Map<String, TreeNode.Entry> = _entryPoints
+    //val entryPoints: Map<String, TreeNode.Entry> = _entryPoints
 
     private val _allPoints: MutableMap<Int, TreeNode> = mutableMapOf()
-    val allPoints: Map<Int, TreeNode> = _allPoints
+    //val allPoints: Map<Int, TreeNode> = _allPoints
 
-    private val _links: MutableMap<TreeNode, MutableList<TreeNode>> = mutableMapOf()
-    val links: Map<TreeNode, List<TreeNode>> = _links
+    private val _links: MutableMap<Int, MutableList<Int>> = mutableMapOf()
+    //val links: Map<TreeNode, List<TreeNode>> = _links
 
-    var size = 0
-        private set
+    private val _translocatedPoints: MutableMap<TreeNode, Boolean> = mutableMapOf()
+
+    private var availableId = 0
 
     var initialized = false
         private set
@@ -51,105 +52,141 @@ class Tree(
                     number = nodeDto.number,
                     forwardVector = nodeDto.forwardVector,
                     id = nodeDto.id,
-                    position = Float3(nodeDto.x, nodeDto.y, nodeDto.z)
+                    position = Float3(nodeDto.x, nodeDto.y, nodeDto.z),
+                    neighbours = nodeDto.neighbours
                 )
                 _entryPoints[node.number] = node
             }
             else {
                 node = TreeNode.Path(
                     id = nodeDto.id,
-                    position = Float3(nodeDto.x, nodeDto.y, nodeDto.z)
+                    position = Float3(nodeDto.x, nodeDto.y, nodeDto.z),
+                    neighbours = nodeDto.neighbours
                 )
             }
             _allPoints[node.id] = node
-            size++
+            _links[node.id] = node.neighbours
+            if (node.id+1 > availableId){
+                availableId = node.id+1
+            }
             Log.d(TAG, "========")
             Log.d(TAG, "Preload: loaded node, id: ${node.id}, number: ${nodeDto.number}")
             Log.d(TAG, "Pos: ${node.position}")
         }
 
-        for (nodeDto in rawNodesList){
-            _allPoints[nodeDto.id]!!.neighbours = nodeDto.neighbours
-                .map { id ->
-                    allPoints[id]!!
-                }
-                .toMutableList()
-            _links[allPoints[nodeDto.id]!!] = allPoints[nodeDto.id]!!.neighbours
-            Log.d(TAG, "Preload: added neighbours for node id: ${nodeDto.id}, size: ${allPoints[nodeDto.id]!!.neighbours.size}")
-        }
         Log.d(TAG, "Preload finished")
 
     }
 
     suspend fun initialize(entryNumber: String, position: Float3, newRotation: Quaternion): Result<Unit?> {
         Log.d(TAG, "Initialization start")
-        if (entryPoints.isNotEmpty()) {
+        if (_entryPoints.isNotEmpty()) {
             Log.d(TAG, "Initialization: entry number $entryNumber")
-            val entry = entryPoints[entryNumber]
+            val entry = _entryPoints[entryNumber]
             if (entry != null) {
 
-                pivotPosition= entry.position
+                pivotPosition = entry.position
                 translocation = entry.position - position
-
-
-                Log.d(TAG, "Initialization: translocation ${translocation}")
-
-                val oldRotation = entry.forwardVector
-                //val invertedOldRotation = oldRotation.inverted()
-                rotation = convertQuaternion(oldRotation, newRotation.inverted()) * -1f
+                rotation = convertQuaternion(entry.forwardVector, newRotation.inverted()) * -1f
                 rotation.w *= -1f
-               // rotation = Quaternion.multiply(newRotation, oldRotation.toOldQuaternion().inverted())
-
-                Log.d(TAG, "Initialization: old rotation ${oldRotation}")
-                Log.d(TAG, "Initialization: new rotation ${newRotation}")
-                Log.d(TAG, "Initialization: rotation ${rotation}")
 
 
-                for (node in allPoints.values) {
-                    Log.d(TAG, "Initialization: new node =======")
+//                for (node in allPoints.values) {
+//                    translocateNode(node)
+//
+//                }
 
-                    //val newPosition = rotation.toNewQuaternion() * (node.position - pivotPosition) + pivotPosition - translocation
-                    Log.d(TAG, "Initialization: node ${node.id}")
-                    //val y = node.position.y - translocation.y
-                    val newPosition = convertPosition(node.position, translocation, rotation, pivotPosition)
-                    //val newPosition = node.position - translocation
-                   // newPosition.y = y
-                    Log.d(TAG, "Initialization: position ${node.position.toVector3()} -> ${newPosition - translocation}")
-                    node.position = newPosition
 
-                    if (node is TreeNode.Entry){
-                        val newOrientation = convertQuaternion(node.forwardVector, rotation)
-                        //val newOrientation = node.forwardVector * rotation.toNewQuaternion()
-                        //val newForwardVector = Quaternion.rotateVector(rotation, node.forwardVector)
-                        //val newForwardVector = Vector3.up()
+            initialized = true
+            return Result.success(null)
 
-                        Log.d(TAG, "Initialization: rotation: ${node.forwardVector} -> ${newOrientation}")
-                        node.forwardVector = newOrientation
-                    }
-                }
-
-                //entry.forwardVector = newRotation.toRotation().toVector3()
-
-                initialized = true
-               // Log.d(TAG, "Initialization: rotation vector $rotationVector")
-                Log.d(TAG, "Initialization success")
-
-                return Result.success(null)
             } else {
-                Log.d(TAG, "Initialization: null entry")
                 return Result.failure(
-                    exception = WrongEntryException(entryPoints.keys)
+                    exception = WrongEntryException(_entryPoints.keys)
                 )
             }
         }
         else {
             clearTree()
             initialized = true
-            Log.d(TAG, "Initialization: empty entry list, tree cleared")
-            Log.d(TAG, "Initialization: rotation vector ${Vector3()}")
-            Log.d(TAG, "Initialization success")
             return Result.success(null)
         }
+    }
+
+    fun getNode(id: Int): TreeNode? {
+        if (!initialized){
+            throw Exception("Tree isnt initialized")
+        }
+        val node = _allPoints[id]
+        return if (_translocatedPoints.containsKey(node)){
+            node
+        } else {
+            if (node == null) {
+                null
+            } else {
+                translocateNode(node)
+                node
+            }
+        }
+    }
+
+    fun getEntry(number: String): TreeNode.Entry? {
+        if (!initialized){
+            throw Exception("Tree isnt initialized")
+        }
+        val entry = _entryPoints[number]
+        return if (entry != null) {
+            getNode(entry.id) as TreeNode.Entry
+        } else {
+            null
+        }
+    }
+
+    fun getNodes(nodes: List<Int>): List<TreeNode> {
+        return nodes.mapNotNull {
+            getNode(it)
+        }
+    }
+
+    fun getAllNodes(): List<TreeNode> {
+        val nodes = mutableListOf<TreeNode>()
+        for (key in _allPoints.keys) {
+            getNode(key)?.let {
+                nodes.add(it)
+            }
+        }
+        return nodes
+    }
+
+    fun getEntriesNumbers(): Set<String> {
+        return _entryPoints.keys
+    }
+
+    fun getAllLinksKeys(): Set<Int> {
+        return _links.keys
+    }
+
+    fun getNodesWithLinks(): List<TreeNode> {
+       return _links.keys.mapNotNull {
+            getNode(it)
+        }
+    }
+
+    fun getNodeLinks(node: TreeNode): List<TreeNode>? {
+        return _links[node.id]?.mapNotNull { getNode(it) }
+
+    }
+
+    fun hasEntry(number: String): Boolean {
+        return _entryPoints.keys.contains(number)
+    }
+
+    private fun translocateNode(node: TreeNode) {
+        node.position = convertPosition(node.position, translocation, rotation, pivotPosition)
+        if (node is TreeNode.Entry){
+            node.forwardVector = convertQuaternion(node.forwardVector, rotation)
+        }
+        _translocatedPoints[node] = true
     }
 
     suspend fun addNode(
@@ -157,44 +194,38 @@ class Tree(
         number: String? = null,
         forwardVector: Quaternion? = null
     ): TreeNode {
-        Log.d(TAG, "Node creation start")
+        if (!initialized){
+            throw Exception("Tree isnt initialized")
+        }
         if (_allPoints.values.find { it.position == position } != null) {
-            Log.d(TAG, "Node creation: position taken")
             throw Exception("Position already taken")
         }
         val newNode: TreeNode
         if (number == null){
-            Log.d(TAG, "Node creation: null number, returning path")
             newNode = TreeNode.Path(
-                size,
+                availableId,
                 position
             )
         }
         else {
-            Log.d(TAG, "Node creation: returning entry")
             if (_entryPoints[number] != null) {
-                Log.d(TAG, "Node creation: entry point exists")
                 throw Exception("Entry point already exists")
             }
             if (forwardVector == null){
-                Log.d(TAG, "Node creation: null forward vector")
                 throw Exception("Null forward vector")
             }
             newNode = TreeNode.Entry(
                 number,
                 forwardVector,
-                size,
+                availableId,
                 position
             )
             _entryPoints[newNode.number] = newNode
-            Log.d(TAG, "Node creation: entry added to map, number ${newNode.number}")
-            Log.d(TAG, "Node creation: rotation vector ${newNode.forwardVector}")
+            _translocatedPoints[newNode] = true
         }
 
         _allPoints[newNode.id] = newNode
-        Log.d(TAG, "Node creation: node added to map, id ${newNode.id}")
-        size++
-        Log.d(TAG, "Node creation finish, tree size = $size")
+        availableId++
         return newNode
     }
 
@@ -203,6 +234,7 @@ class Tree(
     ) {
         Log.d(TAG, "Remove node start")
         removeAllLinks(node)
+        _translocatedPoints.remove(node)
         when (node){
             is TreeNode.Path -> {
                 Log.d(TAG, "Remove node: node id ${node.id}")
@@ -222,27 +254,27 @@ class Tree(
         node2: TreeNode
     ): Boolean {
         Log.d(TAG, "Link creation started")
-        if (links[node1] == null) {
+        if (_links[node1.id] == null) {
             Log.d(TAG, "Link creation: null node1 list")
-            _links[node1] = mutableListOf()
+            _links[node1.id] = mutableListOf()
         }
         else {
-            if (links[node1]!!.contains(node2)) {
+            if (_links[node1.id]!!.contains(node2.id)) {
                 throw Exception("Link already exists")
             }
         }
-        if (links[node2] == null) {
+        if (_links[node2.id] == null) {
             Log.d(TAG, "Link creation: null node2 list")
-            _links[node2] = mutableListOf()
+            _links[node2.id] = mutableListOf()
         }
         else {
-            if (links[node2]!!.contains(node1))
+            if (_links[node2.id]!!.contains(node1.id))
                 throw Exception("Link already exists")
         }
-        node1.neighbours.add(node2)
-        node2.neighbours.add(node1)
-        _links[node1] = node1.neighbours
-        _links[node2] = node2.neighbours
+        node1.neighbours.add(node2.id)
+        node2.neighbours.add(node1.id)
+        _links[node1.id] = node1.neighbours
+        _links[node2.id] = node2.neighbours
         Log.d(TAG, "Link ${node1.id} -> ${node2.id}")
         Log.d(TAG, "Link creation finished")
         return true
@@ -253,33 +285,34 @@ class Tree(
         node1: TreeNode,
         node2: TreeNode
     ) {
-        if (links[node1] == null || links[node2] == null)
+        if (_links[node1.id] == null || _links[node2.id] == null)
             return
-        if (links[node1]!!.contains(node2) && links[node2]!!.contains(node1)){
-            node1.neighbours.remove(node2)
-            node2.neighbours.remove(node1)
-            _links[node1] = node1.neighbours
-            _links[node2] = node2.neighbours
+        if (_links[node1.id]!!.contains(node2.id) && _links[node2.id]!!.contains(node1.id)){
+            node1.neighbours.remove(node2.id)
+            node2.neighbours.remove(node1.id)
+            _links[node1.id] = node1.neighbours
+            _links[node2.id] = node2.neighbours
         }
     }
 
     private fun removeAllLinks(node: TreeNode){
         Log.d(TAG, "Removing all links for node id ${node.id} started")
-        if (links[node] == null) {
+        if (_links[node.id] == null) {
             Log.d(TAG, "Removing all links: null list")
             Log.d(TAG, "Removing all links: finish")
             return
         }
 
-        for (node2 in node.neighbours) {
-            Log.d(TAG, "Removing all links: removed ${node.id} -> ${node2.id}")
-            node2.neighbours.remove(node)
-            _links[node2] = node2.neighbours
+        node.neighbours.forEach { id ->
+            _allPoints[id]?.let {
+                it.neighbours.remove(node.id)
+                _links[it.id] = it.neighbours
+            }
         }
 
         node.neighbours.clear()
         Log.d(TAG, "Removing all links: node list cleared")
-        _links[node] = node.neighbours
+        _links[node.id] = node.neighbours
         Log.d(TAG, "Removing all links: finish")
 
     }
@@ -289,7 +322,8 @@ class Tree(
         _links.clear()
         _allPoints.clear()
         _entryPoints.clear()
-        size = 0
+        _translocatedPoints.clear()
+        availableId = 0
         translocation = Float3(0f, 0f, 0f)
         rotation = Float3(0f, 0f, 0f).toQuaternion()
         pivotPosition = Float3(0f, 0f, 0f)

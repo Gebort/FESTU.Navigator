@@ -8,8 +8,8 @@ class AStarImpl: Pathfinder {
 
     override suspend fun findWay(from: String, to: String, tree: Tree): List<TreeNode>? {
 
-        val finalNode = AStarNode(tree.entryPoints[to]!!, null)
-        val initialNode = AStarNode(tree.entryPoints[from]!!, finalNode)
+        val finalNode = AStarNode(tree.getEntry(to)!!, null)
+        val initialNode = AStarNode(tree.getEntry(from)!!, finalNode)
 
         val openList: MutableList<AStarNode> = mutableListOf()
         val closedSet: MutableSet<AStarNode> = mutableSetOf()
@@ -26,7 +26,7 @@ class AStarImpl: Pathfinder {
                     aStarNode.node
                 }
             } else {
-                addAdjacentNodes(currentNode, openList, closedSet, finalNode)
+                addAdjacentNodes(currentNode, openList, closedSet, finalNode, tree)
             }
         }
         return null
@@ -48,17 +48,21 @@ class AStarImpl: Pathfinder {
         currentNode: AStarNode,
         openList: MutableList<AStarNode>,
         closedSet: Set<AStarNode>,
-        finalNode: AStarNode
+        finalNode: AStarNode,
+        tree: Tree
     ) {
-        currentNode.node.neighbours.forEach { treeNode ->
-            val nodeClosed = closedSet.find { it.node.id == treeNode.id }
-            val nodeOpen = openList.find { it.node.id == treeNode.id }
-            if ( nodeClosed == null && nodeOpen == null) {
-                checkNode(currentNode, AStarNode(treeNode, finalNode), openList, closedSet)
+        currentNode.node.neighbours.forEach { nodeId ->
+            tree.getNode(nodeId)?.let { node ->
+                val nodeClosed = closedSet.find { it.node.id == nodeId }
+                val nodeOpen = openList.find { it.node.id == nodeId }
+                if ( nodeClosed == null && nodeOpen == null) {
+                    checkNode(currentNode, AStarNode(node, finalNode), openList, closedSet)
+                }
+                else if (nodeOpen != null && nodeClosed == null) {
+                    checkNode(currentNode, nodeOpen, openList, closedSet)
+                }
             }
-            else if (nodeOpen != null && nodeClosed == null) {
-                checkNode(currentNode, nodeOpen, openList, closedSet)
-            }
+
         }
     }
 

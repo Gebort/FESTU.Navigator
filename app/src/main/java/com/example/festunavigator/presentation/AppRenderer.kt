@@ -1,25 +1,17 @@
 package com.example.festunavigator.presentation
 
-import android.annotation.SuppressLint
-import android.graphics.Color
 import android.opengl.Matrix
-import android.util.Log
 import android.view.inputmethod.EditorInfo
-import android.widget.TextView
 import android.widget.TextView.OnEditorActionListener
-import androidx.cardview.widget.CardView
-import androidx.core.view.doOnLayout
 import androidx.core.view.isGone
-import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.input.input
 import com.example.festunavigator.R
 import com.example.festunavigator.domain.hit_test.HitTestResult
+import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.ml.DetectedText
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
@@ -31,15 +23,12 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.Frame
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException
-import com.google.ar.sceneform.math.Vector3
-import com.google.ar.sceneform.rendering.*
 import com.uchuhimo.collections.MutableBiMap
 import com.uchuhimo.collections.mutableBiMapOf
 import dev.romainguy.kotlin.math.Float2
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.node.ArNode
-import io.github.sceneview.math.*
 import io.github.sceneview.node.Node
 import io.github.sceneview.utils.FrameTime
 import kotlinx.coroutines.*
@@ -61,8 +50,10 @@ class AppRenderer(
     ) : DefaultLifecycleObserver, CoroutineScope by MainScope() {
 
     companion object {
-        val TAG = "HelloArRenderer"
-        val mode = "ADMIN"
+        const val TAG = "HelloArRenderer"
+        const val ADMIN_MODE = "ADMIN"
+        const val USER_MODE = "USER"
+        val mode = ADMIN_MODE
         //image crop for recognition
         val DESIRED_CROP = Pair(8, 72)
         //delay in seconds for detected object to settle in
@@ -89,7 +80,6 @@ class AppRenderer(
 
     val treeNodesToModels: MutableBiMap<TreeNode, Node> = mutableBiMapOf()
     val modelsToLinkModels: MutableBiMap<Pair<Node, Node>, Node> = mutableBiMapOf()
-    val routeLabels = mutableListOf<Node>()
 
     val viewMatrix = FloatArray(16)
     val projectionMatrix = FloatArray(16)
@@ -108,10 +98,16 @@ class AppRenderer(
 
         changeState(MainState.Starting)
 
+        if (mode == ADMIN_MODE) {
+            view.adminPanel.isVisible = true
+        }
+        else {
+            view.adminPanel.isGone = true
+        }
+
         view.surfaceView.onTouchEvent = {pickHitResult, motionEvent ->
 
-            if (mode == "ADMIN") {
-
+            if (mode == ADMIN_MODE) {
                 pickHitResult.node?.let { node ->
                     if (!linkPlacementMode) {
                         selectNode(node)
@@ -161,19 +157,6 @@ class AppRenderer(
 
         }
 
-        view.init.setOnClickListener {
-            initializeByScan()
-        }
-
-        view.pathfind.setOnClickListener {
-            if (tree.initialized) {
-                pathfindByDialog()
-            }
-            else {
-                showSnackbar("Tree isnt init")
-            }
-        }
-
         view.fromInput.setOnFocusChangeListener { _, b ->
             if (b) {
                 (state as? MainState.Routing.Going)?.let {
@@ -181,8 +164,8 @@ class AppRenderer(
                     view.fromInput.clearFocus()
                     changeState(MainState.Routing.Choosing(
                         true,
-                        startNumber = it.startNumber,
-                        endNumber = it.endNumber
+                        startLabel = it.startLabel,
+                        endLabel = it.endLabel
                     ))
                 }
                 }
@@ -196,8 +179,8 @@ class AppRenderer(
                     view.toInput.clearFocus()
                     changeState(MainState.Routing.Choosing(
                         false,
-                        startNumber = it.startNumber,
-                        endNumber = it.endNumber
+                        startLabel = it.startLabel,
+                        endLabel = it.endLabel
                     ))
                 }
             }
@@ -225,10 +208,6 @@ class AppRenderer(
         else {
             view.activity.finish()
         }
-    }
-
-    private fun initializeByScan(){
-            changeState(MainState.ScanningState.Initialize())
     }
 
     private suspend fun tryGetDetectedObject(): DetectedText? {
@@ -307,11 +286,12 @@ class AppRenderer(
                             view.activity.lifecycleScope.launch {
                                 if (state.currentScanSmoothDelay <= 0 && state.lastDetectedObject != null) {
 
-                                    val orientatedPos = hitTestDetectedObject(state.lastDetectedObject!!)
-                                    if (orientatedPos != null){
-                                        val confirmationObject = ConfirmationObject(
+                                    val res = hitTestDetectedObject(state.lastDetectedObject!!)
+                                    if (res != null){
+                                        val confirmationObject = LabelObject(
                                             label = state.lastDetectedObject!!.detectedObjectResult.label,
-                                            pos = orientatedPos,
+                                            pos = res.orientatedPosition,
+                                            anchor = res.hitResult.createAnchor()
                                         )
                                         when (state) {
                                             is MainState.ScanningState.Initialize -> {
@@ -368,14 +348,14 @@ class AppRenderer(
                                         state.confirmationJob =
                                             view.activity.lifecycleScope.launch {
                                                 val isInit = initialize(
-                                                    state.confirmationObject.label,
-                                                    state.confirmationObject.pos.orientatedPosition.position,
-                                                    state.confirmationObject.pos.orientatedPosition.orientation
+                                                    state.labelObject.label,
+                                                    state.labelObject.pos.position,
+                                                    state.labelObject.pos.orientation
                                                 )
                                                 if (isInit) {
-                                                    state.confirmationObject.node?.destroy()
+                                                    state.labelObject.node?.destroy()
                                                     changeState(MainState.Routing.Going(
-                                                        startNumber = state.confirmationObject.label
+                                                        startLabel = state.labelObject
                                                     ))
                                                 } else {
                                                     rollbackState()
@@ -389,11 +369,11 @@ class AppRenderer(
                                         {
                                         state.confirmationJob =
                                             view.activity.lifecycleScope.launch {
-                                                val entry = state.confirmationObject
+                                                val entry = state.labelObject
                                                 createNode(
                                                     entry.label,
-                                                    entry.pos.orientatedPosition.position,
-                                                    entry.pos.orientatedPosition.orientation
+                                                    entry.pos.position,
+                                                    entry.pos.orientation
                                                 )
                                                 changeState(MainState.Routing.Going())
                                             }
@@ -435,7 +415,7 @@ class AppRenderer(
         treeNodesToModels.inverse[node]?.let { node1 ->
             view.activity.lifecycleScope.launch {
                 treeNodesToModels.remove(node1)
-                val nodesForUpdate = node1.neighbours.toMutableList()
+                val nodesForUpdate = tree.getNodes(node1.neighbours.toMutableList())
                 tree.removeNode(node1)
                 updateNodes(nodesForUpdate, tree.translocation, tree.rotation, tree.pivotPosition)
                 deleteNodes(listOf(node1))
@@ -465,7 +445,7 @@ class AppRenderer(
 
                 }
                 is MainState.ConfirmingState.InitializeConfirm -> {
-                    it.confirmationObject.node?.destroy()
+                    it.labelObject.node?.destroy()
                     it.confirmationJob?.cancel()
                     it.confirmationObjectJob?.cancel()
                     viewStateHelper.onInitializeConfirmEnd()
@@ -475,13 +455,19 @@ class AppRenderer(
                     it.scanningJob?.cancel()
                 }
                 is MainState.ConfirmingState.EntryConfirm -> {
-                    it.confirmationObject.node?.destroy()
-                    it.confirmationObject.node = null
+                    it.labelObject.node?.destroy()
+                    it.labelObject.node = null
                     it.confirmationJob?.cancel()
                     it.confirmationObjectJob?.cancel()
                     viewStateHelper.onEntryConfirmEnd()
                 }
                 is MainState.Routing.Going -> {
+                    it.wayBuildingJob?.cancel()
+                    it.startPlacingJob?.cancel()
+                    it.endPlacingJob?.cancel()
+                    it.wayNodes.forEach { node -> node.destroy() }
+                    it.endLabel?.node?.destroy()
+                    it.startLabel?.node?.destroy()
                     viewStateHelper.onGoingEnd()
                 }
                 is MainState.Routing.Choosing -> {
@@ -513,9 +499,9 @@ class AppRenderer(
                 viewStateHelper.onInitializeConfirmStart()
                 state.confirmationObjectJob?.cancel()
                 state.confirmationObjectJob = view.activity.lifecycleScope.launch {
-                    state.confirmationObject.node = drawerHelper.placeLabel(
-                        state.confirmationObject.label,
-                        state.confirmationObject.pos.orientatedPosition,
+                    state.labelObject.node = drawerHelper.placeLabel(
+                        state.labelObject.label,
+                        state.labelObject.pos,
                         view.surfaceView,
 //                        state.confirmationObject.pos.hitResult.createAnchor()
                     )
@@ -529,9 +515,9 @@ class AppRenderer(
                 viewStateHelper.onEntryConfirmStart()
                 state.confirmationObjectJob?.cancel()
                 state.confirmationObjectJob = view.activity.lifecycleScope.launch {
-                    state.confirmationObject.node = drawerHelper.placeLabel(
-                        state.confirmationObject.label,
-                        state.confirmationObject.pos.orientatedPosition,
+                    state.labelObject.node = drawerHelper.placeLabel(
+                        state.labelObject.label,
+                        state.labelObject.pos,
                         view.surfaceView,
 //                        state.confirmationObject.pos.hitResult.createAnchor()
                     )
@@ -540,24 +526,53 @@ class AppRenderer(
             }
             is MainState.Routing.Going -> {
                 viewStateHelper.onGoingStart()
-                view.fromInput.setText(state.startNumber)
-                view.toInput.setText(state.endNumber)
+                view.fromInput.setText(state.startLabel?.label)
+                view.toInput.setText(state.endLabel?.label)
 
-                if (state.startNumber != null && state.endNumber != null){
-                    if (state.startNumber == state.endNumber){
-                        state.endNumber = null
+                if (state.startLabel != null && state.endLabel != null){
+                    if (state.startLabel == state.endLabel){
+                        state.endLabel = null
                     }
                     else {
                         view.destinationText.isVisible = true
                         view.destinationText.text =
-                            "${view.activity.getString(R.string.going)} ${destinationDesc(state.endNumber!!, view.activity.applicationContext)}"
-                        pathfind(state.startNumber!!, state.endNumber!!)
+                            "${view.activity.getString(R.string.going)} ${destinationDesc(state.endLabel!!.label, view.activity.applicationContext)}"
+                        state.wayBuildingJob?.cancel()
+                        state.wayBuildingJob = view.activity.lifecycleScope.launch {
+                            state.wayNodes.clear()
+                            pathfind(state.startLabel!!.label, state.endLabel!!.label, state.wayNodes)
+                        }
                     }
                 }
-                if (state.endNumber == null){
+                if (state.endLabel == null){
                     view.destinationText.isGone = true
-
                 }
+
+                if (state.startLabel != null){
+                    state.startLabel?.let {
+                        state.startPlacingJob?.cancel()
+                        state.startPlacingJob = view.activity.lifecycleScope.launch {
+                            it.node = drawerHelper.placeLabel(
+                                it.label,
+                                it.pos,
+                                view.surfaceView,
+                            )
+                        }
+                    }
+                }
+                if (state.endLabel != null){
+                    state.endLabel?.let {
+                        state.endPlacingJob?.cancel()
+                        state.endPlacingJob = view.activity.lifecycleScope.launch {
+                            it.node = drawerHelper.placeLabel(
+                                it.label,
+                                it.pos,
+                                view.surfaceView,
+                            )
+                        }
+                    }
+                }
+
             }
             is MainState.Routing.Choosing -> {
                 view.searchInput.setText("")
@@ -569,7 +584,7 @@ class AppRenderer(
                 view.activity.lifecycleScope.launch {
                     var entriesList = listOf<EntryItem>()
                     withContext(Dispatchers.IO){
-                        entriesList = tree.entryPoints.keys.map { number ->
+                        entriesList = tree.getEntriesNumbers().map { number ->
                             EntryItem(number, destinationDesc(number, view.activity.applicationContext))
                         }
                     }
@@ -593,8 +608,8 @@ class AppRenderer(
                         (state as MainState.Routing.Choosing).let {
                             if (it.done){
                                 MainState.Routing.Going(
-                                    startNumber = it.startNumber,
-                                    endNumber = it.endNumber
+                                    startLabel = it.startLabel,
+                                    endLabel = it.endLabel
                                 )
                             }
                             else {
@@ -614,14 +629,14 @@ class AppRenderer(
                 }
                 is MainState.ConfirmingState.InitializeConfirm-> {
                     val confObject = (state.previous as MainState.ConfirmingState.InitializeConfirm)
-                        .confirmationObject
+                        .labelObject
                     MainState.ConfirmingState.InitializeConfirm(
                         confObject
                     )
                 }
                 is MainState.ConfirmingState.EntryConfirm-> {
                     MainState.ConfirmingState.EntryConfirm(
-                        (state.previous as MainState.ConfirmingState.EntryConfirm).confirmationObject
+                        (state.previous as MainState.ConfirmingState.EntryConfirm).labelObject
                     )
                 }
                 else -> {
@@ -656,49 +671,23 @@ class AppRenderer(
         }
     }
 
-
-    @SuppressLint("CheckResult")
-    fun pathfindByDialog(){
-        MaterialDialog(view.activity).show {
-            title(text = "Start and end")
-            input(hint = "Number") { _, text ->
-                try {
-                    val dest = text.split(" ")
-                    pathfind(
-                        from = dest[0],
-                        to = dest[1]
-                    )
-                }
-                catch (e: Exception) {
-                    showSnackbar("Bad input")
-                }
-            }
-            positiveButton(text = "Place")
-        }
-    }
-
-    fun pathfind(from: String, to: String){
-        if (tree.entryPoints[from] != null && tree.entryPoints[to] != null) {
-            view.activity.lifecycleScope.launch {
+    private suspend fun pathfind(from: String, to: String, wayNodes: MutableList<ArNode>){
+        if (tree.getEntry(from) != null && tree.getEntry(to) != null) {
                 val path = findWay(from, to, tree)
                 if (path != null) {
                     drawerHelper.drawWay(
                         path,
-                        treeNodesToModels,
-                        routeLabels,
+                        wayNodes,
                         view.surfaceView
                     )
                 } else {
                     showSnackbar("No path found")
                 }
-            }
         }
         else {
-            showSnackbar("Wrong entry points. Available: ${tree.entryPoints.keys}")
+            showSnackbar("Wrong entry points. Available: ${tree.getEntriesNumbers()}")
         }
     }
-
-
 
     private suspend fun createNode(
         number: String? = null,
@@ -756,7 +745,7 @@ class AppRenderer(
 
     private fun processSearchResult(number: String) {
         (state as? MainState.Routing.Choosing)?.let {
-            if (tree.entryPoints.containsKey(number)){
+            if (tree.hasEntry(number)){
                 view.searchLayout.error = null
             }
             else {
@@ -771,15 +760,22 @@ class AppRenderer(
                 )
                 return
             }
+
+            val treeNode = tree.getEntry(number)!!
+            val labelObject = LabelObject(
+                label = treeNode.number,
+                pos = OrientatedPosition(treeNode.position, treeNode.forwardVector),
+            )
+
             if (it.choosingStart) {
-                it.startNumber = number
-                if (it.startNumber == it.endNumber)
-                    it.endNumber = null
+                it.startLabel = labelObject
+                if (it.startLabel == it.endLabel)
+                    it.endLabel = null
             }
             else
-                it.endNumber = number
-            if (it.startNumber == it.endNumber)
-                it.startNumber = null
+                it.endLabel = labelObject
+            if (it.startLabel == it.endLabel)
+                it.startLabel = null
             it.done = true
             rollbackState()
         }
@@ -800,8 +796,7 @@ class AppRenderer(
             result.exceptionOrNull()?.message?.let{ showSnackbar(it) }
             return false
         }
-        else {
-            }
+        if (mode == ADMIN_MODE) {
             drawerHelper.drawTree(
                 tree,
                 treeNodesToModels,
@@ -812,9 +807,8 @@ class AppRenderer(
             view.delete.isEnabled = true
             view.link.isEnabled = true
             view.entry.isEnabled = true
-            view.pathfind.isEnabled = true
             view.place.isEnabled = true
-
+        }
             return true
         }
 
