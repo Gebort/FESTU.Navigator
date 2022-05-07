@@ -23,8 +23,15 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.Frame
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException
+import com.google.ar.sceneform.math.Vector3
 import com.uchuhimo.collections.MutableBiMap
 import com.uchuhimo.collections.mutableBiMapOf
+import dev.benedikt.math.bezier.curve.BezierCurve
+import dev.benedikt.math.bezier.curve.Order
+import dev.benedikt.math.bezier.math.DoubleMathHelper
+import dev.benedikt.math.bezier.math.MathHelper
+import dev.benedikt.math.bezier.spline.DoubleBezierSpline
+import dev.benedikt.math.bezier.vector.Vector3D
 import dev.romainguy.kotlin.math.Float2
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
@@ -53,7 +60,7 @@ class AppRenderer(
         const val TAG = "HelloArRenderer"
         const val ADMIN_MODE = "ADMIN"
         const val USER_MODE = "USER"
-        val mode = ADMIN_MODE
+        val mode = USER_MODE
         //image crop for recognition
         val DESIRED_CROP = Pair(8, 72)
         //delay in seconds for detected object to settle in
@@ -526,11 +533,9 @@ class AppRenderer(
             }
             is MainState.Routing.Going -> {
                 viewStateHelper.onGoingStart()
-                view.fromInput.setText(state.startLabel?.label)
-                view.toInput.setText(state.endLabel?.label)
 
                 if (state.startLabel != null && state.endLabel != null){
-                    if (state.startLabel == state.endLabel){
+                    if (state.startLabel!!.label == state.endLabel!!.label){
                         state.endLabel = null
                     }
                     else {
@@ -572,6 +577,9 @@ class AppRenderer(
                         }
                     }
                 }
+
+                view.fromInput.setText(state.startLabel?.label)
+                view.toInput.setText(state.endLabel?.label)
 
             }
             is MainState.Routing.Choosing -> {
@@ -772,20 +780,24 @@ class AppRenderer(
                 if (it.startLabel == it.endLabel)
                     it.endLabel = null
             }
-            else
+            else {
                 it.endLabel = labelObject
-            if (it.startLabel == it.endLabel)
-                it.startLabel = null
+                if (it.startLabel == it.endLabel)
+                    it.startLabel = null
+            }
             it.done = true
             rollbackState()
         }
     }
 
     fun preload(){
+
         view.activity.lifecycleScope.launch {
             tree = getTree()
         }
     }
+
+
 
     private suspend fun initialize(entryNumber: String, position: Float3, newOrientation: Quaternion): Boolean{
         var result: Result<Unit?>

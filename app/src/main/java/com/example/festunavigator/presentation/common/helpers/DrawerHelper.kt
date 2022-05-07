@@ -8,6 +8,7 @@ import com.example.festunavigator.R
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
+import com.example.festunavigator.domain.use_cases.SmoothPath
 import com.example.festunavigator.presentation.MainActivity
 import com.google.ar.core.Anchor
 import com.google.ar.sceneform.math.Quaternion
@@ -28,7 +29,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 
 class DrawerHelper(
-    private val activity: MainActivity
+    private val activity: MainActivity,
+    private val smoothPath: SmoothPath = SmoothPath()
 ) {
 
     private val routeStep = 0.2f
@@ -143,80 +145,15 @@ class DrawerHelper(
         surfaceView: ArSceneView
     ){
 
-            routeLabels.forEach { it.destroy() }
-            routeLabels.clear()
+        routeLabels.forEach { it.destroy() }
+        routeLabels.clear()
 
+        val way = smoothPath(nodes)
 
-            if (nodes.size > 3){
-                for (i in 1 until nodes.size-2) {
-                    val node1 = nodes[i]
-                    val node2 = nodes[i+1]
-
-                        drawWayLine(
-                            node1,
-                            node2,
-                            routeLabels,
-                            surfaceView
-                        )
-                }
-            }
-
-    }
-
-    private suspend fun drawWayLine(
-        from: TreeNode,
-        to: TreeNode,
-        routeLabels: MutableList<ArNode>,
-        surfaceView: ArSceneView
-    ): Boolean {
-
-        val fromVector = from.position.toVector3()
-        val toVector = to.position.toVector3()
-
-        // Compute a line's length
-        val lineLength = Vector3.subtract(fromVector, toVector).length()
-
-        if (lineLength < routeStep){
-            return false
-        }
-
-        val nodesAmount = (lineLength / routeStep).toInt()
-
-        val dx = (toVector.x - fromVector.x) / nodesAmount
-        val dy = (toVector.y - fromVector.y) / nodesAmount
-        val dz = (toVector.z - fromVector.z) / nodesAmount
-
-        val difference = Vector3.subtract(toVector, fromVector)
-        val directionFromTopToBottom = difference.normalized()
-        val rotationFromAToB: Quaternion =
-            Quaternion.lookRotation(
-                directionFromTopToBottom,
-                Vector3.up()
-            )
-
-        val rotation = Quaternion.multiply(
-            rotationFromAToB,
-            Quaternion.axisAngle(Vector3(1.0f, 0.0f, 0.0f), 270f)
-        ).toNewQuaternion()
-
-        for (i in -1 until nodesAmount-1){
-            val position = Float3(
-                fromVector.x + dx*i,
-                fromVector.y + dy*i,
-                fromVector.z + dz*i
-            )
-
-            val node = placeArrow(
-                OrientatedPosition(position, rotation),
-                surfaceView
-            )
-            routeLabels.add(node)
-            //give time to the ui thread for update
+        for (pos in way) {
+            routeLabels.add(placeArrow(pos, surfaceView))
             yield()
-
         }
-
-        return true
 
     }
 
@@ -253,6 +190,8 @@ class DrawerHelper(
         ViewRenderable.builder()
             .setView(activity, if (label != null) R.layout.text_sign else R.layout.route_node)
             .setSizer { scale.toVector3() }
+            .setVerticalAlignment(ViewRenderable.VerticalAlignment.CENTER)
+            .setHorizontalAlignment(ViewRenderable.HorizontalAlignment.CENTER)
             .build()
             .thenAccept { renderable: ViewRenderable ->
                 renderable.let {
@@ -268,7 +207,7 @@ class DrawerHelper(
                     setModel(
                         renderable = renderable
                     )
-                    modelPosition = Float3(0f, 0f, 0f)
+                    model
                     position = Position(pos.position.x, pos.position.y, pos.position.z)
                     quaternion = pos.orientation
                     if (anchor != null){

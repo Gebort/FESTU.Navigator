@@ -18,7 +18,7 @@ import io.github.sceneview.ar.ArSceneView
 class MainActivityView(val activity: MainActivity, renderer: AppRenderer) : DefaultLifecycleObserver {
     val root = View.inflate(activity, R.layout.activity_main, null)
     val surfaceView = root.findViewById<ArSceneView>(R.id.sceneView).apply {
-        planeRenderer.isVisible = true
+        planeRenderer.isVisible = false
         instructions.enabled = false
 
     }

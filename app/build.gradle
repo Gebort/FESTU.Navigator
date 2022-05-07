@@ -90,4 +90,7 @@ dependencies {
     // Add ML Kit dependencies
     implementation 'com.google.android.gms:play-services-mlkit-text-recognition:18.0.0'
 
+    //bezier curve for smooth path building
+    implementation 'dev.benedikt.math:bezier-spline:1.2.0'
+
 }
