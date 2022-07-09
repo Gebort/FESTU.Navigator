@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.festunavigator.R
 import com.example.festunavigator.data.ml.classification.ARCoreSessionLifecycleHelper
 import com.example.festunavigator.data.ml.classification.TextAnalyzer
 import com.example.festunavigator.data.pathfinding.AStarImpl
@@ -13,17 +14,21 @@ import com.google.ar.core.CameraConfig
 import com.google.ar.core.CameraConfigFilter
 import com.google.ar.core.Config
 import com.google.ar.core.exceptions.*
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
+
+private const val TAG: String = "MainActivity"
 
 class MainActivity : AppCompatActivity() {
 
-    private val TAG: String = "MainActivity"
     lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
-
-    lateinit var renderer: AppRenderer
-    lateinit var view: MainActivityView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val analytics = Firebase.analytics
+
+        setContentView(R.layout.activity_main)
 
         arCoreSessionHelper = ARCoreSessionLifecycleHelper(this)
 
@@ -63,40 +68,6 @@ class MainActivity : AppCompatActivity() {
 
         lifecycle.addObserver(arCoreSessionHelper)
 
-        val repository = GraphImpl()
-        val insertNodes = InsertNodes(repository)
-        val deleteNodes = DeleteNodes(repository)
-        val updateNodes = UpdateNodes(repository)
-        val pathfinder = AStarImpl()
-        val findWay = FindWay(pathfinder)
-        val getTree = GetTree(repository)
-        val hitTest = HitTest()
-        val objectDetector = TextAnalyzer(this)
-        val analyzeImage = AnalyzeImage(objectDetector)
-
-
-        renderer = AppRenderer(
-            this,
-            analyzeImage,
-            deleteNodes,
-            getTree,
-            insertNodes,
-            updateNodes,
-            findWay,
-            hitTest
-        )
-        lifecycle.addObserver(renderer)
-        view = MainActivityView(this, renderer)
-        setContentView(view.root)
-        renderer.bindView(view)
-        lifecycle.addObserver(view)
-
-        //setContentView(R.layout.activity_main)
-
-    }
-
-    override fun onBackPressed() {
-        renderer.backPressed()
     }
 
 }

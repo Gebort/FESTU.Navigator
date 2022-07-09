@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="initialize">Инициализируйте граф</string>
+    <string name="scan">Дождитесь появления точек и направьте камеру на номер аудитории. Убедитесь, что  табличка сонаправлена с номером. Если номеров несколько, используйте самый нижний</string>
+    <string name="link">Связь</string>
+    <string name="cancel">Отмена</string>
+    <string name="confirm_place">Текст установлен корректно?</string>
+    <string name="from">Начало</string>
+    <string name="to">Конец</string>
+    <string name="main">Главный корпус</string>
+    <string name="lab">Лабораторный корпус</string>
+    <string name="first_tower">Башня №1</string>
+    <string name="second_tower">Башня №2</string>
+    <string name="second_building">Второй корпус</string>
+    <string name="floor">этаж №</string>
+    <string name="incorrect_number">Не можем найти номер</string>
+    <string name="no_path">Нет маршрута</string>
+    <string name="going">Идем в %s</string>
+    <string name="init_failed">Ошибка при инициализации</string>
+
+</resources>

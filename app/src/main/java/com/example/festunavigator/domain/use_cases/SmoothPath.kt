@@ -17,7 +17,7 @@ import io.github.sceneview.math.toVector3
 
 class SmoothPath {
 
-    private val routeStep = 0.2f
+    private val routeStep = 0.4f
 
     operator fun invoke(
         nodes: List<TreeNode>
@@ -58,9 +58,9 @@ class SmoothPath {
                     com.google.ar.sceneform.math.Quaternion.axisAngle(Vector3(1.0f, 0.0f, 0.0f), 270f)
                 ).toNewQuaternion()
 
-                val lowStep = if (nodesAmount > 2) 2 else 1
-                val highStep = if (nodesAmount > 5) 3 else 1
-                for (j in 0 until nodesAmount-highStep) {
+                val lowStep =  if (nodesAmount < 3) 0 else if (nodesAmount == 3) 1 else 2
+                val highStep = if (nodesAmount < 3) 1 else if (nodesAmount == 3) 2 else 3
+                for (j in 0..nodesAmount-highStep) {
                     val position = Float3(
                         fromVector.x + dx * j,
                         fromVector.y + dy * j,
@@ -74,7 +74,7 @@ class SmoothPath {
                     else if (j == lowStep) {
                         list.addAll(
                             getBezierSmoothPoints(
-                                list.last().position,
+                                list.removeLast().position,
                                 position,
                                 fromVector.toFloat3(),
                                 routeStep
@@ -212,7 +212,7 @@ class SmoothPath {
         }
 
         val dist = (result.last().pos - end.pos).magnitude()
-        if (dist < spacing / 4) {
+        if (dist < spacing / 2) {
             result.removeLast()
             result.add(end)
         }
@@ -245,10 +245,6 @@ class SmoothPath {
             this.y.toFloat(),
             this.z.toFloat()
         )
-    }
-
-    private fun Vector3D.toQuaternion(): Quaternion {
-        return com.google.ar.sceneform.math.Quaternion.eulerAngles(this.toVector3()).toNewQuaternion()
     }
 
 }

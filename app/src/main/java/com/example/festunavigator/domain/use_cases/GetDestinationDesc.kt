@@ -22,6 +22,10 @@ class GetDestinationDesc {
             else {
                 building = context.getString(R.string.main)
             }
+            if (number.length == 2 ){
+                floor = 0
+                return "$building, $floorStr$floor"
+            }
         }
         else if (number.length == 4){
             when (number[0]) {
