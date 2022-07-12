@@ -3,13 +3,14 @@ package com.example.festunavigator.presentation.common.helpers
 import android.graphics.Color
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.festunavigator.R
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.domain.use_cases.SmoothPath
-import com.example.festunavigator.presentation.MainActivity
 import com.google.ar.core.Anchor
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
@@ -18,10 +19,12 @@ import com.google.ar.sceneform.rendering.MaterialFactory
 import com.google.ar.sceneform.rendering.ShapeFactory
 import com.google.ar.sceneform.rendering.ViewRenderable
 import com.uchuhimo.collections.MutableBiMap
-import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
-import io.github.sceneview.math.*
+import io.github.sceneview.math.Position
+import io.github.sceneview.math.Scale
+import io.github.sceneview.math.toNewQuaternion
+import io.github.sceneview.math.toVector3
 import io.github.sceneview.node.Node
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.future.await
@@ -29,7 +32,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 
 class DrawerHelper(
-    private val activity: MainActivity,
+    private val fragment: Fragment,
     private val smoothPath: SmoothPath = SmoothPath()
 ) {
 
@@ -58,6 +61,27 @@ class DrawerHelper(
 
     }
 
+    suspend fun removeNode(
+        node: TreeNode,
+        modelsToLinkModels: MutableBiMap<Pair<Node, Node>, Node>,
+        treeNodesToModels: MutableBiMap<TreeNode, Node>,
+
+    ){
+        modelsToLinkModels.keys
+            .filter { pair ->
+                pair.first == node || pair.second == node
+            }
+            .forEach { pair ->
+                modelsToLinkModels[pair]?.destroy()
+                modelsToLinkModels.remove(pair)
+            }
+
+        treeNodesToModels[node]?.let { node1 ->
+                treeNodesToModels.remove(node)
+                node1.destroy()
+        }
+    }
+
     private suspend fun drawPath(
         treeNode: TreeNode.Path,
         treeNodesToModels: MutableBiMap<TreeNode, Node>,
@@ -66,7 +90,7 @@ class DrawerHelper(
     ){
         val modelNode = ArNode()
         modelNode.loadModel(
-            context = activity.applicationContext,
+            context = fragment.requireContext(),
             glbFileLocation = "models/cylinder.glb",
         )
         modelNode.position = treeNode.position
@@ -111,7 +135,7 @@ class DrawerHelper(
         surfaceView: ArSceneView
     ){
         treeDrawingJob?.cancel()
-        treeDrawingJob = activity.lifecycleScope.launch {
+        treeDrawingJob = fragment.lifecycleScope.launch {
             for (node in tree.getAllNodes()){
                 drawNode(
                     node,
@@ -188,7 +212,7 @@ class DrawerHelper(
     ): ArNode {
         var node: ArNode? = null
         ViewRenderable.builder()
-            .setView(activity, if (label != null) R.layout.text_sign else R.layout.route_node)
+            .setView(fragment.requireContext(), if (label != null) R.layout.text_sign else R.layout.route_node)
             .setSizer { scale.toVector3() }
             .setVerticalAlignment(ViewRenderable.VerticalAlignment.CENTER)
             .setHorizontalAlignment(ViewRenderable.HorizontalAlignment.CENTER)
@@ -243,7 +267,7 @@ class DrawerHelper(
         val colorOrange = com.google.ar.sceneform.rendering.Color(Color.parseColor("#ffffff"))
 
         // 1. make a material by the color
-        MaterialFactory.makeOpaqueWithColor(activity.applicationContext, colorOrange)
+        MaterialFactory.makeOpaqueWithColor(fragment.requireContext(), colorOrange)
             .thenAccept { material: Material? ->
                 // 2. make a model by the material
                 val model = ShapeFactory.makeCylinder(

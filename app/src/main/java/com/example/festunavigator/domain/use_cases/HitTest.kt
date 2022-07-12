@@ -1,28 +1,19 @@
 package com.example.festunavigator.domain.use_cases
 
-import android.util.Log
-import com.example.festunavigator.data.model.DetectedObjectResult
 import com.example.festunavigator.domain.hit_test.HitTestResult
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.google.ar.core.Frame
-import com.google.ar.sceneform.collision.Ray
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Float2
-import dev.romainguy.kotlin.math.Float3
-import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.arcore.ArFrame
-import io.github.sceneview.collision.pickHitTest
-import io.github.sceneview.math.*
+import io.github.sceneview.math.toFloat3
+import io.github.sceneview.math.toNewQuaternion
 
 class HitTest {
 
-    /**
-     * A [HitTest] converts 2d frame coordinates into 3d world coordinates with a plane alignment using rays.
-     * @property targetPos the object coordinates on the frame
-     * @property cameraPos the camera world position. The ray casting starting point
-     */
-      operator fun invoke(frame: Frame, targetPos: Float2, cameraPos: Float3, sceneView: ArSceneView): Result<HitTestResult> {
+      operator fun invoke(arFrame: ArFrame, targetPos: Float2): Result<HitTestResult> {
+            arFrame.frame.let { frame ->
 
             val hitResult1 = frame.hitTest(targetPos.x, targetPos.y)
             val hitResult2 = frame.hitTest(targetPos.x-5, targetPos.y)
@@ -63,14 +54,12 @@ class HitTest {
                 ).toNewQuaternion()
 
                 val orientatedPosition = OrientatedPosition(pos1.toFloat3(), orientation)
-                Log.d("HIT TEST", "Hit test success")
-                Log.d("HIT TEST", "Hit test position: ${pos1.toFloat3()}")
-                Log.d("HIT TEST", "Hit test orientation: ${orientation}")
+
                 return Result.success(HitTestResult(orientatedPosition, result1))
             }
             else {
                 return Result.failure(Exception("Null hit result"))
             }
     }
-
+      }
 }

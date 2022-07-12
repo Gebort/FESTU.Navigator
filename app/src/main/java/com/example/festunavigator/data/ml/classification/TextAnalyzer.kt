@@ -1,21 +1,12 @@
 package com.example.festunavigator.data.ml.classification
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.media.Image
-import android.util.Log
-import android.widget.Toast
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.MutableLiveData
 import com.example.festunavigator.data.ml.classification.utils.ImageUtils
 import com.example.festunavigator.data.model.DetectedObjectResult
 import com.example.festunavigator.domain.ml.ObjectDetector
-import com.google.android.gms.tasks.Task
-import com.google.mlkit.common.MlKitException
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.objects.ObjectDetection
-import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -28,9 +19,7 @@ import kotlinx.coroutines.withContext
  * Analyzes the frames passed in from the camera and returns any detected text within the requested
  * crop region.
  */
-class TextAnalyzer(
-    private val context: Context,
-) : ObjectDetector {
+class TextAnalyzer: ObjectDetector {
 
     private val options = TextRecognizerOptions
         .Builder()

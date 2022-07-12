@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">FESTU Navigator</string>
+    <string name="app_name" translatable="false">FESTU Navigator</string>
     <string name="initialize">Initialize the graph please</string>
-    <string name="scan">Point your camera at the nearest auditory number</string>
-    <string name="link">:Link</string>
+    <string name="scan">Wait for the dots to appear and point the camera at the auditorium number. Make sure the plate is aligned with the number. If there are multiple numbers, use the lowest one</string>
+    <string name="link">Link</string>
     <string name="cancel">Cancel</string>
     <string name="confirm_place">Text was placed correctly?</string>
     <string name="from">Start</string>
@@ -15,6 +15,7 @@
     <string name="floor">floor №</string>
     <string name="incorrect_number">Can`t find that number</string>
     <string name="no_path">No route</string>
-    <string name="going">Going to</string>
+    <string name="going">Going to %s</string>
+    <string name="init_failed">Initialization failed</string>
 
 </resources>
