@@ -35,12 +35,12 @@ class MainActivity : AppCompatActivity() {
         arCoreSessionHelper.exceptionCallback = { exception ->
             val message = when (exception) {
                 is UnavailableArcoreNotInstalledException,
-                is UnavailableUserDeclinedInstallationException -> "Please install ARCore"
-                is UnavailableApkTooOldException -> "Please update ARCore"
-                is UnavailableSdkTooOldException -> "Please update this app"
-                is UnavailableDeviceNotCompatibleException -> "This device does not support AR"
-                is CameraNotAvailableException -> "Camera not available. Try restarting the app."
-                else -> "Failed to create AR session: $exception"
+                is UnavailableUserDeclinedInstallationException -> getString(R.string.install_arcode)
+                is UnavailableApkTooOldException -> getString(R.string.update_arcode)
+                is UnavailableSdkTooOldException -> getString(R.string.update_app)
+                is UnavailableDeviceNotCompatibleException -> getString(R.string.no_arcore_support)
+                is CameraNotAvailableException -> getString(R.string.camera_not_available)
+                else -> getString(R.string.failed_to_create_session)
             }
             Log.e(TAG, message, exception)
             Toast.makeText(this, message, Toast.LENGTH_LONG).show()

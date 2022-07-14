@@ -64,7 +64,7 @@ dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
-    implementation 'androidx.lifecycle:lifecycle-common-java8:2.4.1'
+    implementation 'androidx.lifecycle:lifecycle-common-java8:2.5.0'
 
     // ARCore
     implementation 'com.google.ar:core:1.32.0'
@@ -83,7 +83,7 @@ dependencies {
 
     // Kotlin Extensions and Coroutines support for Room
     implementation "androidx.room:room-ktx:2.4.2"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.0-rc02"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.0-alpha01"
 
     //Dialog with editText
     implementation 'com.afollestad.material-dialogs:core:3.3.0'

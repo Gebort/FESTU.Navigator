@@ -30,8 +30,11 @@
                 android:hint="@string/from"
                 android:padding="10dp"
                 android:textAlignment="center"
+                app:boxBackgroundMode="outline"
                 app:boxCornerRadiusBottomStart="10dp"
                 app:boxCornerRadiusTopStart="10dp"
+                app:boxStrokeWidth="2dp"
+                app:boxStrokeWidthFocused="2dp"
                 app:errorEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText

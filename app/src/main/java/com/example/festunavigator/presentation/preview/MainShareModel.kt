@@ -30,10 +30,6 @@ import kotlinx.coroutines.withContext
 
 class MainShareModel: ViewModel() {
 
-    private val deleteNodes = App.instance!!.deleteNodes
-    private val getTree = App.instance!!.getTree
-    private val insertNodes = App.instance!!.insertNodes
-    private val updateNodes = App.instance!!.updateNodes
     private val findWay = App.instance!!.findWay
 
     private var _pathState = MutableStateFlow(PathState())
@@ -56,7 +52,7 @@ class MainShareModel: ViewModel() {
     var session: ArSession? = null
         private set
 
-    var tree = Tree()
+    var tree = App.instance!!.getTree()
         private set
 
     private var pathfindJob: Job? = null
@@ -107,7 +103,6 @@ class MainShareModel: ViewModel() {
             is MainEvent.RejectConfObject -> {
                 viewModelScope.launch {
                     _confirmationObject.update { null }
-                    _mainUiEvents.emit(MainUiEvent.InitFailed)
                 }
             }
             is MainEvent.CreateNode -> {
@@ -194,46 +189,41 @@ class MainShareModel: ViewModel() {
         orientation: Quaternion? = null,
         hitTestResult: HitTestResult,
     ) {
-        if (position == null) {
+     //   if (position == null) {
                 val treeNode = tree.addNode(
-                    hitTestResult.orientatedPosition.position,
+                    position ?: hitTestResult.orientatedPosition.position,
                     number,
                     orientation
                 )
                 treeNode.let {
-                    insertNodes(listOf(treeNode), tree.translocation, tree.rotation, tree.pivotPosition)
                     _mainUiEvents.emit(MainUiEvent.NodeCreated(
                         treeNode,
                         hitTestResult.hitResult.createAnchor()
                     ))
                 }
-        } else {
-            val treeNode = tree.addNode(
-                position,
-                number,
-                orientation
-            )
-            treeNode.let {
-                insertNodes(listOf(treeNode), tree.translocation, tree.rotation, tree.pivotPosition)
-                _mainUiEvents.emit(MainUiEvent.NodeCreated(treeNode,
-                    hitTestResult.hitResult.createAnchor()
-                ))
-            }
-        }
+//        } else {
+//            val treeNode = tree.addNode(
+//                position,
+//                number,
+//                orientation
+//            )
+//            treeNode.let {
+//                _mainUiEvents.emit(MainUiEvent.NodeCreated(
+//                    treeNode,
+//                    hitTestResult.hitResult.createAnchor()
+//                ))
+//            }
+//        }
     }
 
     private suspend fun linkNodes(node1: TreeNode, node2: TreeNode){
         if (tree.addLink(node1, node2)) {
-            updateNodes(listOf(node1, node2), tree.translocation, tree.rotation, tree.pivotPosition)
             _mainUiEvents.emit(MainUiEvent.LinkCreated(node1, node2))
         }
     }
 
     private suspend fun removeNode(node: TreeNode){
-        val nodesForUpdate = tree.getNodes(node.neighbours.toMutableList())
         tree.removeNode(node)
-        updateNodes(nodesForUpdate, tree.translocation, tree.rotation, tree.pivotPosition)
-        deleteNodes(listOf(node))
         _mainUiEvents.emit(MainUiEvent.NodeDeleted(node))
     }
 
@@ -258,7 +248,7 @@ class MainShareModel: ViewModel() {
 
     private fun preload(){
         viewModelScope.launch {
-            tree = getTree()
+            tree.preload()
         }
     }
 }

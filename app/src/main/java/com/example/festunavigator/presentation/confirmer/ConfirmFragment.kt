@@ -62,6 +62,7 @@ class ConfirmFragment : Fragment() {
         binding.rejectButton.setOnClickListener {
             setEnabled(false)
             mainModel.onEvent(MainEvent.RejectConfObject(confType))
+            findNavController().popBackStack()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

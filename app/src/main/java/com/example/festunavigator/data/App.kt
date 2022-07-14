@@ -6,17 +6,16 @@ import com.example.festunavigator.data.data_source.GraphDatabase
 import com.example.festunavigator.data.ml.classification.TextAnalyzer
 import com.example.festunavigator.data.pathfinding.AStarImpl
 import com.example.festunavigator.data.repository.GraphImpl
+import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.use_cases.*
 
 class App : Application() {
-    private var database: GraphDatabase? = null
+    private lateinit var database: GraphDatabase
 
     private lateinit var repository: GraphImpl
-    lateinit var insertNodes: InsertNodes
-    lateinit var deleteNodes: DeleteNodes
-    lateinit var updateNodes: UpdateNodes
+    private lateinit var tree: Tree
+
     lateinit var findWay: FindWay
-    lateinit var getTree: GetTree
 
     private lateinit var pathfinder: AStarImpl
 
@@ -35,10 +34,7 @@ class App : Application() {
             .allowMainThreadQueries()
             .build()
         repository = GraphImpl()
-        insertNodes = InsertNodes(repository)
-        deleteNodes = DeleteNodes(repository)
-        updateNodes = UpdateNodes(repository)
-        getTree = GetTree(repository)
+        tree = Tree(repository)
 
         pathfinder = AStarImpl()
         findWay = FindWay(pathfinder)
@@ -51,8 +47,12 @@ class App : Application() {
         getDestinationDesc = GetDestinationDesc()
     }
 
-    fun getDatabase(): GraphDatabase? {
+    fun getDatabase(): GraphDatabase {
         return database
+    }
+
+    fun getTree(): Tree {
+        return tree
     }
 
     companion object {

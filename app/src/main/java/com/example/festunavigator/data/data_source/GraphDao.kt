@@ -2,7 +2,6 @@ package com.example.festunavigator.data.data_source
 
 import androidx.room.*
 import com.example.festunavigator.data.model.TreeNodeDto
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface GraphDao {
@@ -18,5 +17,8 @@ interface GraphDao {
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateNodes(nodes: List<TreeNodeDto>)
+
+    @Query("DELETE FROM treenodedto")
+    fun clearNodes()
 
 }

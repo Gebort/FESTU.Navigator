@@ -26,7 +26,7 @@
             android:name=".presentation.MainActivity"
             android:configChanges="orientation|screenSize|screenLayout"
             android:windowSoftInputMode="stateHidden|adjustPan"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/Theme.FESTUNavigator"
             android:screenOrientation="portrait"
             android:exported="true"
             tools:ignore="LockedOrientationActivity">

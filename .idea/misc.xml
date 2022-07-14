@@ -3,9 +3,17 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/color_cursor.xml" value="0.1" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_accept.xml" value="0.155" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_app_icon.xml" value="0.158" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_borders.xml" value="0.1525" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_borders_vertical.xml" value="0.1" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_reject.xml" value="0.1" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_search.xml" value="0.1" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_up_arrow.xml" value="0.1" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/rounded.xml" value="0.1" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/scan_area.xml" value="0.1" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/activity_main.xml" value="0.22" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/confirm_layout.xml" value="0.6" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/confirmation_layout.xml" value="0.5285935085007728" />

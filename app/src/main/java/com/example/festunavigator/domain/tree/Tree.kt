@@ -2,33 +2,30 @@ package com.example.festunavigator.domain.tree
 
 import android.util.Log
 import com.example.festunavigator.data.model.TreeNodeDto
-import com.example.festunavigator.domain.use_cases.ConvertPosition
-import com.example.festunavigator.domain.use_cases.ConvertQuaternion
+import com.example.festunavigator.domain.repository.GraphRepository
+import com.example.festunavigator.domain.use_cases.convert
 import com.example.festunavigator.domain.use_cases.inverted
-import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class Tree(
-    private val convertPosition: ConvertPosition = ConvertPosition(),
-    private val convertQuaternion: ConvertQuaternion = ConvertQuaternion()
+    private val repository: GraphRepository
 ) {
 
     private val _entryPoints: MutableMap<String, TreeNode.Entry> = mutableMapOf()
-    //val entryPoints: Map<String, TreeNode.Entry> = _entryPoints
-
     private val _allPoints: MutableMap<Int, TreeNode> = mutableMapOf()
-    //val allPoints: Map<Int, TreeNode> = _allPoints
-
     private val _links: MutableMap<Int, MutableList<Int>> = mutableMapOf()
-    //val links: Map<TreeNode, List<TreeNode>> = _links
 
     private val _translocatedPoints: MutableMap<TreeNode, Boolean> = mutableMapOf()
 
     private var availableId = 0
 
     var initialized = false
+        private set
+    var preloaded = false
         private set
 
     var translocation = Float3(0f, 0f, 0f)
@@ -40,9 +37,12 @@ class Tree(
     var rotation = Float3(0f, 0f, 0f).toQuaternion()
         private set
 
-    constructor(rawNodesList: List<TreeNodeDto>) : this() {
-        Log.d(TAG, "Preload start")
-
+    suspend fun preload() = withContext(Dispatchers.IO) {
+        if (initialized){
+            throw Exception("Already initialized, cant preload")
+        }
+        preloaded = false
+        val rawNodesList = repository.getNodes()
         for (nodeDto in rawNodesList) {
             var node: TreeNode
             if (nodeDto.type == TreeNodeDto.TYPE_ENTRY
@@ -69,25 +69,19 @@ class Tree(
             if (node.id+1 > availableId){
                 availableId = node.id+1
             }
-            Log.d(TAG, "========")
-            Log.d(TAG, "Preload: loaded node, id: ${node.id}, number: ${nodeDto.number}")
-            Log.d(TAG, "Pos: ${node.position}")
         }
-
-        Log.d(TAG, "Preload finished")
-
+        preloaded = true
     }
 
     suspend fun initialize(entryNumber: String, position: Float3, newRotation: Quaternion): Result<Unit?> {
-        Log.d(TAG, "Initialization start")
+        initialized = false
         if (_entryPoints.isNotEmpty()) {
-            Log.d(TAG, "Initialization: entry number $entryNumber")
             val entry = _entryPoints[entryNumber]
             if (entry != null) {
 
                 pivotPosition = entry.position
                 translocation = entry.position - position
-                rotation = convertQuaternion(entry.forwardVector, newRotation.inverted()) * -1f
+                rotation = entry.forwardVector.convert(newRotation.inverted()) * -1f
                 rotation.w *= -1f
 
 
@@ -143,12 +137,18 @@ class Tree(
     }
 
     fun getNodes(nodes: List<Int>): List<TreeNode> {
+        if (!initialized){
+            throw Exception("Tree isnt initialized")
+        }
         return nodes.mapNotNull {
             getNode(it)
         }
     }
 
     fun getAllNodes(): List<TreeNode> {
+        if (!initialized){
+            throw Exception("Tree isnt initialized")
+        }
         val nodes = mutableListOf<TreeNode>()
         for (key in _allPoints.keys) {
             getNode(key)?.let {
@@ -162,11 +162,14 @@ class Tree(
         return _entryPoints.keys
     }
 
-    fun getAllLinksKeys(): Set<Int> {
-        return _links.keys
-    }
+//    fun getAllLinksKeys(): Set<Int> {
+//        return _links.keys
+//    }
 
     fun getNodesWithLinks(): List<TreeNode> {
+        if (!initialized){
+            throw Exception("Tree isnt initialized")
+        }
        return _links.keys.mapNotNull {
             getNode(it)
         }
@@ -184,7 +187,7 @@ class Tree(
     private fun translocateNode(node: TreeNode) {
         node.position = convertPosition(node.position, translocation, rotation, pivotPosition)
         if (node is TreeNode.Entry){
-            node.forwardVector = convertQuaternion(node.forwardVector, rotation)
+            node.forwardVector = node.forwardVector.convert(rotation)
         }
         _translocatedPoints[node] = true
     }
@@ -226,36 +229,40 @@ class Tree(
 
         _allPoints[newNode.id] = newNode
         availableId++
+        repository.insertNodes(listOf(newNode), translocation, rotation, pivotPosition)
         return newNode
     }
 
     suspend fun removeNode(
         node: TreeNode
     ) {
-        Log.d(TAG, "Remove node start")
+        if (!initialized){
+            throw Exception("Tree isnt initialized")
+        }
+        val nodesForUpdate = getNodes(node.neighbours.toMutableList())
         removeAllLinks(node)
         _translocatedPoints.remove(node)
         when (node){
             is TreeNode.Path -> {
-                Log.d(TAG, "Remove node: node id ${node.id}")
                 _allPoints.remove(node.id)
             }
             is TreeNode.Entry -> {
-                Log.d(TAG, "Remove node: entry node id ${node.id} number ${node.number}")
                 _entryPoints.remove(node.number)
                 _allPoints.remove(node.id)
             }
         }
-        Log.d(TAG, "Remove node finish")
+        repository.updateNodes(nodesForUpdate, translocation, rotation, pivotPosition)
+        repository.deleteNodes(listOf(node))
     }
 
     suspend fun addLink(
         node1: TreeNode,
         node2: TreeNode
     ): Boolean {
-        Log.d(TAG, "Link creation started")
+        if (!initialized){
+            throw Exception("Tree isnt initialized")
+        }
         if (_links[node1.id] == null) {
-            Log.d(TAG, "Link creation: null node1 list")
             _links[node1.id] = mutableListOf()
         }
         else {
@@ -264,7 +271,6 @@ class Tree(
             }
         }
         if (_links[node2.id] == null) {
-            Log.d(TAG, "Link creation: null node2 list")
             _links[node2.id] = mutableListOf()
         }
         else {
@@ -275,31 +281,34 @@ class Tree(
         node2.neighbours.add(node1.id)
         _links[node1.id] = node1.neighbours
         _links[node2.id] = node2.neighbours
-        Log.d(TAG, "Link ${node1.id} -> ${node2.id}")
-        Log.d(TAG, "Link creation finished")
+        repository.updateNodes(listOf(node1, node2), translocation, rotation, pivotPosition)
         return true
 
     }
 
-    suspend fun removeLink(
-        node1: TreeNode,
-        node2: TreeNode
-    ) {
-        if (_links[node1.id] == null || _links[node2.id] == null)
-            return
-        if (_links[node1.id]!!.contains(node2.id) && _links[node2.id]!!.contains(node1.id)){
-            node1.neighbours.remove(node2.id)
-            node2.neighbours.remove(node1.id)
-            _links[node1.id] = node1.neighbours
-            _links[node2.id] = node2.neighbours
-        }
-    }
+//    suspend fun removeLink(
+//        node1: TreeNode,
+//        node2: TreeNode
+//    ) {
+//        //нет обновления в repository!!!!
+//        if (!initialized){
+//            throw Exception("Tree isnt initialized")
+//        }
+//        if (_links[node1.id] == null || _links[node2.id] == null)
+//            return
+//        if (_links[node1.id]!!.contains(node2.id) && _links[node2.id]!!.contains(node1.id)){
+//            node1.neighbours.remove(node2.id)
+//            node2.neighbours.remove(node1.id)
+//            _links[node1.id] = node1.neighbours
+//            _links[node2.id] = node2.neighbours
+//        }
+//    }
 
     private fun removeAllLinks(node: TreeNode){
-        Log.d(TAG, "Removing all links for node id ${node.id} started")
+        if (!initialized){
+            throw Exception("Tree isnt initialized")
+        }
         if (_links[node.id] == null) {
-            Log.d(TAG, "Removing all links: null list")
-            Log.d(TAG, "Removing all links: finish")
             return
         }
 
@@ -311,13 +320,10 @@ class Tree(
         }
 
         node.neighbours.clear()
-        Log.d(TAG, "Removing all links: node list cleared")
         _links[node.id] = node.neighbours
-        Log.d(TAG, "Removing all links: finish")
-
     }
 
-    private fun clearTree(){
+    private suspend fun clearTree(){
         Log.d(TAG, "Tree cleared")
         _links.clear()
         _allPoints.clear()
@@ -327,6 +333,19 @@ class Tree(
         translocation = Float3(0f, 0f, 0f)
         rotation = Float3(0f, 0f, 0f).toQuaternion()
         pivotPosition = Float3(0f, 0f, 0f)
+        repository.clearNodes()
+    }
+
+    private fun convertPosition(
+        position: Float3,
+        translocation: Float3,
+        quaternion: Quaternion,
+        pivotPosition: Float3
+    ): Float3 {
+        return (com.google.ar.sceneform.math.Quaternion.rotateVector(
+            quaternion.toOldQuaternion(),
+            (position - pivotPosition).toVector3()
+        ).toFloat3() + pivotPosition) - translocation
     }
 
     companion object {

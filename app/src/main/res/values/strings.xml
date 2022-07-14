@@ -17,5 +17,11 @@
     <string name="no_path">No route</string>
     <string name="going">Going to %s</string>
     <string name="init_failed">Initialization failed</string>
+    <string name="install_arcode">Please, install ARCore</string>
+    <string name="update_arcode">Please, update ARCore</string>
+    <string name="update_app">Please, update this app</string>
+    <string name="no_arcore_support">This device does not support AR</string>
+    <string name="camera_not_available">Camera not available. Try restarting the app</string>
+    <string name="failed_to_create_session">Failed to create AR session</string>
 
 </resources>

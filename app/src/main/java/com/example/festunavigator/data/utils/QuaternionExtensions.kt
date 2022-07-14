@@ -6,14 +6,8 @@ import dev.romainguy.kotlin.math.inverse
 import io.github.sceneview.math.toNewQuaternion
 import io.github.sceneview.math.toOldQuaternion
 
-class ConvertQuaternion {
-
-    operator fun invoke(
-        quaternion1: Quaternion,
-        quaternion2: Quaternion
-    ): Quaternion {
-        return quaternion1 * quaternion2
-    }
+fun Quaternion.convert(quaternion2: Quaternion): Quaternion {
+    return this * quaternion2
 }
 
 fun Quaternion.inverted(): Quaternion {

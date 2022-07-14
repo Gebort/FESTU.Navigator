@@ -17,5 +17,11 @@
     <string name="no_path">Нет маршрута</string>
     <string name="going">Идем в %s</string>
     <string name="init_failed">Ошибка при инициализации</string>
+    <string name="install_arcode">Пожалуйста, установите ARCore</string>
+    <string name="update_arcode">Пожалуйста, обновите ARCore</string>
+    <string name="update_app">Пожалуйста, обновите this app</string>
+    <string name="no_arcore_support">Устройство не поддерживает дополненную реальность</string>
+    <string name="camera_not_available">Камера недоступна. Попробуйте перезапустить приложение</string>
+    <string name="failed_to_create_session">Не получилось создать AR сессию</string>
 
 </resources>
