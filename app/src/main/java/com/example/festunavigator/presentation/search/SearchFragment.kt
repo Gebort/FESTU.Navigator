@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.activityViewModels
@@ -18,11 +17,9 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.festunavigator.R
 import com.example.festunavigator.data.App
-import com.example.festunavigator.databinding.FragmentPreviewBinding
 import com.example.festunavigator.databinding.FragmentSearchBinding
-import com.example.festunavigator.presentation.LabelObject
-import com.example.festunavigator.presentation.common.adapters.EntriesAdapter
-import com.example.festunavigator.presentation.common.adapters.EntryItem
+import com.example.festunavigator.presentation.search.adapters.EntriesAdapter
+import com.example.festunavigator.presentation.search.adapters.EntryItem
 import com.example.festunavigator.presentation.common.helpers.viewHideInput
 import com.example.festunavigator.presentation.common.helpers.viewRequestInput
 import com.example.festunavigator.presentation.preview.MainEvent
@@ -73,7 +70,7 @@ class SearchFragment : Fragment() {
 
         with(binding.searchInput){
             doOnTextChanged { text, _, _, _ ->
-                adapter.applyFilter(text.toString())
+                    adapter.applyFilter(text.toString())
             }
             setOnEditorActionListener { v, actionId, event ->
                 var handled = false
@@ -103,18 +100,7 @@ class SearchFragment : Fragment() {
             adapter.changeList(entriesList)
         }
 
-        viewRequestInput(
-            binding.searchInput,
-            requireContext()
-        )
-
-//        viewLifecycleOwner.lifecycleScope.launch {
-//            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                mainModel.pathState.collectLatest { path ->
-//                    //TODO обработка начальной и конечной точки
-//                }
-//            }
-//        }
+        binding.searchInput.viewRequestInput()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -122,18 +108,12 @@ class SearchFragment : Fragment() {
                     when (uiEvent) {
                         is SearchUiEvent.SearchSuccess -> {
                             binding.searchLayout.error = null
+                            binding.searchInput.viewHideInput()
                             findNavController().popBackStack()
                         }
                         is SearchUiEvent.SearchInvalid -> {
                             binding.searchLayout.error = resources.getString(R.string.incorrect_number)
-                            viewHideInput(
-                                binding.searchInput,
-                                requireContext()
-                            )
-                            viewRequestInput(
-                                binding.searchInput,
-                                requireContext()
-                            )
+                            binding.searchInput.viewRequestInput()
                         }
                     }
                 }

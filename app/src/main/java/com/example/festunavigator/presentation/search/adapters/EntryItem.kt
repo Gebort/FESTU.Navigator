@@ -1,4 +1,4 @@
-package com.example.festunavigator.presentation.common.adapters
+package com.example.festunavigator.presentation.search.adapters
 
 data class EntryItem(
     val number: String,

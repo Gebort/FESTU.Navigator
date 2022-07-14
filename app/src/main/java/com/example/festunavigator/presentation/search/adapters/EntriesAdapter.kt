@@ -1,4 +1,4 @@
-package com.example.festunavigator.presentation.common.adapters
+package com.example.festunavigator.presentation.search.adapters
 
 import android.view.LayoutInflater
 import android.view.View
@@ -10,13 +10,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.festunavigator.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class EntriesAdapter(
     private val onItemClick: (String) -> Unit
 ) : ListAdapter<EntryItem, EntriesAdapter.ItemViewholder>(DiffCallback())  {
 
-    private val adapterScope = CoroutineScope(Dispatchers.Default)
     private var rawList = listOf<EntryItem>()
     private var filter: String = ""
 
