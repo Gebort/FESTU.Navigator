@@ -59,6 +59,7 @@ Remove line - .createFromAsset(DATABASE_DIR):
 34     .build()
 ```
 Now you can run the app and experience it anywhere
+If you have any questions, you can email me: gerbort111@gmail.com
 
 
 
