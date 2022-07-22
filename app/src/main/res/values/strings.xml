@@ -23,5 +23,7 @@
     <string name="no_arcore_support">This device does not support AR</string>
     <string name="camera_not_available">Camera not available. Try restarting the app</string>
     <string name="failed_to_create_session">Failed to create AR session</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

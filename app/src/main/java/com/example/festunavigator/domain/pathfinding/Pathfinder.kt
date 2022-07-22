@@ -9,6 +9,6 @@ interface Pathfinder {
         from: String,
         to: String,
         tree: Tree
-    ): List<TreeNode>?
+    ): Path?
 
 }

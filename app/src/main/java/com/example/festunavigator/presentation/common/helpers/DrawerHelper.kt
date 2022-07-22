@@ -8,6 +8,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.festunavigator.R
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
+import com.example.festunavigator.domain.pathfinding.Path
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.domain.use_cases.SmoothPath
@@ -32,9 +33,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 
 class DrawerHelper(
-    private val fragment: Fragment,
-    private val smoothPath: SmoothPath = SmoothPath()
-) {
+    private val fragment: Fragment
+    ) {
 
     private val routeStep = 0.2f
     private var labelScale = Scale(0.15f, 0.075f, 0.15f)
@@ -164,7 +164,7 @@ class DrawerHelper(
     }
 
     suspend fun drawWay(
-        nodes: List<TreeNode>,
+        way: Path?,
         routeLabels: MutableList<ArNode>,
         surfaceView: ArSceneView
     ){
@@ -172,13 +172,12 @@ class DrawerHelper(
         routeLabels.forEach { it.destroy() }
         routeLabels.clear()
 
-        val way = smoothPath(nodes)
-
-        for (pos in way) {
-            routeLabels.add(placeArrow(pos, surfaceView))
-            yield()
+        way?.let {
+            for (pos in way.nodes) {
+                routeLabels.add(placeArrow(pos, surfaceView))
+                yield()
+            }
         }
-
     }
 
     suspend fun placeLabel(

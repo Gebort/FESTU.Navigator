@@ -109,8 +109,11 @@ class ScannerFragment : Fragment() {
                 currentScanSmoothDelay -= getFrameInterval()
             }
 
+            return
+
             if (!scanningNow) {
                 if (scanningJob?.isActive != true) {
+                    scanningJob?.cancel()
                     scanningJob =
                         viewLifecycleOwner.lifecycleScope.launch {
                                 if (currentScanSmoothDelay <= 0 && lastDetectedObject != null) {

@@ -11,12 +11,11 @@ fun Quaternion.convert(quaternion2: Quaternion): Quaternion {
 }
 
 fun Quaternion.inverted(): Quaternion {
-    return this.toOldQuaternion().inverted().toNewQuaternion()
+    return toOldQuaternion().inverted().toNewQuaternion()
 }
 
 fun Quaternion.opposite(): Quaternion {
     return inverse(this)
-   // return Quaternion.fromEuler(-this.toEulerAngles())
 }
 
 fun Quaternion.Companion.lookRotation(forward: Vector3, up: Vector3 = Vector3.up()): Quaternion {

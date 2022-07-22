@@ -1,12 +1,16 @@
 package com.example.festunavigator.data.pathfinding
 
+import com.example.festunavigator.data.App
+import com.example.festunavigator.domain.pathfinding.Path
 import com.example.festunavigator.domain.pathfinding.Pathfinder
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
 
 class AStarImpl: Pathfinder {
 
-    override suspend fun findWay(from: String, to: String, tree: Tree): List<TreeNode>? {
+    private val smoothPath = App.instance!!.smoothPath
+
+    override suspend fun findWay(from: String, to: String, tree: Tree): Path? {
 
         val finalNode = AStarNode(tree.getEntry(to)!!, null)
         val initialNode = AStarNode(tree.getEntry(from)!!, finalNode)
@@ -22,9 +26,14 @@ class AStarImpl: Pathfinder {
             closedSet.add(currentNode)
 
             if (currentNode == finalNode) {
-                return getPath(currentNode).map { aStarNode ->
-                    aStarNode.node
-                }
+
+                return Path(
+                    smoothPath(
+                        getPath(currentNode).map { aStarNode ->
+                            aStarNode.node
+                        }
+                    )
+                )
             } else {
                 addAdjacentNodes(currentNode, openList, closedSet, finalNode, tree)
             }

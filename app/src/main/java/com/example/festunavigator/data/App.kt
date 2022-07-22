@@ -26,6 +26,8 @@ class App : Application() {
 
     lateinit var getDestinationDesc: GetDestinationDesc
 
+    lateinit var smoothPath: SmoothPath
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -36,6 +38,8 @@ class App : Application() {
         repository = GraphImpl()
         tree = Tree(repository)
 
+        smoothPath = SmoothPath()
+
         pathfinder = AStarImpl()
         findWay = FindWay(pathfinder)
 
@@ -45,6 +49,7 @@ class App : Application() {
         analyzeImage = AnalyzeImage(objectDetector)
 
         getDestinationDesc = GetDestinationDesc()
+
     }
 
     fun getDatabase(): GraphDatabase {

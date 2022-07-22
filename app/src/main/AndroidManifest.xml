@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.festunavigator">
 
     <uses-permission android:name="android.permission.CAMERA" />
-    <!-- Sceneform requires OpenGLES 3.0 or later. -->
     <uses-feature android:glEsVersion="0x00030000" android:required="true" />
-    <!-- Indicates that this app requires Google Play Services for AR ("AR Required") and results in
-         the app only being visible in the Google Play Store on devices that support ARCore.
-         For an "AR Optional" app, remove this tag. -->
     <uses-feature android:name="android.hardware.camera.ar" android:required="true"/>
 
     <application

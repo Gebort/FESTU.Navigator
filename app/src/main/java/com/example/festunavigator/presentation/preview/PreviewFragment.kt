@@ -16,6 +16,7 @@ import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.databinding.FragmentPreviewBinding
 import com.example.festunavigator.domain.hit_test.HitTestResult
+import com.example.festunavigator.domain.pathfinding.Path
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
@@ -310,11 +311,11 @@ class PreviewFragment : Fragment() {
         }
     }
 
-    private fun reDrawPath(path: List<TreeNode>?, wayNodes: MutableList<ArNode>){
+    private fun reDrawPath(path: Path?, wayNodes: MutableList<ArNode>){
         wayBuildingJob?.cancel()
         wayBuildingJob = viewLifecycleOwner.lifecycleScope.launch {
             drawerHelper.drawWay(
-                path ?: listOf(),
+                path,
                 wayNodes,
                 binding.sceneView
             )

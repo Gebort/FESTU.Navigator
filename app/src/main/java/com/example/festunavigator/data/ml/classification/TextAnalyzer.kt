@@ -38,7 +38,7 @@ class TextAnalyzer: ObjectDetector {
         var cropRect: Rect?
         var croppedBit: Bitmap?
 
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.Default) {
 
             // We requested a setTargetAspectRatio, but it's not guaranteed that's what the camera
             // stack is able to support, so we calculate the actual ratio from the first frame to

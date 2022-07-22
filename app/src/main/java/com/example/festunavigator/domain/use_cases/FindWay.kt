@@ -1,5 +1,6 @@
 package com.example.festunavigator.domain.use_cases
 
+import com.example.festunavigator.domain.pathfinding.Path
 import com.example.festunavigator.domain.pathfinding.Pathfinder
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
@@ -12,7 +13,7 @@ class FindWay(
         from: String,
         to: String,
         tree: Tree
-    ): List<TreeNode>? {
+    ): Path? {
         return pathfinder.findWay(from, to, tree)
     }
 }

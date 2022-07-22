@@ -93,10 +93,19 @@ class MainShareModel: ViewModel() {
 
                             }
                         }
-
                     }
                     ConfirmFragment.CONFIRM_ENTRY -> {
-                        //TODO преобразование conf Object в новый Entry
+                        viewModelScope.launch {
+                            _confirmationObject.value?.let {
+                                createNode(
+                                    number = it.label,
+                                    position = it.pos.position,
+                                    orientation = it.pos.orientation
+                                )
+                                _confirmationObject.update { null }
+
+                            }
+                        }
                     }
                 }
             }
@@ -187,18 +196,21 @@ class MainShareModel: ViewModel() {
         number: String? = null,
         position: Float3? = null,
         orientation: Quaternion? = null,
-        hitTestResult: HitTestResult,
+        hitTestResult: HitTestResult? = null,
     ) {
+        if (position == null && hitTestResult == null){
+            throw Exception("No position was provided")
+        }
      //   if (position == null) {
                 val treeNode = tree.addNode(
-                    position ?: hitTestResult.orientatedPosition.position,
+                    position ?: hitTestResult!!.orientatedPosition.position,
                     number,
                     orientation
                 )
                 treeNode.let {
                     _mainUiEvents.emit(MainUiEvent.NodeCreated(
                         treeNode,
-                        hitTestResult.hitResult.createAnchor()
+                        hitTestResult?.hitResult?.createAnchor()
                     ))
                 }
 //        } else {
