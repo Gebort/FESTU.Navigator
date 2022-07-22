@@ -48,10 +48,6 @@ class MainShareModel: ViewModel() {
     private var _confirmationObject = MutableStateFlow<LabelObject?>(null)
     val confirmationObject = _confirmationObject.asStateFlow()
 
-    @SuppressLint("StaticFieldLeak")
-    var session: ArSession? = null
-        private set
-
     var tree = App.instance!!.getTree()
         private set
 
@@ -67,9 +63,6 @@ class MainShareModel: ViewModel() {
                 viewModelScope.launch {
                     _frame.emit(event.frame)
                 }
-            }
-            is MainEvent.NewSession -> {
-                session = event.session
             }
             is MainEvent.NewConfirmationObject -> {
                 _confirmationObject.update { event.confObject }

@@ -150,7 +150,7 @@ class ScannerFragment : Fragment() {
 
                                 } else {
                                     scanningNow = true
-                                    val detectedObject = tryGetDetectedObject()
+                                    val detectedObject = tryGetDetectedObject(frame)
                                     if (lastDetectedObject == null) {
                                         lastDetectedObject = detectedObject
                                         currentScanSmoothDelay = SMOOTH_DELAY
@@ -180,10 +180,9 @@ class ScannerFragment : Fragment() {
 
         }
 
-        private suspend fun tryGetDetectedObject(): DetectedText? {
-            val session = mainModel.session ?: return null
-            val frame = session.currentFrame ?: return null
+        private suspend fun tryGetDetectedObject(frame: ArFrame): DetectedText? {
             val camera = frame.camera
+            val session = frame.session
 
             if (camera.trackingState != TrackingState.TRACKING) {
                 return null

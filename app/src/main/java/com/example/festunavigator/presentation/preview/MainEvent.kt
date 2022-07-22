@@ -10,7 +10,6 @@ import io.github.sceneview.ar.arcore.ArSession
 
 sealed class MainEvent{
     class NewFrame(val frame: ArFrame): MainEvent()
-    class NewSession(val session: ArSession): MainEvent()
     class NewConfirmationObject(val confObject: LabelObject): MainEvent()
     class TrySearch(val number: String, val changeType: Int): MainEvent()
     class AcceptConfObject(val confirmType: Int): MainEvent()

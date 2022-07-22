@@ -141,12 +141,8 @@ class PreviewFragment : Fragment() {
             findNavController().navigate(R.id.action_global_scannerFragment, args = bundle)
         }
 
-        binding.sceneView.onFrame = { frameTime ->
-            if (mainModel.session != binding.sceneView.arSession){
-                mainModel.onEvent(MainEvent.NewSession(binding.sceneView.arSession!!))
-            }
-            onDrawFrame(frameTime)
-
+        binding.sceneView.onArFrame = { frame ->
+            onDrawFrame(frame)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -260,10 +256,7 @@ class PreviewFragment : Fragment() {
         }
 
 
-    private fun onDrawFrame(frameTime: FrameTime) {
-
-        val session = binding.sceneView.arSession ?: return
-        val frame = session.currentFrame ?: return
+    private fun onDrawFrame(frame: ArFrame) {
 
         val camera = frame.camera
 

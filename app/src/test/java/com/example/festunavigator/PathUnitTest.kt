@@ -25,7 +25,7 @@ class PathUnitTest {
     val pos10 = OrientatedPosition(Float3(10f,0f,0f), Quaternion())
     var path = Path(listOf(pos1, pos2, pos3, pos4, pos5, pos6, pos7, pos8, pos9, pos10))
 
-    @After
+    @Before
     fun setup(){
         path = Path(listOf(pos1, pos2, pos3, pos4, pos5, pos6, pos7, pos8, pos9, pos10))
 
