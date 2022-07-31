@@ -38,7 +38,7 @@
                 android:layout_marginRight="5dp"
                 android:layout_weight="1"
                 android:backgroundTint="#B21E851B"
-                android:minHeight="48dp"
+                android:contentDescription="@string/accept"
                 app:srcCompat="@drawable/ic_accept"
                 app:tint="#FFFFFF" />
 
@@ -50,6 +50,7 @@
                 android:layout_marginRight="5dp"
                 android:layout_weight="1"
                 android:backgroundTint="#C4D84949"
+                android:contentDescription="@string/reject"
                 app:srcCompat="@drawable/ic_reject"
                 app:tint="#FFFFFF" />
         </LinearLayout>

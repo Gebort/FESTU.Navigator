@@ -109,8 +109,6 @@ class ScannerFragment : Fragment() {
                 currentScanSmoothDelay -= getFrameInterval()
             }
 
-            return
-
             if (!scanningNow) {
                 if (scanningJob?.isActive != true) {
                     scanningJob?.cancel()

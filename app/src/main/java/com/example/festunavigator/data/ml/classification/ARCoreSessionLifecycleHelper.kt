@@ -15,8 +15,8 @@ import com.google.ar.core.exceptions.CameraNotAvailableException
  * and asks the user for permissions, if necessary.
  */
 class ARCoreSessionLifecycleHelper(
-    val activity: Activity,
-    val features: Set<Session.Feature> = setOf()
+    private val activity: Activity,
+    private val features: Set<Session.Feature> = setOf()
 ) : DefaultLifecycleObserver {
     var installRequested = false
     var sessionCache: Session? = null
@@ -57,11 +57,6 @@ class ARCoreSessionLifecycleHelper(
     }
 
     override fun onResume(owner: LifecycleOwner) {
-        if (!CameraPermissionHelper.hasCameraPermission(activity)) {
-            //CameraPermissionHelper.requestCameraPermission(activity)
-            return
-        }
-
         val session = tryCreateSession() ?: return
         try {
             beforeSessionResume?.invoke(session)
@@ -83,21 +78,5 @@ class ARCoreSessionLifecycleHelper(
         // https://developers.google.com/ar/reference/java/arcore/reference/com/google/ar/core/Session#close()
         sessionCache?.close()
         sessionCache = null
-    }
-
-    fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        if (!CameraPermissionHelper.hasCameraPermission(activity)) {
-            Toast.makeText(activity, "Camera permission is needed to run this application", Toast.LENGTH_LONG)
-                .show()
-            if (!CameraPermissionHelper.shouldShowRequestPermissionRationale(activity)) {
-                // Permission denied with checking "Do not ask again".
-                CameraPermissionHelper.launchPermissionSettings(activity)
-            }
-            activity.finish()
-        }
     }
 }

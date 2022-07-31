@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -23,7 +24,9 @@ import com.example.festunavigator.presentation.common.helpers.DrawerHelper
 import com.example.festunavigator.presentation.preview.state.PathState
 import com.example.festunavigator.presentation.scanner.ScannerFragment
 import com.google.android.material.snackbar.Snackbar
+import com.google.ar.core.Config
 import com.google.ar.core.TrackingState
+import com.google.ar.core.exceptions.*
 import com.uchuhimo.collections.MutableBiMap
 import com.uchuhimo.collections.mutableBiMapOf
 import dev.romainguy.kotlin.math.Float2
@@ -69,6 +72,7 @@ class PreviewFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentPreviewBinding.inflate(inflater, container, false)
+
         return binding.root
     }
 
@@ -84,12 +88,41 @@ class PreviewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        //TODO нужно получать ноды из модели и отрисовывать их при перевороте экрана
+        //отработать сворачивание приложения
 
-        with(binding.sceneView){
-            instructions.enabled = false
+        binding.sceneView.apply {
             planeRenderer.isVisible = true
+            instructions.enabled = false
+            onArFrame = { frame ->
+                onDrawFrame(frame)
+            }
 
+            onTouchEvent = { pickHitResult, _ ->
+                if (mode == ADMIN_MODE) {
+                    pickHitResult.node?.let { node ->
+                        if (!linkPlacementMode) {
+                            selectNode(node)
+                        } else {
+                            linkNodes(selectedNode!!, node)
+                            changeLinkPlacementMode(false)
+                        }
+                    }
+                }
+                true
+            }
+            onArSessionFailed = { exception ->
+                val message = when (exception) {
+                    is UnavailableArcoreNotInstalledException,
+                    is UnavailableUserDeclinedInstallationException -> getString(R.string.install_arcode)
+                    is UnavailableApkTooOldException -> getString(R.string.update_arcode)
+                    is UnavailableSdkTooOldException -> getString(R.string.update_app)
+                    is UnavailableDeviceNotCompatibleException -> getString(R.string.no_arcore_support)
+                    is CameraNotAvailableException -> getString(R.string.camera_not_available)
+                    is SecurityException -> getString(R.string.provide_camera_permission)
+                    else -> getString(R.string.failed_to_create_session)
+                }
+                Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+            }
         }
 
         if (mode == ADMIN_MODE) {
@@ -100,22 +133,6 @@ class PreviewFragment : Fragment() {
         }
 
         selectNode(null)
-
-        binding.sceneView.onTouchEvent = {pickHitResult, motionEvent ->
-
-            if (mode == ADMIN_MODE) {
-                pickHitResult.node?.let { node ->
-                    if (!linkPlacementMode) {
-                        selectNode(node)
-
-                    } else {
-                        linkNodes(selectedNode!!, node)
-                        changeLinkPlacementMode(false)
-                    }
-                }
-            }
-            true
-        }
 
         binding.deleteButton.setOnClickListener {
             removeNode(selectedNode)
@@ -139,10 +156,6 @@ class PreviewFragment : Fragment() {
                 ScannerFragment.TYPE_ENTRY
             )
             findNavController().navigate(R.id.action_global_scannerFragment, args = bundle)
-        }
-
-        binding.sceneView.onArFrame = { frame ->
-            onDrawFrame(frame)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

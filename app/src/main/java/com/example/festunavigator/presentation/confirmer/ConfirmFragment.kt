@@ -37,6 +37,7 @@ class ConfirmFragment : Fragment() {
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     mainModel.onEvent(MainEvent.RejectConfObject(confType))
+                    findNavController().popBackStack()
                 }
             }
         requireActivity().onBackPressedDispatcher.addCallback(this, callback)
