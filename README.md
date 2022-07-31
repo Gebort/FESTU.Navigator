@@ -13,23 +13,43 @@ Classrooms number recognition performed using Google MLKit.
 
 **The recognizable classroom number must be vertical and not contain letters in the name**
 
-![image](https://user-images.githubusercontent.com/35885530/179328286-371043fc-a101-46d3-a3da-b1d2885b9ee4.png)
+<p align="middle">
+  <img src="https://user-images.githubusercontent.com/35885530/179328286-371043fc-a101-46d3-a3da-b1d2885b9ee4.png" width="300" />
+</p>
+
+<br>
 
 It is required to confirm the recognized classroom number and its position in 3D space, since an error is possible in determining the planes around the user
 
-![image](https://user-images.githubusercontent.com/35885530/179328379-60c46df3-bdfd-42f4-a534-c5f79e4cd218.png)
+<p align="middle">
+  <img src="https://user-images.githubusercontent.com/35885530/179328379-60c46df3-bdfd-42f4-a534-c5f79e4cd218.png" width="300" />
+</p>
+
+<br>
 
 Initialization is required to determine the user's current position relative to the saved classrooms graph. After initialization, the user can select both the start and end points of the route
 
-![image](https://user-images.githubusercontent.com/35885530/179328505-4ae5348e-0e3d-4cd9-ab29-5543bf37bfc3.png)
+<p align="middle">
+  <img src="https://user-images.githubusercontent.com/35885530/179328505-4ae5348e-0e3d-4cd9-ab29-5543bf37bfc3.png" width="200" />
+</p>
+
+<br>
 
 The built route thanks to the SceneView AR library is displayed in 3D space in front of the user. Finding the shortest route is done using the A* algorithm, path smoothing is done using Bezier curves
 
-![image](https://user-images.githubusercontent.com/35885530/179328566-72e66c07-088d-498d-a7eb-955cbcbf8fb4.png)
+<p align="middle">
+  <img src="https://user-images.githubusercontent.com/35885530/179328566-72e66c07-088d-498d-a7eb-955cbcbf8fb4.png" width="300" />
+</p>
+
+<br>
 
 The classrooms graph is created manually by the application administrator through a special interface
 
-![image](https://user-images.githubusercontent.com/35885530/179328653-132d6894-bd8c-4a39-a8a5-d38374a82c77.png)
+<p align="middle">
+  <img src="https://user-images.githubusercontent.com/35885530/179328653-132d6894-bd8c-4a39-a8a5-d38374a82c77.png" width="300" />
+</p>
+
+<br>
 
 ## Video demonstration and APK installer
 Video demonstration: https://drive.google.com/file/d/1D1yIw9z9UXiHfDxtPgEj0x_9gJDrNFvz/view?usp=sharing  
