@@ -4,9 +4,7 @@
 The project, developed for a FESTU university (city Khabarovsk) competition, implements AR navigation through the FESTU university buildings along a pre-created corridor graph. 
 Work with AR is done entirely using the SceneView library
 
-Video demonstration can be found here: https://drive.google.com/file/d/1D1yIw9z9UXiHfDxtPgEj0x_9gJDrNFvz/view?usp=sharing
-
-APK installer available below
+**Video demonstration available below**
 
 The application builds routes between university classrooms. When launching the application, it is required to scan the number of the nearest auditorium in order to set the starting point of the route. 
 Classrooms number recognition performed using Google MLKit. 
@@ -51,10 +49,8 @@ The classrooms graph is created manually by the application administrator throug
 
 <br>
 
-## Video demonstration and APK installer
+## Video demonstration
 Video demonstration: https://drive.google.com/file/d/1D1yIw9z9UXiHfDxtPgEj0x_9gJDrNFvz/view?usp=sharing  
-
-APK installer: https://drive.google.com/file/d/1TxfbyrT44EFahexf0sbyLiUyvAttTDYl/view?usp=sharing
 
 ## Admin/User mode
 To enable the audience graph editing mode, in festunavigator/presentation/preview/PreviewFragment.kt find:
