@@ -14,10 +14,9 @@ import io.github.sceneview.math.toFloat3
 import io.github.sceneview.math.toNewQuaternion
 import io.github.sceneview.math.toVector3
 
+private const val ROUTE_STEP = 0.3f
 
 class SmoothPath {
-
-    private val routeStep = 0.4f
 
     operator fun invoke(
         nodes: List<TreeNode>
@@ -35,11 +34,11 @@ class SmoothPath {
 
                 val lineLength = Vector3.subtract(fromVector, toVector).length()
 
-                if (lineLength < routeStep){
+                if (lineLength < ROUTE_STEP){
                     continue
                 }
 
-                val nodesAmount = (lineLength / routeStep).toInt()
+                val nodesAmount = (lineLength / ROUTE_STEP).toInt()
 
                 val dx = (toVector.x - fromVector.x) / nodesAmount
                 val dy = (toVector.y - fromVector.y) / nodesAmount
@@ -77,7 +76,7 @@ class SmoothPath {
                                 list.removeLast().position,
                                 position,
                                 fromVector.toFloat3(),
-                                routeStep
+                                ROUTE_STEP
                             )
                         )
                     }

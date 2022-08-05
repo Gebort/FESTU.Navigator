@@ -21,6 +21,7 @@ import com.example.festunavigator.domain.pathfinding.Path
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
+import com.example.festunavigator.presentation.preview.path_adapter.PathAdapter
 import com.example.festunavigator.presentation.preview.state.PathState
 import com.example.festunavigator.presentation.scanner.ScannerFragment
 import com.google.android.material.snackbar.Snackbar
@@ -37,7 +38,9 @@ import io.github.sceneview.ar.node.ArNode
 import io.github.sceneview.ar.scene.destroy
 import io.github.sceneview.node.Node
 import io.github.sceneview.utils.FrameTime
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -54,13 +57,16 @@ class PreviewFragment : Fragment() {
 
     var linkPlacementMode = false
 
+    private val drawerHelper = DrawerHelper(this)
+
     var endPlacingJob: Job? = null
     var startPlacingJob: Job? = null
     var wayBuildingJob: Job? = null
     val wayNodes: MutableList<ArNode> = mutableListOf()
     var currentPathState = PathState()
+    var lastPositionTime = 0L
+    lateinit var pathAdapter: PathAdapter
 
-    private val drawerHelper = DrawerHelper(this)
 
     private var lastConfObject: LabelObject? = null
     private var confObjectJob: Job? = null
@@ -88,7 +94,13 @@ class PreviewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        //отработать сворачивание приложения
+        //TODO отработать сворачивание приложения
+        pathAdapter = PathAdapter(
+            drawerHelper,
+            binding.sceneView,
+            VIEWABLE_PATH_NODES,
+            viewLifecycleOwner.lifecycleScope
+        )
 
         binding.sceneView.apply {
             planeRenderer.isVisible = true
@@ -162,11 +174,13 @@ class PreviewFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                 mainModel.pathState.collectLatest { pathState ->
                     if (currentPathState.path != pathState.path) {
-                        reDrawPath(pathState.path, wayNodes)
+                        //reDrawPath(pathState.path, wayNodes)
                     }
                     if (currentPathState.endLabel != pathState.endLabel){
                         endPlacingJob?.cancel()
-                        currentPathState.endLabel?.anchor?.destroy()
+                        currentPathState.endLabel?.node?.let {
+                            drawerHelper.removeLabelWithAnim(it)
+                        }
                         endPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
                             currentPathState.endLabel?.let {
                                 it.node = drawerHelper.placeLabel(
@@ -179,7 +193,9 @@ class PreviewFragment : Fragment() {
                     }
                     if (currentPathState.startLabel != pathState.startLabel){
                         startPlacingJob?.cancel()
-                        currentPathState.startLabel?.anchor?.destroy()
+                        currentPathState.startLabel?.node?.let {
+                            drawerHelper.removeLabelWithAnim(it)
+                        }
                         startPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
                             currentPathState.startLabel?.let {
                                 it.node = drawerHelper.placeLabel(
@@ -207,9 +223,8 @@ class PreviewFragment : Fragment() {
                         }
                         is MainUiEvent.NodeCreated -> {
                             viewLifecycleOwner.lifecycleScope.launch {
-                                drawerHelper.drawNode(
+                                treeNodesToModels[uiEvent.treeNode] = drawerHelper.drawNode(
                                     uiEvent.treeNode,
-                                    treeNodesToModels,
                                     binding.sceneView,
                                     uiEvent.anchor
                                 )
@@ -252,8 +267,11 @@ class PreviewFragment : Fragment() {
                 mainModel.confirmationObject.collectLatest { confObject ->
                     confObjectJob?.cancel()
                     confObjectJob = viewLifecycleOwner.lifecycleScope.launch {
-                        lastConfObject?.node?.destroy()
-                        lastConfObject?.anchor?.destroy()
+                        lastConfObject?.node?.let {
+                            drawerHelper.removeArrow(it)
+//                            drawerHelper.removeLabelWithAnim(it)
+//                            drawerHelper.joinAnimation(it)
+                        }
                         confObject?.let {
                             it.node = drawerHelper.placeLabel(
                                 confObject.label,
@@ -282,6 +300,16 @@ class PreviewFragment : Fragment() {
             MainEvent.NewFrame(frame)
         )
 
+        val userPos = Float3(
+            frame.camera.displayOrientedPose.tx(),
+            frame.camera.displayOrientedPose.ty(),
+            frame.camera.displayOrientedPose.tz()
+        )
+
+        if (System.currentTimeMillis() - lastPositionTime > POSITION_DETECT_DELAY){
+            lastPositionTime = System.currentTimeMillis()
+            changeViewablePath(userPos)
+        }
 
         }
 
@@ -293,10 +321,9 @@ class PreviewFragment : Fragment() {
     
     fun selectNode(node: Node?){
         selectedNode = node
-        val treeNode = treeNodesToModels.inverse[node]
 
-        //view.link.isEnabled = node != null
-        //view.delete.isEnabled = node != null
+        binding.linkButton.isEnabled = node != null
+        binding.deleteButton.isEnabled = node != null
     }
 
     private fun removeNode(node: Node?){
@@ -317,16 +344,28 @@ class PreviewFragment : Fragment() {
         }
     }
 
-    private fun reDrawPath(path: Path?, wayNodes: MutableList<ArNode>){
+    private fun changeViewablePath(userPosition: Float3){
         wayBuildingJob?.cancel()
-        wayBuildingJob = viewLifecycleOwner.lifecycleScope.launch {
-            drawerHelper.drawWay(
-                path,
-                wayNodes,
-                binding.sceneView
+        wayBuildingJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            val nodes = currentPathState.path?.getNearNodes(
+                number = VIEWABLE_PATH_NODES,
+                position = userPosition
             )
+            pathAdapter.commit(nodes ?: listOf())
         }
+
     }
+
+//    private fun reDrawPath(path: Path?, wayNodes: MutableList<ArNode>){
+//        wayBuildingJob?.cancel()
+//        wayBuildingJob = viewLifecycleOwner.lifecycleScope.launch {
+//            drawerHelper.drawWay(
+//                path,
+//                wayNodes,
+//                binding.sceneView
+//            )
+//        }
+//    }
 
     private fun createNode(
         frame: ArFrame? = binding.sceneView.currentFrame,
@@ -382,7 +421,12 @@ class PreviewFragment : Fragment() {
     companion object {
         const val ADMIN_MODE = "ADMIN"
         const val USER_MODE = "USER"
+
         const val mode = USER_MODE
+
+        const val VIEWABLE_PATH_NODES = 21
+
+        const val POSITION_DETECT_DELAY = 100L
 
         //image crop for recognition
         val DESIRED_CROP = Pair(8, 72)

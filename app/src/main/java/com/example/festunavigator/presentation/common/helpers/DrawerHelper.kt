@@ -1,61 +1,65 @@
 package com.example.festunavigator.presentation.common.helpers
 
+import android.animation.ValueAnimator
 import android.graphics.Color
+import android.util.Log
+import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.festunavigator.R
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.pathfinding.Path
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
-import com.example.festunavigator.domain.use_cases.SmoothPath
 import com.google.ar.core.Anchor
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
-import com.google.ar.sceneform.rendering.Material
-import com.google.ar.sceneform.rendering.MaterialFactory
-import com.google.ar.sceneform.rendering.ShapeFactory
-import com.google.ar.sceneform.rendering.ViewRenderable
+import com.google.ar.sceneform.rendering.*
 import com.uchuhimo.collections.MutableBiMap
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
+import io.github.sceneview.ar.scene.destroy
 import io.github.sceneview.math.Position
 import io.github.sceneview.math.Scale
 import io.github.sceneview.math.toNewQuaternion
 import io.github.sceneview.math.toVector3
 import io.github.sceneview.node.Node
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 
+
 class DrawerHelper(
-    private val fragment: Fragment
+    private val fragment: Fragment,
     ) {
 
     private val routeStep = 0.2f
     private var labelScale = Scale(0.15f, 0.075f, 0.15f)
     private var arrowScale = Scale(0.5f, 0.5f, 0.5f)
+    private var labelAnimationDelay = 2L
+    private var arrowAnimationDelay = 2L
+    private var labelAnimationPart = 10
+    private var arrowAnimationPart = 15
     private var treeDrawingJob: Job? = null
+
+    private val animationJobs = mutableMapOf<ArNode, Job>()
 
     suspend fun drawNode(
         treeNode: TreeNode,
-        treeNodesToModels: MutableBiMap<TreeNode, Node>,
         surfaceView: ArSceneView,
         anchor: Anchor? = null
-    ){
-        when (treeNode){
+    ): Node {
+        return when (treeNode){
             is TreeNode.Path -> {
-                drawPath(treeNode, treeNodesToModels, surfaceView, anchor)
+                drawPath(treeNode, surfaceView, anchor)
             }
             is TreeNode.Entry -> {
-                drawEntry(treeNode, treeNodesToModels, surfaceView, anchor)
-            }
-            else -> {
-                throw Exception("Unknown treeNode type")
+                drawEntry(treeNode, surfaceView, anchor)
             }
         }
 
@@ -84,10 +88,9 @@ class DrawerHelper(
 
     private suspend fun drawPath(
         treeNode: TreeNode.Path,
-        treeNodesToModels: MutableBiMap<TreeNode, Node>,
         surfaceView: ArSceneView,
         anchor: Anchor? = null
-    ){
+    ): Node {
         val modelNode = ArNode()
         modelNode.loadModel(
             context = fragment.requireContext(),
@@ -109,23 +112,21 @@ class DrawerHelper(
             it.isShadowReceiver = false
         }
 
-        treeNodesToModels[treeNode] = modelNode
-
         surfaceView.addChild(modelNode)
+
+        return modelNode
     }
 
     private suspend fun drawEntry(
         treeNode: TreeNode.Entry,
-        treeNodesToModels: MutableBiMap<TreeNode, Node>,
         surfaceView: ArSceneView,
         anchor: Anchor? = null
-    ){
-        val modelNode = placeLabel(
+    ): Node {
+        return placeLabel(
             treeNode.number,
             OrientatedPosition(treeNode.position, treeNode.forwardVector),
             surfaceView
         )
-        treeNodesToModels[treeNode] = modelNode
     }
 
     fun drawTree(
@@ -137,11 +138,11 @@ class DrawerHelper(
         treeDrawingJob?.cancel()
         treeDrawingJob = fragment.lifecycleScope.launch {
             for (node in tree.getAllNodes()){
-                drawNode(
+                treeNodesToModels[node] = drawNode(
                     node,
-                    treeNodesToModels,
                     surfaceView
                 )
+
                 yield()
             }
             for (treenode1 in tree.getNodesWithLinks()){
@@ -193,7 +194,7 @@ class DrawerHelper(
         anchor = anchor
     )
 
-    private suspend fun placeArrow(
+    suspend fun placeArrow(
         pos: OrientatedPosition,
         surfaceView: ArSceneView
     ): ArNode = placeRend(
@@ -212,7 +213,7 @@ class DrawerHelper(
         var node: ArNode? = null
         ViewRenderable.builder()
             .setView(fragment.requireContext(), if (label != null) R.layout.text_sign else R.layout.route_node)
-            .setSizer { scale.toVector3() }
+            .setSizer { Vector3(0f, 0f, 0f) }
             .setVerticalAlignment(ViewRenderable.VerticalAlignment.CENTER)
             .setHorizontalAlignment(ViewRenderable.HorizontalAlignment.CENTER)
             .build()
@@ -240,13 +241,33 @@ class DrawerHelper(
                         this.anchor = this.createAnchor()
                     }
                 }
-
                 surfaceView.addChild(textNode)
                 node = textNode
+                textNode.animateViewAppear(
+                    scale,
+                    if (label != null) labelAnimationDelay else arrowAnimationDelay,
+                    if (label != null) labelAnimationPart else arrowAnimationPart
+                )
             }
             .await()
 
         return node!!
+    }
+
+    fun removeArrow(node: ArNode) {
+        node.destroy()
+        node.anchor?.destroy()
+        animationJobs[node]?.cancel()
+    }
+
+    fun removeArrowWithAnim(node: ArNode) {
+        node.model as ViewRenderable? ?: throw Exception("No view renderable")
+        node.animateViewDisappear(arrowScale, arrowAnimationDelay, arrowAnimationPart)
+    }
+
+    fun removeLabelWithAnim(node: ArNode) {
+        node.model as ViewRenderable? ?: throw Exception("No view renderable")
+        node.animateViewDisappear(arrowScale, labelAnimationDelay, labelAnimationPart)
     }
 
     fun drawLine(
@@ -304,5 +325,56 @@ class DrawerHelper(
             }
     }
 
+    private fun ArNode.animateViewAppear(targetScale: Scale, delay: Long, part: Int) {
+        animateView(true, targetScale, delay, part, end = null)
+    }
 
+    private fun ArNode.animateViewDisappear(targetScale: Scale, delay: Long, part: Int) {
+        animateView(false, targetScale, delay, part) {
+            removeArrow(it)
+        }
+    }
+
+    private fun ArNode.animateView(appear: Boolean, targetScale: Scale, delay: Long, part: Int, end: ((ArNode) -> Unit)?) {
+        val renderable = this.model as ViewRenderable? ?: throw Exception("No view renderable")
+        var size = renderable.sizer.getSize(renderable.view)
+        val xPart = targetScale.x/part
+        val yPart = targetScale.y/part
+        val zPart = targetScale.z/part
+        animationJobs[this]?.cancel()
+        animationJobs[this] = fragment.viewLifecycleOwner.lifecycleScope.launch {
+            while (true) {
+                if (size.x >= targetScale.toVector3().x && appear) {
+                    break
+                }
+                else if(size.x <= 0 && !appear){
+                    break
+                }
+                renderable.sizer = ViewSizer {
+                    if (appear)
+                        size.addConst(xPart, yPart, zPart)
+                    else
+                        size.addConst(xPart, yPart, zPart, -1)
+
+                }
+                delay(delay)
+                size = renderable.sizer.getSize(renderable.view)
+            }
+            if (end != null) {
+                end(this@animateView)
+            }
+        }
+    }
+
+    suspend fun joinAnimation(node: ArNode) {
+        animationJobs[node]?.join()
+    }
+
+    private fun Vector3.addConst(xValue: Float, yValue: Float, zValue: Float, modifier: Int = 1): Vector3 {
+        return Vector3(
+            x + xValue * modifier,
+            y + yValue * modifier,
+            z + zValue * modifier
+        )
+    }
 }
