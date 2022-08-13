@@ -69,7 +69,6 @@ class ConfirmFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainModel.mainUiEvents.collect { uiEvent ->
-                    if (confType == CONFIRM_INITIALIZE) {
                         when (uiEvent) {
                             is MainUiEvent.InitSuccess -> {
                                 val action = ConfirmFragmentDirections.actionConfirmFragmentToRouterFragment()
@@ -78,9 +77,16 @@ class ConfirmFragment : Fragment() {
                             is MainUiEvent.InitFailed -> {
                                 findNavController().popBackStack()
                             }
+                            is MainUiEvent.EntryCreated -> {
+                                val action = ConfirmFragmentDirections.actionConfirmFragmentToRouterFragment()
+                                findNavController().navigate(action)
+                            }
+                            is MainUiEvent.EntryAlreadyExists -> {
+                                val action = ConfirmFragmentDirections.actionConfirmFragmentToRouterFragment()
+                                findNavController().navigate(action)
+                            }
                             else -> {}
                         }
-                    }
                 }
             }
         }

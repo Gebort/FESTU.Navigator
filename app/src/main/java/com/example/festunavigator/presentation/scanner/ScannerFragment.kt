@@ -78,7 +78,8 @@ class ScannerFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     mainModel.frame.collect { frame ->
-                        onFrame(frame)
+                        frame?.let { onFrame(it) }
+
                     }
                 }
             }
@@ -117,7 +118,7 @@ class ScannerFragment : Fragment() {
                                 if (currentScanSmoothDelay <= 0 && lastDetectedObject != null) {
 
                                     val res = hitTestDetectedObject(lastDetectedObject!!, frame)
-                                    if (res != null) {
+                                    if (res != null && !navigating) {
                                         val confirmationObject = LabelObject(
                                             label = lastDetectedObject!!.detectedObjectResult.label,
                                             pos = res.orientatedPosition,
@@ -248,8 +249,8 @@ class ScannerFragment : Fragment() {
         }
 
         companion object {
-        const val SCAN_TYPE = "scanType"
-        const val TYPE_INITIALIZE = 0
-        const val TYPE_ENTRY = 1
+            const val SCAN_TYPE = "scanType"
+            const val TYPE_INITIALIZE = 0
+            const val TYPE_ENTRY = 1
     }
     }

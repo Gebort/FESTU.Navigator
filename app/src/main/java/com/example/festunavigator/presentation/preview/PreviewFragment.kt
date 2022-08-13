@@ -5,42 +5,29 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.core.view.isGone
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.databinding.FragmentPreviewBinding
-import com.example.festunavigator.domain.hit_test.HitTestResult
-import com.example.festunavigator.domain.pathfinding.Path
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
 import com.example.festunavigator.presentation.preview.path_adapter.PathAdapter
 import com.example.festunavigator.presentation.preview.state.PathState
-import com.example.festunavigator.presentation.scanner.ScannerFragment
 import com.google.android.material.snackbar.Snackbar
-import com.google.ar.core.Config
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.*
 import com.uchuhimo.collections.MutableBiMap
 import com.uchuhimo.collections.mutableBiMapOf
-import dev.romainguy.kotlin.math.Float2
 import dev.romainguy.kotlin.math.Float3
-import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
-import io.github.sceneview.ar.node.ArNode
-import io.github.sceneview.ar.scene.destroy
 import io.github.sceneview.node.Node
-import io.github.sceneview.utils.FrameTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -48,21 +35,16 @@ class PreviewFragment : Fragment() {
 
     private val mainModel: MainShareModel by activityViewModels()
 
-    private val hitTest = App.instance!!.hitTest
 
     private var _binding: FragmentPreviewBinding? = null
     private val binding get() = _binding!!
-
-    var selectedNode: Node? = null
-
-    var linkPlacementMode = false
 
     private val drawerHelper = DrawerHelper(this)
 
     var endPlacingJob: Job? = null
     var startPlacingJob: Job? = null
     var wayBuildingJob: Job? = null
-    val wayNodes: MutableList<ArNode> = mutableListOf()
+    //val wayNodes: MutableList<ArNode> = mutableListOf()
     var currentPathState = PathState()
     var lastPositionTime = 0L
     lateinit var pathAdapter: PathAdapter
@@ -110,13 +92,16 @@ class PreviewFragment : Fragment() {
             }
 
             onTouchEvent = { pickHitResult, _ ->
-                if (mode == ADMIN_MODE) {
+                if (App.mode == App.ADMIN_MODE) {
                     pickHitResult.node?.let { node ->
-                        if (!linkPlacementMode) {
+                        if (!mainModel.linkPlacementMode.value) {
                             selectNode(node)
                         } else {
-                            linkNodes(selectedNode!!, node)
-                            changeLinkPlacementMode(false)
+                            val treeNode = mainModel.selectedNode.value
+                            treeNodesToModels[treeNode]?.let { node1 ->
+                                linkNodes(node1, node)
+                            }
+
                         }
                     }
                 }
@@ -137,38 +122,7 @@ class PreviewFragment : Fragment() {
             }
         }
 
-        if (mode == ADMIN_MODE) {
-            binding.adminPanel.isVisible = true
-        }
-        else {
-            binding.adminPanel.isGone = true
-        }
-
         selectNode(null)
-
-        binding.deleteButton.setOnClickListener {
-            removeNode(selectedNode)
-        }
-
-        binding.linkButton.setOnClickListener {
-            changeLinkPlacementMode(!linkPlacementMode)
-        }
-
-        //TODO нужно вынести административные кнопки в router фрагмент
-        binding.placeButton.setOnClickListener {
-            viewLifecycleOwner.lifecycleScope.launch {
-                createNode()
-            }
-        }
-
-        binding.entryButton.setOnClickListener {
-            val bundle = Bundle()
-            bundle.putInt(
-                ScannerFragment.SCAN_TYPE,
-                ScannerFragment.TYPE_ENTRY
-            )
-            findNavController().navigate(R.id.action_global_scannerFragment, args = bundle)
-        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
@@ -257,6 +211,9 @@ class PreviewFragment : Fragment() {
                         is MainUiEvent.PathNotFound -> {
                             showSnackbar(getString(R.string.no_path))
                         }
+                        is MainUiEvent.EntryAlreadyExists -> {
+                            showSnackbar(getString(R.string.entry_already_exists))
+                        }
                 }
                 }
             }
@@ -268,9 +225,7 @@ class PreviewFragment : Fragment() {
                     confObjectJob?.cancel()
                     confObjectJob = viewLifecycleOwner.lifecycleScope.launch {
                         lastConfObject?.node?.let {
-                            drawerHelper.removeArrow(it)
-//                            drawerHelper.removeLabelWithAnim(it)
-//                            drawerHelper.joinAnimation(it)
+                            drawerHelper.removeNode(it)
                         }
                         confObject?.let {
                             it.node = drawerHelper.placeLabel(
@@ -312,25 +267,9 @@ class PreviewFragment : Fragment() {
         }
 
         }
-
-
-    private fun changeLinkPlacementMode(link: Boolean){
-        linkPlacementMode = link
-        binding.linkButton.text = if (link) getString(R.string.cancel) else getString(R.string.link)
-    }
     
-    fun selectNode(node: Node?){
-        selectedNode = node
-
-        binding.linkButton.isEnabled = node != null
-        binding.deleteButton.isEnabled = node != null
-    }
-
-    private fun removeNode(node: Node?){
-        val treeNode = treeNodesToModels.inverse[node]
-        treeNode?.let {
-            mainModel.onEvent(MainEvent.DeleteNode(treeNode))
-        }
+    private fun selectNode(node: Node?){
+        mainModel.onEvent(MainEvent.NewSelectedNode(treeNodesToModels.inverse[node]))
     }
 
     private fun linkNodes(node1: Node, node2: Node){
@@ -367,49 +306,16 @@ class PreviewFragment : Fragment() {
 //        }
 //    }
 
-    private fun createNode(
-        frame: ArFrame? = binding.sceneView.currentFrame,
-        number: String? = null,
-        position: Float3? = null,
-        orientation: Quaternion? = null,
-    ) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            frame?.let {
-                val result = useHitTest(frame).getOrNull()
-                if (result != null) {
-                    mainModel.onEvent(MainEvent.CreateNode(
-                        number,
-                        position,
-                        orientation,
-                        result
-                    ))
-                }
-            }
-        }
-    }
 
-    private fun useHitTest(
-        frame: ArFrame,
-        x: Float = frame.session.displayWidth / 2f,
-        y: Float = frame.session.displayHeight / 2f,
-    ): Result<HitTestResult> {
-
-        return hitTest(frame, Float2(x, y))
-    }
 
     private suspend fun onInitializeSuccess() {
-        if (mode == ADMIN_MODE) {
+        if (App.mode == App.ADMIN_MODE) {
             drawerHelper.drawTree(
                 mainModel.tree,
                 treeNodesToModels,
                 modelsToLinkModels,
                 binding.sceneView
             )
-
-            binding.deleteButton.isEnabled = true
-            binding.linkButton.isEnabled = true
-            binding.entryButton.isEnabled = true
-            binding.placeButton.isEnabled = true
         }
     }
 
@@ -419,15 +325,9 @@ class PreviewFragment : Fragment() {
     }
 
     companion object {
-        const val ADMIN_MODE = "ADMIN"
-        const val USER_MODE = "USER"
-
-        const val mode = USER_MODE
-
+        //how many path nodes will be displayed at the moment
         const val VIEWABLE_PATH_NODES = 21
-
         const val POSITION_DETECT_DELAY = 100L
-
         //image crop for recognition
         val DESIRED_CROP = Pair(8, 72)
     }

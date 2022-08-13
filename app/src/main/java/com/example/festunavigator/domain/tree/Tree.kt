@@ -158,6 +158,19 @@ class Tree(
         return nodes
     }
 
+    fun getAllEntries(): List<TreeNode> {
+        if (!initialized){
+            throw Exception("Tree isnt initialized")
+        }
+        val nodes = mutableListOf<TreeNode>()
+        for (entry in _entryPoints.values) {
+            getNode(entry.id)?.let {
+                nodes.add(it)
+            }
+        }
+        return nodes
+    }
+
     fun getEntriesNumbers(): Set<String> {
         return _entryPoints.keys
     }

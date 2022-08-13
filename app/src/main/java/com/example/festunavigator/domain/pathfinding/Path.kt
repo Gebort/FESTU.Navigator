@@ -2,6 +2,7 @@ package com.example.festunavigator.domain.pathfinding
 
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.tree.TreeNode
+import com.example.festunavigator.domain.utils.getApproxDif
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.light.position
 import kotlin.math.abs
@@ -38,8 +39,8 @@ class Path(val nodes: List<OrientatedPosition>) {
             throw Exception("Nodes list is empty")
         }
 
-        val left = if (start > 0) getApproxDif(pos, nodes[start-1].position) else null
-        val right = if (start < nodes.size-1) getApproxDif(pos, nodes[start+1].position) else null
+        val left = if (start > 0) pos.getApproxDif(nodes[start-1].position) else null
+        val right = if (start < nodes.size-1) pos.getApproxDif(nodes[start+1].position) else null
 
         val toRight = when {
             left == null -> {
@@ -56,10 +57,10 @@ class Path(val nodes: List<OrientatedPosition>) {
         val searchIds = if (toRight) start+1 until nodes.size else start-1 downTo 0
 
         var prevId = start
-        var prev = getApproxDif(pos, nodes[prevId].position)
+        var prev = pos.getApproxDif(nodes[prevId].position)
 
         for (i in searchIds) {
-            val curr = getApproxDif(pos, nodes[i].position)
+            val curr = pos.getApproxDif(nodes[i].position)
             if (curr >= prev) {
                 break
             }
@@ -69,12 +70,6 @@ class Path(val nodes: List<OrientatedPosition>) {
             }
         }
         return prevId
-    }
-
-    private fun getApproxDif(pos1: Float3, pos2: Float3): Float {
-        return sqrt(+abs(pos1.x - pos2.x)
-                + abs(pos1.y - pos2.y)
-                + abs(pos1.z - pos2.z))
     }
 
 }

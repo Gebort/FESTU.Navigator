@@ -1,10 +1,6 @@
 package com.example.festunavigator.presentation.common.helpers
 
-import android.animation.ValueAnimator
 import android.graphics.Color
-import android.util.Log
-import android.view.ViewGroup
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
@@ -254,7 +250,7 @@ class DrawerHelper(
         return node!!
     }
 
-    fun removeArrow(node: ArNode) {
+    fun removeNode(node: ArNode) {
         node.destroy()
         node.anchor?.destroy()
         animationJobs[node]?.cancel()
@@ -331,7 +327,7 @@ class DrawerHelper(
 
     private fun ArNode.animateViewDisappear(targetScale: Scale, delay: Long, part: Int) {
         animateView(false, targetScale, delay, part) {
-            removeArrow(it)
+            removeNode(it)
         }
     }
 

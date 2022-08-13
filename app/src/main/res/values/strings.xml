@@ -2,8 +2,11 @@
     <string name="app_name" translatable="false">FESTU Navigator</string>
     <string name="initialize">Initialize the graph please</string>
     <string name="scan">Wait for the dots to appear and point the camera at the auditorium number. Make sure the plate is aligned with the number. If there are multiple numbers, use the lowest one</string>
-    <string name="link">Link</string>
-    <string name="cancel">Cancel</string>
+    <string name="link" translatable="false">Link</string>
+    <string name="delete" translatable="false">Delete</string>
+    <string name="entry" translatable="false">Entry</string>
+    <string name="path" translatable="false">Path</string>
+    <string name="cancel" translatable="false">Cancel</string>
     <string name="confirm_place">Text was placed correctly?</string>
     <string name="from">Start</string>
     <string name="to">End</string>
@@ -26,6 +29,7 @@
     <string name="provide_camera_permission">Please, provide the camera permission</string>
     <string name="accept">Accept</string>
     <string name="reject">Reject</string>
+    <string name="entry_already_exists" translatable="false">Entry already exists</string>
 
 
 </resources>

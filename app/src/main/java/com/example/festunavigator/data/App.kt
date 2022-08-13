@@ -31,8 +31,9 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+
         database = Room.databaseBuilder(this, GraphDatabase::class.java, DATABASE_NAME)
-            .createFromAsset(DATABASE_DIR)
+         //   .createFromAsset(DATABASE_DIR)
             .allowMainThreadQueries()
             .build()
         repository = GraphImpl()
@@ -64,5 +65,8 @@ class App : Application() {
         var instance: App? = null
         const val DATABASE_NAME = "nodes"
         const val DATABASE_DIR = "database/nodes.db"
+        const val ADMIN_MODE = "ADMIN"
+        const val USER_MODE = "USER"
+        const val mode = ADMIN_MODE
     }
 }

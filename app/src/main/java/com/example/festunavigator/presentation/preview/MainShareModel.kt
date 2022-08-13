@@ -35,8 +35,8 @@ class MainShareModel: ViewModel() {
     private var _pathState = MutableStateFlow(PathState())
     val pathState = _pathState.asStateFlow()
 
-    private var _frame = MutableSharedFlow<ArFrame>()
-    val frame = _frame.asSharedFlow()
+    private var _frame = MutableStateFlow<ArFrame?>(null)
+    val frame = _frame.asStateFlow()
 
     private var _mainUiEvents = MutableSharedFlow<MainUiEvent>()
     val mainUiEvents = _mainUiEvents.asSharedFlow()
@@ -47,6 +47,12 @@ class MainShareModel: ViewModel() {
     @SuppressLint("StaticFieldLeak")
     private var _confirmationObject = MutableStateFlow<LabelObject?>(null)
     val confirmationObject = _confirmationObject.asStateFlow()
+
+    private var _selectedNode = MutableStateFlow<TreeNode?>(null)
+    val selectedNode = _selectedNode.asStateFlow()
+
+    private var _linkPlacementMode = MutableStateFlow(false)
+    val linkPlacementMode = _linkPlacementMode.asStateFlow()
 
     var tree = App.instance!!.getTree()
         private set
@@ -105,6 +111,16 @@ class MainShareModel: ViewModel() {
             is MainEvent.RejectConfObject -> {
                 viewModelScope.launch {
                     _confirmationObject.update { null }
+                }
+            }
+            is MainEvent.NewSelectedNode -> {
+                viewModelScope.launch {
+                    _selectedNode.update { event.node }
+                }
+            }
+            is MainEvent.ChangeLinkMode -> {
+                viewModelScope.launch {
+                    _linkPlacementMode.update { !linkPlacementMode.value }
                 }
             }
             is MainEvent.CreateNode -> {
@@ -195,17 +211,25 @@ class MainShareModel: ViewModel() {
             throw Exception("No position was provided")
         }
      //   if (position == null) {
-                val treeNode = tree.addNode(
-                    position ?: hitTestResult!!.orientatedPosition.position,
-                    number,
-                    orientation
-                )
-                treeNode.let {
-                    _mainUiEvents.emit(MainUiEvent.NodeCreated(
-                        treeNode,
-                        hitTestResult?.hitResult?.createAnchor()
-                    ))
-                }
+        if (number != null && tree.hasEntry(number)){
+            _mainUiEvents.emit(MainUiEvent.EntryAlreadyExists)
+            return
+        }
+        val treeNode = tree.addNode(
+            position ?: hitTestResult!!.orientatedPosition.position,
+            number,
+            orientation
+        )
+
+        treeNode.let {
+            if (number != null){
+                _mainUiEvents.emit(MainUiEvent.EntryCreated)
+            }
+            _mainUiEvents.emit(MainUiEvent.NodeCreated(
+                treeNode,
+                hitTestResult?.hitResult?.createAnchor()
+            ))
+        }
 //        } else {
 //            val treeNode = tree.addNode(
 //                position,
@@ -223,6 +247,7 @@ class MainShareModel: ViewModel() {
 
     private suspend fun linkNodes(node1: TreeNode, node2: TreeNode){
         if (tree.addLink(node1, node2)) {
+            _linkPlacementMode.update { false }
             _mainUiEvents.emit(MainUiEvent.LinkCreated(node1, node2))
         }
     }
@@ -230,6 +255,9 @@ class MainShareModel: ViewModel() {
     private suspend fun removeNode(node: TreeNode){
         tree.removeNode(node)
         _mainUiEvents.emit(MainUiEvent.NodeDeleted(node))
+        if (node == selectedNode.value) {
+            _selectedNode.update { null }
+        }
     }
 
     private suspend fun initialize(entryNumber: String, position: Float3, newOrientation: Quaternion): Boolean {
@@ -242,12 +270,17 @@ class MainShareModel: ViewModel() {
             return false
         }
         _mainUiEvents.emit(MainUiEvent.InitSuccess)
-        _pathState.update { it.copy(
-            startLabel = LabelObject(
-                entryNumber,
-                OrientatedPosition(position, newOrientation)
-            )
+        if (tree.hasEntry(entryNumber)){
+            _pathState.update { PathState(
+                startLabel = LabelObject(
+                    entryNumber,
+                    OrientatedPosition(position, newOrientation)
+                )
             ) }
+        }
+        else {
+            _pathState.update { PathState() }
+        }
         return true
     }
 
