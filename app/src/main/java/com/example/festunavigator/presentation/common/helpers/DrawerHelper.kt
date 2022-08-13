@@ -34,14 +34,12 @@ class DrawerHelper(
     private val fragment: Fragment,
     ) {
 
-    private val routeStep = 0.2f
     private var labelScale = Scale(0.15f, 0.075f, 0.15f)
     private var arrowScale = Scale(0.5f, 0.5f, 0.5f)
     private var labelAnimationDelay = 2L
     private var arrowAnimationDelay = 2L
     private var labelAnimationPart = 10
     private var arrowAnimationPart = 15
-    private var treeDrawingJob: Job? = null
 
     private val animationJobs = mutableMapOf<ArNode, Job>()
 
@@ -124,15 +122,14 @@ class DrawerHelper(
         )
     }
 
-    fun drawTree(
+    suspend fun drawTree(
         tree: Tree,
         treeNodesToModels: MutableBiMap<TreeNode, ArNode>,
         modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode>,
         surfaceView: ArSceneView
     ){
-        treeDrawingJob?.cancel()
-        treeDrawingJob = fragment.lifecycleScope.launch {
             for (node in tree.getAllNodes()){
+                treeNodesToModels[node]?.let { removeNode(it) }
                 treeNodesToModels[node] = drawNode(
                     node,
                     surfaceView
@@ -140,11 +137,11 @@ class DrawerHelper(
 
                 yield()
             }
-            for (treenode1 in tree.getNodesWithLinks()){
-                val node1 = treeNodesToModels[treenode1]!!
-                val others = tree.getNodeLinks(treenode1)!!
-                for (treenode2 in others) {
-                    val node2 = treeNodesToModels[treenode2]!!
+            for (treeNode1 in tree.getNodesWithLinks()){
+                val node1 = treeNodesToModels[treeNode1]!!
+                val others = tree.getNodeLinks(treeNode1)!!
+                for (treeNode2 in others) {
+                    val node2 = treeNodesToModels[treeNode2]!!
                     if (modelsToLinkModels[Pair(node1, node2)] == null ){
                         drawLine(
                             node1,
@@ -156,7 +153,6 @@ class DrawerHelper(
                 }
                 yield()
             }
-        }
     }
 
     suspend fun drawWay(

@@ -141,44 +141,39 @@ class PreviewFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                 mainModel.pathState.collectLatest { pathState ->
-                    if (currentPathState.path != pathState.path) {
-                        //reDrawPath(pathState.path, wayNodes)
-                    }
-                    if (currentPathState.endEntry != pathState.endEntry){
-                        endPlacingJob?.cancel()
-                        currentPathState.endEntry?.let { entry ->
-                            treeNodesToModels[entry]?.let {
-                                drawerHelper.removeLabelWithAnim(it)
-                            }
-                        }
+                    //In ADMIN_MODE, all entry labels are drawn automatically, so another redraw from this function
+                    //will cause node
+                 //   if (App.mode == App.USER_MODE) {
 
-                        endPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
-                            currentPathState.endEntry?.let { end ->
-                                treeNodesToModels[end] = drawerHelper.placeLabel(
-                                    end.number,
-                                    OrientatedPosition(end.position, end.forwardVector),
-                                    binding.sceneView,
-                                )
+                        if (currentPathState.endEntry != pathState.endEntry) {
+                            endPlacingJob?.cancel()
+                            endPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
+                                currentPathState.endEntry?.let { end ->
+                                    treeNodesToModels[end]?.let {
+                                        drawerHelper.removeNode(it)
+                                    }
+                                    treeNodesToModels[end] = drawerHelper.drawNode(
+                                        end,
+                                        binding.sceneView,
+                                    )
+                                }
                             }
                         }
-                    }
-                    if (currentPathState.startEntry != pathState.startEntry){
-                        startPlacingJob?.cancel()
-                        currentPathState.startEntry?.let { entry ->
-                            treeNodesToModels[entry]?.let {
-                                drawerHelper.removeLabelWithAnim(it)
+                        if (currentPathState.startEntry != pathState.startEntry) {
+                            startPlacingJob?.cancel()
+                            startPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
+                                currentPathState.startEntry?.let { start ->
+                                    treeNodesToModels[start]?.let {
+                                        drawerHelper.removeNode(it)
+                                    }
+                                    treeNodesToModels[start] = drawerHelper.drawNode(
+                                        start,
+                                        binding.sceneView,
+                                    )
+                                }
                             }
                         }
-                        startPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
-                            currentPathState.startEntry?.let { start ->
-                                treeNodesToModels[start] = drawerHelper.placeLabel(
-                                    start.number,
-                                    OrientatedPosition(start.position, start.forwardVector),
-                                    binding.sceneView,
-                                )
-                            }
-                        }
-                    }
+           //         }
                     currentPathState = pathState
                 }
             }
@@ -288,7 +283,8 @@ class PreviewFragment : Fragment() {
         }
     
     private fun selectNode(node: Node?){
-        mainModel.onEvent(MainEvent.NewSelectedNode(treeNodesToModels.inverse[node]))
+        val treeNode = treeNodesToModels.inverse[node]
+        mainModel.onEvent(MainEvent.NewSelectedNode(treeNode))
     }
 
     private fun linkNodes(node1: Node, node2: Node){
