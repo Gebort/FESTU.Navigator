@@ -5,7 +5,7 @@ import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.presentation.LabelObject
 
 data class PathState(
-    val startLabel: LabelObject? = null,
-    val endLabel: LabelObject? = null,
+    val startEntry: TreeNode.Entry? = null,
+    val endEntry: TreeNode.Entry? = null,
     val path: Path? = null
 )

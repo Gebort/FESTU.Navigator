@@ -102,14 +102,14 @@ class RouterFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainModel.pathState.collect { pathState ->
-                    binding.fromInput.setText(pathState.startLabel?.label ?: "")
-                    binding.toInput.setText(pathState.endLabel?.label ?: "")
+                    binding.fromInput.setText(pathState.startEntry?.number ?: "")
+                    binding.toInput.setText(pathState.endEntry?.number ?: "")
                     if (pathState.path != null){
                         binding.destinationText.isVisible = true
                         binding.destinationText.text =
                             resources.getString(
                                 R.string.going,
-                                destinationDesc(pathState.endLabel!!.label, requireContext())
+                                destinationDesc(pathState.endEntry!!.number, requireContext())
                             )
                     }
                     else {

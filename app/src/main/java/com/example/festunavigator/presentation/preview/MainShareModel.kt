@@ -147,31 +147,26 @@ class MainShareModel: ViewModel() {
     }
 
     private suspend fun processSearch(number: String, changeType: Int) {
-        if (!tree.hasEntry(number)) {
+        val entry = tree.getEntry(number)
+        if (entry == null) {
             _searchUiEvents.emit(SearchUiEvent.SearchInvalid)
             return
-        }
-
-        val treeNode = tree.getEntry(number)!!
-        val labelObject = LabelObject(
-            label = treeNode.number,
-            pos = OrientatedPosition(treeNode.position, treeNode.forwardVector),
-        )
-
-        if (changeType == SearchFragment.TYPE_START) {
-            val endLabel = pathState.value.endLabel
-            _pathState.update {
-                PathState(
-                    startLabel = labelObject,
-                    endLabel = if (labelObject.label == endLabel?.label) null else endLabel
-                )
-            }
         } else {
-            val startLabel = pathState.value.startLabel
+
+            if (changeType == SearchFragment.TYPE_START) {
+                val endEntry = pathState.value.endEntry
+                _pathState.update {
+                    PathState(
+                        startEntry = entry,
+                        endEntry = if (entry.number == endEntry?.number) null else endEntry
+                 )
+                }
+            } else {
+                val startEntry = pathState.value.startEntry
             _pathState.update {
                 PathState(
-                    startLabel = if (labelObject.label == startLabel?.label) null else startLabel,
-                    endLabel = labelObject
+                    startEntry = if (entry.number == startEntry?.number) null else startEntry,
+                    endEntry = entry
                 )
             }
         }
@@ -182,10 +177,11 @@ class MainShareModel: ViewModel() {
         }
         _searchUiEvents.emit(SearchUiEvent.SearchSuccess)
     }
+    }
 
     private suspend fun pathfind(){
-        val from = pathState.value.startLabel?.label ?: return
-        val to = pathState.value.endLabel?.label ?: return
+        val from = pathState.value.startEntry?.number ?: return
+        val to = pathState.value.endEntry?.number ?: return
         if (tree.getEntry(from) != null && tree.getEntry(to) != null) {
             val path = findWay(from, to, tree)
             if (path != null) {
@@ -270,12 +266,10 @@ class MainShareModel: ViewModel() {
             return false
         }
         _mainUiEvents.emit(MainUiEvent.InitSuccess)
-        if (tree.hasEntry(entryNumber)){
+        val entry = tree.getEntry(entryNumber)
+        if (entry != null){
             _pathState.update { PathState(
-                startLabel = LabelObject(
-                    entryNumber,
-                    OrientatedPosition(position, newOrientation)
-                )
+                startEntry = entry
             ) }
         }
         else {

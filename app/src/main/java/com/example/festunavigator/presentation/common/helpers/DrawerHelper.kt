@@ -49,7 +49,7 @@ class DrawerHelper(
         treeNode: TreeNode,
         surfaceView: ArSceneView,
         anchor: Anchor? = null
-    ): Node {
+    ): ArNode {
         return when (treeNode){
             is TreeNode.Path -> {
                 drawPath(treeNode, surfaceView, anchor)
@@ -62,23 +62,22 @@ class DrawerHelper(
     }
 
     suspend fun removeNode(
-        node: TreeNode,
-        modelsToLinkModels: MutableBiMap<Pair<Node, Node>, Node>,
-        treeNodesToModels: MutableBiMap<TreeNode, Node>,
-
+        treeNode: TreeNode,
+        modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode>,
+        treeNodesToModels: MutableBiMap<TreeNode, ArNode>,
     ){
-        modelsToLinkModels.keys
-            .filter { pair ->
-                pair.first == node || pair.second == node
-            }
-            .forEach { pair ->
-                modelsToLinkModels[pair]?.destroy()
-                modelsToLinkModels.remove(pair)
-            }
-
-        treeNodesToModels[node]?.let { node1 ->
-                treeNodesToModels.remove(node)
-                node1.destroy()
+        treeNodesToModels[treeNode]?.let { node ->
+            modelsToLinkModels.keys
+                .filter { pair ->
+                    pair.first == node || pair.second == node
+                }
+                .forEach { pair ->
+                    modelsToLinkModels[pair]?.destroy()
+                    modelsToLinkModels.remove(pair)
+                }
+            treeNodesToModels.remove(treeNode)
+            node.destroy()
+            node.anchor?.destroy()
         }
     }
 
@@ -86,7 +85,7 @@ class DrawerHelper(
         treeNode: TreeNode.Path,
         surfaceView: ArSceneView,
         anchor: Anchor? = null
-    ): Node {
+    ): ArNode {
         val modelNode = ArNode()
         modelNode.loadModel(
             context = fragment.requireContext(),
@@ -117,7 +116,7 @@ class DrawerHelper(
         treeNode: TreeNode.Entry,
         surfaceView: ArSceneView,
         anchor: Anchor? = null
-    ): Node {
+    ): ArNode {
         return placeLabel(
             treeNode.number,
             OrientatedPosition(treeNode.position, treeNode.forwardVector),
@@ -127,8 +126,8 @@ class DrawerHelper(
 
     fun drawTree(
         tree: Tree,
-        treeNodesToModels: MutableBiMap<TreeNode, Node>,
-        modelsToLinkModels: MutableBiMap<Pair<Node, Node>, Node>,
+        treeNodesToModels: MutableBiMap<TreeNode, ArNode>,
+        modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode>,
         surfaceView: ArSceneView
     ){
         treeDrawingJob?.cancel()
@@ -267,9 +266,9 @@ class DrawerHelper(
     }
 
     fun drawLine(
-        from: Node,
-        to: Node,
-        modelsToLinkModels: MutableBiMap<Pair<Node, Node>, Node>,
+        from: ArNode,
+        to: ArNode,
+        modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode>,
         surfaceView: ArSceneView
     ){
 

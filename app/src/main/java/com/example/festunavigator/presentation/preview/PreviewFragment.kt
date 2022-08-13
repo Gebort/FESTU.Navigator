@@ -13,6 +13,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.databinding.FragmentPreviewBinding
+import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
@@ -25,6 +26,7 @@ import com.uchuhimo.collections.MutableBiMap
 import com.uchuhimo.collections.mutableBiMapOf
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.ar.arcore.ArFrame
+import io.github.sceneview.ar.node.ArNode
 import io.github.sceneview.node.Node
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -41,19 +43,18 @@ class PreviewFragment : Fragment() {
 
     private val drawerHelper = DrawerHelper(this)
 
-    var endPlacingJob: Job? = null
-    var startPlacingJob: Job? = null
-    var wayBuildingJob: Job? = null
-    //val wayNodes: MutableList<ArNode> = mutableListOf()
-    var currentPathState = PathState()
-    var lastPositionTime = 0L
-    lateinit var pathAdapter: PathAdapter
+    private var endPlacingJob: Job? = null
+    private var startPlacingJob: Job? = null
+    private var wayBuildingJob: Job? = null
+    private var currentPathState = PathState()
+    private var lastPositionTime = 0L
+    private lateinit var pathAdapter: PathAdapter
 
 
     private var lastConfObject: LabelObject? = null
     private var confObjectJob: Job? = null
-    private val treeNodesToModels: MutableBiMap<TreeNode, Node> = mutableBiMapOf()
-    private val modelsToLinkModels: MutableBiMap<Pair<Node, Node>, Node> = mutableBiMapOf()
+    private val treeNodesToModels: MutableBiMap<TreeNode, ArNode> = mutableBiMapOf()
+    private val modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode> = mutableBiMapOf()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -76,7 +77,7 @@ class PreviewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        //TODO отработать сворачивание приложения
+        //TODO process pause and resume
         pathAdapter = PathAdapter(
             drawerHelper,
             binding.sceneView,
@@ -90,23 +91,36 @@ class PreviewFragment : Fragment() {
             onArFrame = { frame ->
                 onDrawFrame(frame)
             }
-
-            onTouchEvent = { pickHitResult, _ ->
+            onTouch = {node, _ ->
                 if (App.mode == App.ADMIN_MODE) {
-                    pickHitResult.node?.let { node ->
+                    node?.let { it ->
                         if (!mainModel.linkPlacementMode.value) {
-                            selectNode(node)
+                            selectNode(it)
                         } else {
                             val treeNode = mainModel.selectedNode.value
                             treeNodesToModels[treeNode]?.let { node1 ->
-                                linkNodes(node1, node)
+                                linkNodes(node1, it)
                             }
-
                         }
                     }
                 }
                 true
             }
+//            onTouchEvent = { pickHitResult, _ ->
+//                if (App.mode == App.ADMIN_MODE) {
+//                    pickHitResult.node?.let { node ->
+//                        if (!mainModel.linkPlacementMode.value) {
+//                            selectNode(node)
+//                        } else {
+//                            val treeNode = mainModel.selectedNode.value
+//                            treeNodesToModels[treeNode]?.let { node1 ->
+//                                linkNodes(node1, node)
+//                            }
+//                        }
+//                    }
+//                }
+//                true
+//            }
             onArSessionFailed = { exception ->
                 val message = when (exception) {
                     is UnavailableArcoreNotInstalledException,
@@ -130,31 +144,36 @@ class PreviewFragment : Fragment() {
                     if (currentPathState.path != pathState.path) {
                         //reDrawPath(pathState.path, wayNodes)
                     }
-                    if (currentPathState.endLabel != pathState.endLabel){
+                    if (currentPathState.endEntry != pathState.endEntry){
                         endPlacingJob?.cancel()
-                        currentPathState.endLabel?.node?.let {
-                            drawerHelper.removeLabelWithAnim(it)
+                        currentPathState.endEntry?.let { entry ->
+                            treeNodesToModels[entry]?.let {
+                                drawerHelper.removeLabelWithAnim(it)
+                            }
                         }
+
                         endPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
-                            currentPathState.endLabel?.let {
-                                it.node = drawerHelper.placeLabel(
-                                    it.label,
-                                    it.pos,
+                            currentPathState.endEntry?.let { end ->
+                                treeNodesToModels[end] = drawerHelper.placeLabel(
+                                    end.number,
+                                    OrientatedPosition(end.position, end.forwardVector),
                                     binding.sceneView,
                                 )
                             }
                         }
                     }
-                    if (currentPathState.startLabel != pathState.startLabel){
+                    if (currentPathState.startEntry != pathState.startEntry){
                         startPlacingJob?.cancel()
-                        currentPathState.startLabel?.node?.let {
-                            drawerHelper.removeLabelWithAnim(it)
+                        currentPathState.startEntry?.let { entry ->
+                            treeNodesToModels[entry]?.let {
+                                drawerHelper.removeLabelWithAnim(it)
+                            }
                         }
                         startPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
-                            currentPathState.startLabel?.let {
-                                it.node = drawerHelper.placeLabel(
-                                    it.label,
-                                    it.pos,
+                            currentPathState.startEntry?.let { start ->
+                                treeNodesToModels[start] = drawerHelper.placeLabel(
+                                    start.number,
+                                    OrientatedPosition(start.position, start.forwardVector),
                                     binding.sceneView,
                                 )
                             }
