@@ -33,7 +33,7 @@ class App : Application() {
         instance = this
 
         database = Room.databaseBuilder(this, GraphDatabase::class.java, DATABASE_NAME)
-         //   .createFromAsset(DATABASE_DIR)
+            .createFromAsset(DATABASE_DIR)
             .allowMainThreadQueries()
             .build()
         repository = GraphImpl()

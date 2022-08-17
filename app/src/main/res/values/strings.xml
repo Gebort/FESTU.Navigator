@@ -30,6 +30,12 @@
     <string name="accept">Accept</string>
     <string name="reject">Reject</string>
     <string name="entry_already_exists" translatable="false">Entry already exists</string>
+    <string name="node_created" translatable="false">Node created</string>
+    <string name="node_deleted" translatable="false">Node deleted</string>
+    <string name="link_created" translatable="false">Link created</string>
+
+
+
 
 
 </resources>

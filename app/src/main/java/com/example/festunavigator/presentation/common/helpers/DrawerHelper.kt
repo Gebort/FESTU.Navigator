@@ -59,6 +59,14 @@ class DrawerHelper(
 
     }
 
+    suspend fun removeLink(
+        pair: Pair<ArNode, ArNode>,
+        modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode>
+    ) {
+        modelsToLinkModels[pair]?.destroy()
+        modelsToLinkModels.remove(pair)
+    }
+
     suspend fun removeNode(
         treeNode: TreeNode,
         modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode>,
@@ -70,8 +78,7 @@ class DrawerHelper(
                     pair.first == node || pair.second == node
                 }
                 .forEach { pair ->
-                    modelsToLinkModels[pair]?.destroy()
-                    modelsToLinkModels.remove(pair)
+                    removeLink(pair, modelsToLinkModels)
                 }
             treeNodesToModels.remove(treeNode)
             node.destroy()

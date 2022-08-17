@@ -2,37 +2,60 @@ package com.example.festunavigator.domain.tree
 
 import com.example.festunavigator.domain.utils.getApproxDif
 import dev.romainguy.kotlin.math.Float3
+import dev.romainguy.kotlin.math.radians
 
 class TreeDiffUtils(
     private val tree: Tree
     ) {
 
-    private var lastNode: TreeNode? = null
+    private var closestNodes = mutableMapOf<Int, TreeNode>()
+ //   private var closestNode: TreeNode? = null
 
-    suspend fun getNearNodes(position: Float3, radius: Int): List<TreeNode>{
-        if (lastNode == null) {
-            lastNode = getClosestInArray(position, tree.getAllEntries())
-        }
-        lastNode = getNewCentralNode(position, lastNode!!)
-        val nearNodes = mutableListOf<TreeNode>()
-        getNodesByRadius(lastNode!!, radius, nearNodes)
-        return nearNodes
-    }
-
-    private fun getNodesByRadius(central: TreeNode, radius: Int, list: MutableList<TreeNode>) {
-        if (radius == 0){
-            return
+    suspend fun getNearNodes(position: Float3, radius: Float): List<TreeNode>{
+        if (!tree.initialized) {
+            return listOf()
         }
         else {
+            val nodes = tree.getNodeFromEachRegion().toMutableMap()
+            closestNodes.keys.forEach { key ->
+                if (nodes.containsKey(key)) {
+                    nodes[key] = closestNodes[key]!!
+                }
+            }
+            closestNodes = nodes
+
+            closestNodes.forEach { item ->
+                closestNodes[item.key] = getNewCentralNode(position, item.value)
+            }
+
+
+//            if (closestNode == null) {
+//                closestNode = getClosestInArray(position, tree.getAllEntries())
+//            }
+//            val closestNode = getNewCentralNode(position, closestNode!!)
+
+            val nearNodes = mutableListOf<TreeNode>()
+            closestNodes.values.forEach { node ->
+                getNodesByRadius(position, node, radius, nearNodes)
+            }
+
+            //getClosestFreeNodes(position, radius, nearNodes)
+            return nearNodes
+        }
+    }
+
+    private fun getNodesByRadius(position: Float3, central: TreeNode, radius: Float, list: MutableList<TreeNode>) {
+            if (position.getApproxDif(central.position) > radius ) {
+                return
+            }
             list.add(central)
             central.neighbours.forEach { id ->
                 tree.getNode(id)?.let { node ->
                     if (!list.contains(node)){
-                        getNodesByRadius(node, radius-1, list)
+                        getNodesByRadius(position, node, radius, list)
                     }
                 }
             }
-        }
     }
 
     private fun getNewCentralNode(position: Float3, central: TreeNode): TreeNode {
@@ -76,6 +99,14 @@ class TreeDiffUtils(
                 }
             }
             return Pair(node, dist)
+        }
+    }
+
+    private fun getClosestFreeNodes(position: Float3, radius: Float, list: MutableList<TreeNode>) {
+        tree.getFreeNodes().forEach { node ->
+            if (position.getApproxDif(node.position) <= radius) {
+                list.add(node)
+            }
         }
     }
 

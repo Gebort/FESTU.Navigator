@@ -93,7 +93,7 @@ class SearchFragment : Fragment() {
         var entriesList = listOf<EntryItem>()
         viewLifecycleOwner.lifecycleScope.launch {
             withContext(Dispatchers.IO){
-                entriesList = mainModel.tree.getEntriesNumbers().map { number ->
+                entriesList = mainModel.entriesNumber.map { number ->
                     EntryItem(number, destinationDesc(number, requireActivity().applicationContext))
                 }
             }

@@ -2,26 +2,18 @@ package com.example.festunavigator.presentation.preview
 
 import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import com.example.festunavigator.data.App
 import com.example.festunavigator.domain.hit_test.HitTestResult
-import com.example.festunavigator.domain.hit_test.OrientatedPosition
-import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.confirmer.ConfirmFragment
 import com.example.festunavigator.presentation.preview.state.PathState
 import com.example.festunavigator.presentation.search.SearchFragment
 import com.example.festunavigator.presentation.search.SearchUiEvent
-import com.google.ar.core.Anchor
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
-import io.github.sceneview.ar.arcore.ArSession
-import io.github.sceneview.ar.node.ArNode
-import io.github.sceneview.ar.scene.destroy
-import io.github.sceneview.node.Node
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -54,8 +46,10 @@ class MainShareModel: ViewModel() {
     private var _linkPlacementMode = MutableStateFlow(false)
     val linkPlacementMode = _linkPlacementMode.asStateFlow()
 
-    var tree = App.instance!!.getTree()
-        private set
+    private var tree = App.instance!!.getTree()
+
+    val treeDiffUtils = tree.diffUtils
+    val entriesNumber = tree.getEntriesNumbers()
 
     private var pathfindJob: Job? = null
 
@@ -251,9 +245,9 @@ class MainShareModel: ViewModel() {
     private suspend fun removeNode(node: TreeNode){
         tree.removeNode(node)
         _mainUiEvents.emit(MainUiEvent.NodeDeleted(node))
-        if (node == selectedNode.value) {
-            _selectedNode.update { null }
-        }
+        if (node == selectedNode.value) {_selectedNode.update { null }}
+        if (node == pathState.value.endEntry) {_pathState.update { it.copy(endEntry = null, path = null) }}
+        else if (node == pathState.value.startEntry) {_pathState.update { it.copy(startEntry = null, path = null) }}
     }
 
     private suspend fun initialize(entryNumber: String, position: Float3, newOrientation: Quaternion): Boolean {
