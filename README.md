@@ -6,10 +6,10 @@ Work with AR is done entirely using the SceneView library
 
 **Video demonstration available below**
 
-The application builds routes between university classrooms. When launching the application, it is required to scan the number of the nearest auditorium in order to set the starting point of the route. 
+The application builds routes between university classrooms. When launching the application, it is required to scan the number of the nearest classroom in order to set the starting point of the route. 
 Classrooms number recognition performed using Google MLKit. 
 
-**The recognizable classroom number must be vertical and not contain letters in the name**
+**By default, the recognizable classroom number must be vertical and not contain letters in the name**
 
 <p align="middle">
   <img src="https://user-images.githubusercontent.com/35885530/179328286-371043fc-a101-46d3-a3da-b1d2885b9ee4.png" width="300" />
@@ -33,7 +33,7 @@ Initialization is required to determine the user's current position relative to 
 
 <br>
 
-The built route thanks to the SceneView AR library is displayed in 3D space in front of the user. Finding the shortest route is done using the A* algorithm, path smoothing is done using Bezier curves
+The built route thanks to the SceneView AR library is displayed in 3D space in front of the user. Finding the shortest route is done using the A* algorithm, path smoothing is done using Bezier curves. 
 
 <p align="middle">
   <img src="https://user-images.githubusercontent.com/35885530/179328566-72e66c07-088d-498d-a7eb-955cbcbf8fb4.png" width="300" />
@@ -52,10 +52,31 @@ The classrooms graph is created manually by the application administrator throug
 ## Video demonstration
 Video demonstration: https://drive.google.com/file/d/1D1yIw9z9UXiHfDxtPgEj0x_9gJDrNFvz/view?usp=sharing  
 
-## Admin/User mode
-To enable the audience graph editing mode, in festunavigator/presentation/preview/PreviewFragment.kt find:
+## Settings
+You can change the path rendering distance (increase the number of nodes) and other settings, in festunavigator/presentation/preview/PreviewFragment.kt:
 ```kotlin
-378 const val mode = USER_MODE
+360 companion object {
+361        //path rendering distance (number of nodes)
+362        const val VIEWABLE_PATH_NODES = 21
+363        //tree rendering distance, used only in admin mode
+364        const val VIEWABLE_ADMIN_NODES = 5f
+365        //how often the check for path and tree redraw will be
+366        const val POSITION_DETECT_DELAY = 100L
+367        //image crop for recognition
+368        val DESIRED_CROP = Pair(8, 72)
+369    }
+```
+You can change the classroom number template (first char must be a digit by standard) in festunavigator/data/ml/classification/TextAnalyzer.kt:
+```kotlin
+143    private fun filterFunction(text: Text.TextBlock): Boolean {
+144        return text.text[0].isDigit()
+145    }
+```
+
+## Admin/User mode
+To enable the audience graph editing mode, in festunavigator/data/App.kt find:
+```kotlin
+70 const val mode = USER_MODE
 ```
 Change it with:
 ```kotlin
@@ -63,17 +84,18 @@ Change it with:
 ```
 By default, the application is installed with a pre-installed FESTU university classrooms graph. To run the application without a pre-installed graph, in festunavigator/data/App.kt find:
 ```kotlin
-32 database = Room.databaseBuilder(this, GraphDatabase::class.java, DATABASE_NAME)
-33     .createFromAsset(DATABASE_DIR)
-34     .allowMainThreadQueries()
-35     .build()
+35 database = Room.databaseBuilder(this, GraphDatabase::class.java, DATABASE_NAME)
+36     .createFromAsset(DATABASE_DIR)
+37     .allowMainThreadQueries()
+38     .build()
 ```
 Remove line - .createFromAsset(DATABASE_DIR):
 ```kotlin
-32 database = Room.databaseBuilder(this, GraphDatabase::class.java, DATABASE_NAME)
-33     .allowMainThreadQueries()
-34     .build()
+35 database = Room.databaseBuilder(this, GraphDatabase::class.java, DATABASE_NAME)
+36     .allowMainThreadQueries()
+37     .build()
 ```
+
 Now you can run the app and experience it anywhere
 If you have any questions, you can email me: gerbort111@gmail.com
 
