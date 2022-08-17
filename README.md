@@ -80,7 +80,7 @@ To enable the audience graph editing mode, in festunavigator/data/App.kt find:
 ```
 Change it with:
 ```kotlin
-378 const val mode = ADMIN_MODE
+70 const val mode = ADMIN_MODE
 ```
 By default, the application is installed with a pre-installed FESTU university classrooms graph. To run the application without a pre-installed graph, in festunavigator/data/App.kt find:
 ```kotlin
