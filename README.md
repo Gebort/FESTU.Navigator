@@ -11,8 +11,9 @@ Classrooms number recognition performed using Google MLKit.
 
 **By default, the recognizable classroom number must be vertical and not contain letters in the name**
 
+
 <p align="middle">
-  <img src="https://user-images.githubusercontent.com/35885530/179328286-371043fc-a101-46d3-a3da-b1d2885b9ee4.png" width="300" />
+  <img src="https://user-images.githubusercontent.com/35885530/185281107-2485e7b1-2a59-4fce-9049-7830cd024d96.png" width="250" />
 </p>
 
 <br>
@@ -20,7 +21,7 @@ Classrooms number recognition performed using Google MLKit.
 It is required to confirm the recognized classroom number and its position in 3D space, since an error is possible in determining the planes around the user
 
 <p align="middle">
-  <img src="https://user-images.githubusercontent.com/35885530/179328379-60c46df3-bdfd-42f4-a534-c5f79e4cd218.png" width="300" />
+  <img src="https://user-images.githubusercontent.com/35885530/185281219-aa1f2617-9328-47fa-a175-f5563780730b.png" width="250" />
 </p>
 
 <br>
@@ -28,7 +29,7 @@ It is required to confirm the recognized classroom number and its position in 3D
 Initialization is required to determine the user's current position relative to the saved classrooms graph. After initialization, the user can select both the start and end points of the route
 
 <p align="middle">
-  <img src="https://user-images.githubusercontent.com/35885530/179328505-4ae5348e-0e3d-4cd9-ab29-5543bf37bfc3.png" width="200" />
+  <img src="https://user-images.githubusercontent.com/35885530/185281644-cd024077-782f-450b-818a-38546d7b6638.png" width="250" />
 </p>
 
 <br>
@@ -36,7 +37,8 @@ Initialization is required to determine the user's current position relative to 
 The built route thanks to the SceneView AR library is displayed in 3D space in front of the user. Finding the shortest route is done using the A* algorithm, path smoothing is done using Bezier curves. 
 
 <p align="middle">
-  <img src="https://user-images.githubusercontent.com/35885530/179328566-72e66c07-088d-498d-a7eb-955cbcbf8fb4.png" width="300" />
+  <img src="https://user-images.githubusercontent.com/35885530/185281417-9d558881-1cf6-43cc-9e62-852645bbdcd8.jpeg" width="200" />
+    <img src="https://user-images.githubusercontent.com/35885530/185281425-3fb933ed-e07c-4600-90cb-c6ed4d755526.jpg" width="200" />
 </p>
 
 <br>
@@ -44,13 +46,13 @@ The built route thanks to the SceneView AR library is displayed in 3D space in f
 The classrooms graph is created manually by the application administrator through a special interface
 
 <p align="middle">
-  <img src="https://user-images.githubusercontent.com/35885530/179328653-132d6894-bd8c-4a39-a8a5-d38374a82c77.png" width="300" />
+  <img src="https://user-images.githubusercontent.com/35885530/185282075-e17f1e4f-6ebb-43c0-a644-d8d591758ec0.png" width="250" />
 </p>
 
 <br>
 
 ## Video demonstration
-Video demonstration: https://drive.google.com/file/d/1D1yIw9z9UXiHfDxtPgEj0x_9gJDrNFvz/view?usp=sharing  
+https://user-images.githubusercontent.com/35885530/185282923-e424978b-de67-486c-a4b1-ebde455ae3ee.mp4
 
 ## Settings
 You can change the path rendering distance (increase the number of nodes) and other settings, in festunavigator/presentation/preview/PreviewFragment.kt:
@@ -97,6 +99,11 @@ Remove line - .createFromAsset(DATABASE_DIR):
 ```
 
 Now you can run the app and experience it anywhere
+
+## Admin mode video demonstration
+
+An example of setting up navigation in a new space is available here (the video is too long for github): https://drive.google.com/file/d/11a_lTeQmXhMfE2AxJ8mg5ec34yCC1uoH/view?usp=sharing
+
 If you have any questions, you can email me: gerbort111@gmail.com
 
 
