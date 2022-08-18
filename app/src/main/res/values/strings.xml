@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">FESTU Navigator</string>
     <string name="initialize">Initialize the graph please</string>
-    <string name="scan">Wait for the dots to appear and point the camera at the auditorium number. Make sure the plate is aligned with the number. If there are multiple numbers, use the lowest one</string>
+    <string name="scan">Wait for the dots to appear and point the camera at the auditorium number</string>
     <string name="link" translatable="false">Link</string>
     <string name="delete" translatable="false">Delete</string>
     <string name="entry" translatable="false">Entry</string>
