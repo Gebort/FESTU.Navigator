@@ -55,6 +55,8 @@ class PreviewFragment : Fragment() {
     private var lastConfObject: LabelObject? = null
     private var confObjectJob: Job? = null
     private val treeNodesToModels: MutableBiMap<TreeNode, ArNode> = mutableBiMapOf()
+    private var selectionJob: Job? = null
+    private var selectionNode: ArNode? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -282,12 +284,19 @@ class PreviewFragment : Fragment() {
         //User selected entry can be stored in PreviewFragment nodes map,
         // if this node displayed as PathState start or end
         val treeNode = treeNodesToModels.inverse[node] ?: treeAdapter.getTreeNode(node)
+        selectionJob?.cancel()
+        selectionNode?.let { drawerHelper.removeNode(it) }
+        treeNode?.let {
+            selectionJob = viewLifecycleOwner.lifecycleScope.launch {
+                selectionNode = drawerHelper.drawSelection(it, binding.sceneView)
+            }
+        }
         mainModel.onEvent(MainEvent.NewSelectedNode(treeNode))
     }
 
     private fun checkSelectedNode(treeNode: TreeNode){
         if (treeAdapter.getArNode(treeNode) == null) {
-            mainModel.onEvent(MainEvent.NewSelectedNode(null))
+            selectNode(null)
         }
     }
 
@@ -327,30 +336,6 @@ class PreviewFragment : Fragment() {
         }
 
     }
-
-//    private fun reDrawPath(path: Path?, wayNodes: MutableList<ArNode>){
-//        wayBuildingJob?.cancel()
-//        wayBuildingJob = viewLifecycleOwner.lifecycleScope.launch {
-//            drawerHelper.drawWay(
-//                path,
-//                wayNodes,
-//                binding.sceneView
-//            )
-//        }
-//    }
-
-
-
-//    private suspend fun onInitializeSuccess() {
-//        if (App.mode == App.ADMIN_MODE) {
-//            drawerHelper.drawTree(
-//                mainModel.tree,
-//                treeNodesToModels,
-//                modelsToLinkModels,
-//                binding.sceneView
-//            )
-//        }
-//    }
 
     private fun showSnackbar(message: String) {
         Snackbar.make(binding.sceneView, message, Snackbar.LENGTH_SHORT)

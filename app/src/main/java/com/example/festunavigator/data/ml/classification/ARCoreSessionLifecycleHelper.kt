@@ -1,10 +1,8 @@
 package com.example.festunavigator.data.ml.classification
 
 import android.app.Activity
-import android.widget.Toast
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import com.example.festunavigator.presentation.common.helpers.CameraPermissionHelper
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.CameraNotAvailableException

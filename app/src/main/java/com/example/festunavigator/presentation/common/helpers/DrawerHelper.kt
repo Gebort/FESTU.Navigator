@@ -15,6 +15,7 @@ import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.*
 import com.uchuhimo.collections.MutableBiMap
+import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
 import io.github.sceneview.ar.scene.destroy
@@ -36,6 +37,11 @@ class DrawerHelper(
 
     private var labelScale = Scale(0.15f, 0.075f, 0.15f)
     private var arrowScale = Scale(0.5f, 0.5f, 0.5f)
+    private var pathScale = Scale(0.1f)
+    private var selectionPathScale = Scale(0.2f)
+    private var selectionEntryScale = Scale(0.1f)
+    private val pathModel = "models/cylinder.glb"
+    private val selectionModel = "models/cone.glb"
     private var labelAnimationDelay = 2L
     private var arrowAnimationDelay = 2L
     private var labelAnimationPart = 10
@@ -86,27 +92,44 @@ class DrawerHelper(
         }
     }
 
+    suspend fun drawSelection(
+        treeNode: TreeNode,
+        surfaceView: ArSceneView,
+    ): ArNode = when (treeNode) {
+        is TreeNode.Entry -> {
+            drawArNode(selectionModel, selectionEntryScale, treeNode.position, surfaceView, null)
+        }
+        is TreeNode.Path -> {
+            drawArNode(selectionModel, selectionPathScale, treeNode.position, surfaceView, null)
+        }
+    }
+
     private suspend fun drawPath(
         treeNode: TreeNode.Path,
         surfaceView: ArSceneView,
         anchor: Anchor? = null
+    ): ArNode = drawArNode(pathModel, pathScale, treeNode.position, surfaceView, anchor)
+
+    private suspend fun drawArNode(
+        model: String,
+        scale: Scale,
+        position: Float3,
+        surfaceView: ArSceneView,
+        anchor: Anchor?
     ): ArNode {
         val modelNode = ArNode()
         modelNode.loadModel(
             context = fragment.requireContext(),
-            glbFileLocation = "models/cylinder.glb",
+            glbFileLocation = model,
         )
-        modelNode.position = treeNode.position
-        modelNode.modelScale = Scale(0.1f)
+        modelNode.position = position
+        modelNode.modelScale = scale
         if (anchor != null){
             modelNode.anchor = anchor
         }
         else {
             modelNode.anchor = modelNode.createAnchor()
         }
-//        anchor?.let {
-//            modelNode.anchor = it
-//        }
         modelNode.model?.let {
             it.isShadowCaster = false
             it.isShadowReceiver = false
