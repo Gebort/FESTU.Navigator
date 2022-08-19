@@ -109,5 +109,8 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.0-rc02"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.1'
 
+    //Splashscreen
+    implementation "androidx.core:core-splashscreen:1.0.0-rc01"
+
 
 }
