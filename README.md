@@ -76,14 +76,14 @@ You can change the classroom number template (first char must be a digit by stan
 ```
 
 ## Admin/User mode
-To enable the audience graph editing mode, in festunavigator/data/App.kt find:
-```kotlin
-70 const val mode = USER_MODE
-```
-Change it with:
-```kotlin
-70 const val mode = ADMIN_MODE
-```
+To enable the audience graph editing mode, change the build variant to adminDebug or adminRelease:
+
+<p align="middle">
+  <img src="https://user-images.githubusercontent.com/35885530/186618592-0728c71b-8d19-4874-89ae-0e3a8986c7d2.png" width="300" />
+</p>
+
+<br>
+
 By default, the application is installed with a pre-installed FESTU university classrooms graph. To run the application without a pre-installed graph, in festunavigator/data/App.kt find:
 ```kotlin
 35 database = Room.databaseBuilder(this, GraphDatabase::class.java, DATABASE_NAME)
