@@ -25,18 +25,20 @@ import com.example.festunavigator.presentation.common.helpers.viewHideInput
 import com.example.festunavigator.presentation.common.helpers.viewRequestInput
 import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-
-class SearchFragment @Inject constructor(
-    private val destinationDesc: GetDestinationDesc
-    ): Fragment() {
+@AndroidEntryPoint
+class SearchFragment: Fragment() {
 
     private val mainModel: MainShareModel by activityViewModels()
+
+    @Inject
+    lateinit var destinationDesc: GetDestinationDesc
 
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!

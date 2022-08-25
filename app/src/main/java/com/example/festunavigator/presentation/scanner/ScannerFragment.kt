@@ -29,6 +29,7 @@ import com.example.festunavigator.presentation.preview.PreviewFragment
 import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException
+import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
 import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.scene.destroy
@@ -41,12 +42,15 @@ import javax.inject.Inject
 
 private const val SMOOTH_DELAY = 0.5
 
-class ScannerFragment @Inject constructor(
-    private val hitTest: HitTest,
-    private val analyzeImage: AnalyzeImage
-): Fragment() {
+@AndroidEntryPoint
+class ScannerFragment: Fragment() {
 
     private val mainModel: MainShareModel by activityViewModels()
+
+    @Inject
+    lateinit var hitTest: HitTest
+    @Inject
+    lateinit var analyzeImage: AnalyzeImage
 
     private var _binding: FragmentScannerBinding? = null
     private val binding get() = _binding!!

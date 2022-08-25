@@ -82,7 +82,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-common-java8:2.5.1'
 
     // ARCore
-    implementation 'com.google.ar:core:1.33.0'
+    implementation 'com.google.ar:core:1.32.0'
 
     // Obj - a simple Wavefront OBJ file loader
     // https://github.com/javagl/Obj

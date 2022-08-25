@@ -24,6 +24,7 @@ import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
 import com.example.festunavigator.presentation.scanner.ScannerFragment
 import com.example.festunavigator.presentation.search.SearchFragment
+import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
@@ -36,12 +37,15 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class RouterFragment @Inject constructor(
-    private val destinationDesc: GetDestinationDesc,
-    private val hitTest: HitTest
-): Fragment() {
+@AndroidEntryPoint
+class RouterFragment: Fragment() {
 
     private val mainModel: MainShareModel by activityViewModels()
+
+    @Inject
+    lateinit var destinationDesc: GetDestinationDesc
+    @Inject
+    lateinit var hitTest: HitTest
 
     private var _binding: FragmentRouterBinding? = null
     private val binding get() = _binding!!
