@@ -17,6 +17,8 @@ import com.example.festunavigator.data.App
 import com.example.festunavigator.databinding.FragmentRouterBinding
 import com.example.festunavigator.databinding.FragmentSearchBinding
 import com.example.festunavigator.domain.hit_test.HitTestResult
+import com.example.festunavigator.domain.use_cases.GetDestinationDesc
+import com.example.festunavigator.domain.use_cases.HitTest
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
@@ -32,11 +34,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class RouterFragment : Fragment() {
-
-    private val destinationDesc = App.instance!!.getDestinationDesc
-    private val hitTest = App.instance!!.hitTest
+class RouterFragment @Inject constructor(
+    private val destinationDesc: GetDestinationDesc,
+    private val hitTest: HitTest
+): Fragment() {
 
     private val mainModel: MainShareModel by activityViewModels()
 

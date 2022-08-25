@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.databinding.FragmentSearchBinding
+import com.example.festunavigator.domain.use_cases.GetDestinationDesc
 import com.example.festunavigator.presentation.search.adapters.EntriesAdapter
 import com.example.festunavigator.presentation.search.adapters.EntryItem
 import com.example.festunavigator.presentation.common.helpers.viewHideInput
@@ -28,11 +29,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 
-class SearchFragment : Fragment() {
-
-    private val destinationDesc = App.instance!!.getDestinationDesc
+class SearchFragment @Inject constructor(
+    private val destinationDesc: GetDestinationDesc
+    ): Fragment() {
 
     private val mainModel: MainShareModel by activityViewModels()
 

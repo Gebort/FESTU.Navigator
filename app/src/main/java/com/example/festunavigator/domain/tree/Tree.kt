@@ -10,8 +10,9 @@ import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class Tree(
+class Tree @Inject constructor(
     private val repository: GraphRepository
 ) {
 

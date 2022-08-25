@@ -18,6 +18,8 @@ import com.example.festunavigator.data.App
 import com.example.festunavigator.databinding.FragmentScannerBinding
 import com.example.festunavigator.domain.hit_test.HitTestResult
 import com.example.festunavigator.domain.ml.DetectedText
+import com.example.festunavigator.domain.use_cases.AnalyzeImage
+import com.example.festunavigator.domain.use_cases.HitTest
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.common.helpers.DisplayRotationHelper
 import com.example.festunavigator.presentation.confirmer.ConfirmFragment
@@ -35,10 +37,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 private const val SMOOTH_DELAY = 0.5
 
-class ScannerFragment : Fragment() {
+class ScannerFragment @Inject constructor(
+    private val hitTest: HitTest,
+    private val analyzeImage: AnalyzeImage
+): Fragment() {
 
     private val mainModel: MainShareModel by activityViewModels()
 
@@ -47,9 +53,6 @@ class ScannerFragment : Fragment() {
 
     private val args: ScannerFragmentArgs by navArgs()
     private val scanType by lazy { args.scanType }
-
-    private val hitTest = App.instance!!.hitTest
-    private val analyzeImage = App.instance!!.analyzeImage
 
     private lateinit var displayRotationHelper: DisplayRotationHelper
     private var lastDetectedObject: DetectedText? = null
