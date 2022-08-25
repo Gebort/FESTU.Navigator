@@ -18,6 +18,8 @@ import com.example.festunavigator.data.App
 import com.example.festunavigator.databinding.FragmentScannerBinding
 import com.example.festunavigator.domain.hit_test.HitTestResult
 import com.example.festunavigator.domain.ml.DetectedText
+import com.example.festunavigator.domain.use_cases.AnalyzeImage
+import com.example.festunavigator.domain.use_cases.HitTest
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.common.helpers.DisplayRotationHelper
 import com.example.festunavigator.presentation.confirmer.ConfirmFragment
@@ -27,6 +29,7 @@ import com.example.festunavigator.presentation.preview.PreviewFragment
 import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException
+import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
 import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.scene.destroy
@@ -35,21 +38,25 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 private const val SMOOTH_DELAY = 0.5
 
-class ScannerFragment : Fragment() {
+@AndroidEntryPoint
+class ScannerFragment: Fragment() {
 
     private val mainModel: MainShareModel by activityViewModels()
+
+    @Inject
+    lateinit var hitTest: HitTest
+    @Inject
+    lateinit var analyzeImage: AnalyzeImage
 
     private var _binding: FragmentScannerBinding? = null
     private val binding get() = _binding!!
 
     private val args: ScannerFragmentArgs by navArgs()
     private val scanType by lazy { args.scanType }
-
-    private val hitTest = App.instance!!.hitTest
-    private val analyzeImage = App.instance!!.analyzeImage
 
     private lateinit var displayRotationHelper: DisplayRotationHelper
     private var lastDetectedObject: DetectedText? = null

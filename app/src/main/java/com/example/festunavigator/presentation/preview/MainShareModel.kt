@@ -5,12 +5,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.festunavigator.data.App
 import com.example.festunavigator.domain.hit_test.HitTestResult
+import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
+import com.example.festunavigator.domain.use_cases.FindWay
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.confirmer.ConfirmFragment
 import com.example.festunavigator.presentation.preview.state.PathState
 import com.example.festunavigator.presentation.search.SearchFragment
 import com.example.festunavigator.presentation.search.SearchUiEvent
+import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
@@ -19,10 +22,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class MainShareModel: ViewModel() {
-
-    private val findWay = App.instance!!.findWay
+@HiltViewModel
+class MainShareModel @Inject constructor(
+    private val tree: Tree,
+    private val findWay: FindWay
+): ViewModel() {
 
     private var _pathState = MutableStateFlow(PathState())
     val pathState = _pathState.asStateFlow()
@@ -45,8 +51,6 @@ class MainShareModel: ViewModel() {
 
     private var _linkPlacementMode = MutableStateFlow(false)
     val linkPlacementMode = _linkPlacementMode.asStateFlow()
-
-    private var tree = App.instance!!.getTree()
 
     val treeDiffUtils = tree.diffUtils
     val entriesNumber = tree.getEntriesNumbers()

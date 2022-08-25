@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "585021364061",
+    "project_id": "festu-navigator",
+    "storage_bucket": "festu-navigator.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:585021364061:android:fe3e2c14e15689df0bfab4",
+        "android_client_info": {
+          "package_name": "com.example.festunavigator.user"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "585021364061-4kbu8lj4l6jq21jnh6h50ebopit7eikp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWcXWGuBnlcduZj-Y30jfa3e5Sa6QHeKY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "585021364061-4kbu8lj4l6jq21jnh6h50ebopit7eikp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

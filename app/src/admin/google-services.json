@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:585021364061:android:fe3e2c14e15689df0bfab4",
         "android_client_info": {
-          "package_name": "com.example.festunavigator"
+          "package_name": "com.example.festunavigator.admin"
         }
       },
       "oauth_client": [

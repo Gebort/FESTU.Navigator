@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name" translatable="false">FESTU Navigator</string>
+    <string name="app_name_user" translatable="false">FESTU Navigator</string>
+    <string name="app_name_admin" translatable="false">Navigator Admin</string>
     <string name="initialize">Initialize the graph please</string>
     <string name="scan">Wait for the dots to appear and point the camera at the auditorium number</string>
     <string name="link" translatable="false">Link</string>

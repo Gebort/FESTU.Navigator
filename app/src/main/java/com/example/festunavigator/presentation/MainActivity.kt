@@ -1,19 +1,16 @@
 package com.example.festunavigator.presentation
 
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.festunavigator.R
 import com.example.festunavigator.data.ml.classification.ARCoreSessionLifecycleHelper
-import com.example.festunavigator.domain.use_cases.*
 import com.google.ar.core.CameraConfig
 import com.google.ar.core.CameraConfigFilter
 import com.google.ar.core.Config
-import com.google.ar.core.exceptions.*
-import io.github.sceneview.utils.setFullScreen
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

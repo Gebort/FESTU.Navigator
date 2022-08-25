@@ -1,14 +1,16 @@
 package com.example.festunavigator.data.pathfinding
 
-import com.example.festunavigator.data.App
 import com.example.festunavigator.domain.pathfinding.Path
 import com.example.festunavigator.domain.pathfinding.Pathfinder
 import com.example.festunavigator.domain.tree.Tree
-import com.example.festunavigator.domain.tree.TreeNode
+import com.example.festunavigator.domain.use_cases.SmoothPath
+import javax.inject.Inject
 
-class AStarImpl: Pathfinder {
+class AStarImpl @Inject constructor(
+    private val smoothPath: SmoothPath
+): Pathfinder {
 
-    private val smoothPath = App.instance!!.smoothPath
+
 
     override suspend fun findWay(from: String, to: String, tree: Tree): Path? {
 
