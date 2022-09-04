@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/preview_nav_graph"
-    app:startDestination="@id/scannerFragment">
+    app:startDestination="@id/orientationFragment">
 
     <fragment
         android:id="@+id/scannerFragment"
@@ -71,4 +71,24 @@
         app:popEnterAnim="@anim/slide_up"
         app:popExitAnim="@android:anim/fade_out"
         app:popUpTo="@id/routerFragment" />
+    <fragment
+        android:id="@+id/orientationFragment"
+        android:name="com.example.festunavigator.presentation.orientating.OrientationFragment"
+        android:label="fragment_orientation"
+        tools:layout="@layout/fragment_orientation" >
+        <action
+            android:id="@+id/action_orientationFragment_to_scannerFragment"
+            app:destination="@id/scannerFragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:exitAnim="@android:anim/fade_out"
+            app:popEnterAnim="@android:anim/fade_in"
+            app:popExitAnim="@android:anim/fade_out" />
+    </fragment>
+    <action
+        android:id="@+id/action_global_orientationFragment"
+        app:destination="@id/orientationFragment"
+        app:enterAnim="@android:anim/fade_in"
+        app:exitAnim="@android:anim/fade_out"
+        app:popEnterAnim="@android:anim/fade_in"
+        app:popExitAnim="@android:anim/fade_out" />
 </navigation>
