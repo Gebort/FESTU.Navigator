@@ -94,7 +94,7 @@ class PreviewFragment : Fragment() {
         )
 
         binding.sceneView.apply {
-            planeRenderer.isVisible = true
+            planeRenderer.isVisible = App.mode == App.ADMIN_MODE
             instructions.enabled = false
             onArFrame = { frame ->
                 onDrawFrame(frame)

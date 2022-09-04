@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="initialize">Инициализируйте граф</string>
-    <string name="scan">Дождитесь появления точек и направьте камеру на номер аудитории</string>
-    <string name="orientate">Дождитесь появления точек</string>
+    <string name="scan">Направьте камеру на номер аудитории</string>
+    <string name="orientate">Move the phone while pointing it at the audience number</string>
     <string name="confirm_place">Текст установлен корректно?</string>
     <string name="from">Начало</string>
     <string name="to">Конец</string>

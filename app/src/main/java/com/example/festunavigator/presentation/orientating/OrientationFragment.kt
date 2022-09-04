@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
+import androidx.core.view.doOnLayout
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -63,21 +64,23 @@ class OrientationFragment : Fragment() {
     }
 
     override fun onResume() {
-        binding.imageView.on
-        val x = binding.imageView.x
-        val y = binding.imageView.y
-        val animationPath = Path().apply {
-            lineTo(x + x/2, y)
-            lineTo(x, y - y/4)
-            lineTo(x - x/2, y)
-            lineTo(x, y)
-        }
-        val animationDuration = 3000L
+        binding.imageView.doOnLayout {
+            val x = it.x
+            val y = it.y
+            val animationPath = Path().apply {
+                setLastPoint(x, y)
+                lineTo(x + x/2, y)
+                lineTo(x, y - y/4, )
+                lineTo(x - x/2, y)
+                lineTo(x, y)
+            }
+            val animationDuration = 3000L
 
-        ObjectAnimator.ofFloat(binding.imageView, View.X, View.Y, animationPath).apply {
-            duration = animationDuration
-            repeatCount = Animation.INFINITE
-            start()
+            ObjectAnimator.ofFloat(it, View.X, View.Y, animationPath).apply {
+                duration = animationDuration
+                repeatCount = Animation.INFINITE
+                start()
+            }
         }
         super.onResume()
     }
