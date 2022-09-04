@@ -89,10 +89,12 @@ class SearchFragment: Fragment() {
                 else getString(R.string.from)
         }
 
-        binding.entryRecyclerView.adapter = adapter
-        binding.entryRecyclerView.layoutManager = LinearLayoutManager(
+        binding.entryRecyclerView.apply {
+            adapter = adapter
+            layoutManager = LinearLayoutManager(
                 requireActivity().applicationContext
-        )
+            )
+        }
 
         var entriesList = listOf<EntryItem>()
         viewLifecycleOwner.lifecycleScope.launch {

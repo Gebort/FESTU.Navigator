@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_weight="1"
-        android:fontFamily="sans-serif-light"
+        android:fontFamily="@font/poppins_light"
         android:text="Main building, floor №4"
         android:textSize="16sp" />
 </LinearLayout>
