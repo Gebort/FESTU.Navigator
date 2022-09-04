@@ -36,7 +36,6 @@ class PreviewFragment : Fragment() {
 
     private val mainModel: MainShareModel by activityViewModels()
 
-
     private var _binding: FragmentPreviewBinding? = null
     private val binding get() = _binding!!
 
@@ -95,7 +94,7 @@ class PreviewFragment : Fragment() {
         )
 
         binding.sceneView.apply {
-            planeRenderer.isVisible = true
+            planeRenderer.isVisible = App.mode == App.ADMIN_MODE
             instructions.enabled = false
             onArFrame = { frame ->
                 onDrawFrame(frame)
@@ -115,21 +114,7 @@ class PreviewFragment : Fragment() {
                 }
                 true
             }
-//            onTouchEvent = { pickHitResult, _ ->
-//                if (App.mode == App.ADMIN_MODE) {
-//                    pickHitResult.node?.let { node ->
-//                        if (!mainModel.linkPlacementMode.value) {
-//                            selectNode(node)
-//                        } else {
-//                            val treeNode = mainModel.selectedNode.value
-//                            treeNodesToModels[treeNode]?.let { node1 ->
-//                                linkNodes(node1, node)
-//                            }
-//                        }
-//                    }
-//                }
-//                true
-//            }
+
             onArSessionFailed = { exception ->
                 val message = when (exception) {
                     is UnavailableArcoreNotInstalledException,

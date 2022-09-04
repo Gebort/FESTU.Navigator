@@ -8,6 +8,7 @@
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_app_icon.xml" value="0.158" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_borders.xml" value="0.1525" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_borders_vertical.xml" value="0.1" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_hand_phone.xml" value="0.18" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_reject.xml" value="0.1" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/drawable/ic_search.xml" value="0.1" />
@@ -17,10 +18,11 @@
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/activity_main.xml" value="0.22" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/confirm_layout.xml" value="0.6" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/confirmation_layout.xml" value="0.5285935085007728" />
-        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/entry_item.xml" value="0.3333333333333333" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/entry_item.xml" value="0.5" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/fragment_admin.xml" value="0.1693840579710145" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/fragment_ar.xml" value="0.3523550724637681" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/fragment_confirm.xml" value="0.3333333333333333" />
+        <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/fragment_orientation.xml" value="0.36666666666666664" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/fragment_preview.xml" value="0.16666666666666666" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/fragment_router.xml" value="0.35260416666666666" />
         <entry key="..\:/Projects/AndroidStudioProjects/FESTUNavigator/app/src/main/res/layout/fragment_scanner.xml" value="0.36666666666666664" />

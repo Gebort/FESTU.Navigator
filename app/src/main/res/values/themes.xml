@@ -11,7 +11,7 @@
         <item name="colorOnSecondary">@color/black</item>
     </style>
 
-    <style name="CustomOutlineBox" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+    <style name="CustomBox" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
         <item name="boxStrokeColor">@color/text_input_layout_stroke_color</item>
         <item name="hintTextColor">@color/grey_500</item>
         <item name="boxStrokeWidth">2dp</item>

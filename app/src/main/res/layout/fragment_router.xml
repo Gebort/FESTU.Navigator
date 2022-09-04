@@ -79,7 +79,7 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/from_layout"
-                style="@style/CustomOutlineBox"
+                style="@style/CustomBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -102,7 +102,7 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/to_layout"
-                style="@style/CustomOutlineBox"
+                style="@style/CustomBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
