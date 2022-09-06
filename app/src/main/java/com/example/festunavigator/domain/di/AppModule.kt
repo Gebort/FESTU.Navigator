@@ -2,13 +2,15 @@ package com.example.festunavigator.domain.di
 
 import android.app.Application
 import androidx.room.Room
-import com.example.festunavigator.data.data_source.GraphDatabase
+import com.example.festunavigator.data.data_source.Database
 import com.example.festunavigator.data.ml.classification.TextAnalyzer
 import com.example.festunavigator.data.pathfinding.AStarImpl
 import com.example.festunavigator.data.repository.GraphImpl
+import com.example.festunavigator.data.repository.RecordsImpl
 import com.example.festunavigator.domain.ml.ObjectDetector
 import com.example.festunavigator.domain.pathfinding.Pathfinder
 import com.example.festunavigator.domain.repository.GraphRepository
+import com.example.festunavigator.domain.repository.RecordsRepository
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.use_cases.*
 import dagger.Module
@@ -26,17 +28,24 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(app: Application): GraphDatabase {
-        return Room.databaseBuilder(app, GraphDatabase::class.java, DATABASE_NAME)
+    fun provideDatabase(app: Application): Database {
+        return Room.databaseBuilder(app, Database::class.java, DATABASE_NAME)
             .createFromAsset(DATABASE_DIR)
             .allowMainThreadQueries()
+            .addMigrations()
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideRepository(database: GraphDatabase): GraphRepository {
+    fun provideGraphRepository(database: Database): GraphRepository {
         return GraphImpl(database)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRecordsRepository(database: Database): RecordsRepository {
+        return RecordsImpl(database)
     }
 
     @Provides

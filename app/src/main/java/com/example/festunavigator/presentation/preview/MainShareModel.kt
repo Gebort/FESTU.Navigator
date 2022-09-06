@@ -1,10 +1,13 @@
 package com.example.festunavigator.presentation.preview
 
 import android.annotation.SuppressLint
+import android.icu.util.Calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.festunavigator.data.App
+import com.example.festunavigator.data.model.Record
 import com.example.festunavigator.domain.hit_test.HitTestResult
+import com.example.festunavigator.domain.repository.RecordsRepository
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.domain.use_cases.FindWay
@@ -27,7 +30,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MainShareModel @Inject constructor(
     private val tree: Tree,
-    private val findWay: FindWay
+    private val findWay: FindWay,
+    private val records: RecordsRepository
 ): ViewModel() {
 
     private var _pathState = MutableStateFlow(PathState())
@@ -52,10 +56,14 @@ class MainShareModel @Inject constructor(
     private var _linkPlacementMode = MutableStateFlow(false)
     val linkPlacementMode = _linkPlacementMode.asStateFlow()
 
+    private var _timeRecords = MutableStateFlow<List<Record>>(listOf())
+    val timeRecords = _timeRecords.asStateFlow()
+
     val treeDiffUtils = tree.diffUtils
     val entriesNumber = tree.getEntriesNumbers()
 
     private var pathfindJob: Job? = null
+    private var recordsJob: Job? = null
 
     init {
         preload()
@@ -116,6 +124,11 @@ class MainShareModel @Inject constructor(
                     _selectedNode.update { event.node }
                 }
             }
+            is MainEvent.LoadRecords -> {
+                viewModelScope.launch {
+                    loadRecords()
+                }
+            }
             is MainEvent.ChangeLinkMode -> {
                 viewModelScope.launch {
                     _linkPlacementMode.update { !linkPlacementMode.value }
@@ -174,6 +187,19 @@ class MainShareModel @Inject constructor(
             pathfind()
         }
         _searchUiEvents.emit(SearchUiEvent.SearchSuccess)
+
+         //saving route to the database
+        pathState.value.startEntry?.let { start ->
+            pathState.value.endEntry?.let { end ->
+                val record = Record(
+                    start = start.number,
+                    end = end.number,
+                    time = Calendar.getInstance().timeInMillis
+                )
+                records.insertRecord(record)
+            }
+        }
+
     }
     }
 
@@ -252,6 +278,19 @@ class MainShareModel @Inject constructor(
         if (node == selectedNode.value) {_selectedNode.update { null }}
         if (node == pathState.value.endEntry) {_pathState.update { it.copy(endEntry = null, path = null) }}
         else if (node == pathState.value.startEntry) {_pathState.update { it.copy(startEntry = null, path = null) }}
+    }
+
+    private suspend fun loadRecords() {
+        recordsJob?.cancel()
+        recordsJob = viewModelScope.launch {
+            val time = Calendar.getInstance().run {
+                add(Calendar.MINUTE, 30)
+                timeInMillis
+            }
+            records.getRecords(time, 5).collectLatest{ records ->
+                _timeRecords.emit(records)
+            }
+        }
     }
 
     private suspend fun initialize(entryNumber: String, position: Float3, newOrientation: Quaternion): Boolean {

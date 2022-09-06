@@ -3,7 +3,9 @@ package com.example.festunavigator.presentation.search.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -15,6 +17,7 @@ class EntriesAdapter(
     private val onItemClick: (String) -> Unit
 ) : ListAdapter<EntryItem, EntriesAdapter.ItemViewholder>(DiffCallback())  {
 
+    private var recordsList = listOf<EntryItem>()
     private var rawList = listOf<EntryItem>()
     private var filter: String = ""
 
@@ -34,8 +37,10 @@ class EntriesAdapter(
         fun bind(item: EntryItem) = with(itemView) {
             val textView: TextView = this.findViewById(R.id.entry_number)
             val descTextView: TextView = this.findViewById(R.id.description_text)
+            val historyImage: ImageView = this.findViewById(R.id.image_history)
             textView.text = item.number
             descTextView.text = item.description
+            historyImage.isVisible = item.history
 
             setOnClickListener {
                 onItemClick(item.number)
@@ -45,15 +50,24 @@ class EntriesAdapter(
 
     fun changeList(entries: List<EntryItem>){
         rawList = entries
-        filter = ""
-        submitList(rawList)
+        applyFilter(filter)
+    }
+
+    fun changeHistory(records: List<EntryItem>){
+    //    recordsList = records
+    //    applyFilter(filter)
     }
 
     fun applyFilter(filter: String){
         this.filter = filter
-        submitList(rawList
-            .filter { it.number.startsWith(filter) }
-            .sortedBy { it.number.length })
+        if (filter == "") {
+            submitList(recordsList + rawList)
+        }
+        else {
+            submitList((recordsList + rawList)
+                .filter { it.number.startsWith(filter) }
+            )
+        }
     }
 }
 

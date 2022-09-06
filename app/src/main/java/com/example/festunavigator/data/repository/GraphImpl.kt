@@ -1,10 +1,8 @@
 package com.example.festunavigator.data.repository
 
-import com.example.festunavigator.data.App
-import com.example.festunavigator.data.data_source.GraphDatabase
+import com.example.festunavigator.data.data_source.Database
 import com.example.festunavigator.data.model.TreeNodeDto
 import com.example.festunavigator.domain.repository.GraphRepository
-import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.domain.use_cases.convert
 import com.example.festunavigator.domain.use_cases.opposite
@@ -16,7 +14,7 @@ import io.github.sceneview.math.toVector3
 import javax.inject.Inject
 
 class GraphImpl @Inject constructor(
-    private val database: GraphDatabase
+    private val database: Database
 ): GraphRepository {
 
     private val dao = database.graphDao

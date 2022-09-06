@@ -97,13 +97,34 @@ class SearchFragment: Fragment() {
         }
 
         var entriesList = listOf<EntryItem>()
+        mainModel.onEvent(MainEvent.LoadRecords)
+
         viewLifecycleOwner.lifecycleScope.launch {
-            withContext(Dispatchers.IO){
-                entriesList = mainModel.entriesNumber.map { number ->
-                    EntryItem(number, destinationDesc(number, requireActivity().applicationContext))
-                }
+            withContext(Dispatchers.IO) {
+                entriesList = mainModel.entriesNumber
+                    .map { number ->
+                        EntryItem(
+                            number,
+                            destinationDesc(number, requireActivity().applicationContext)
+                        )
+                    }
             }
             adapter.changeList(entriesList)
+
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
+                mainModel.timeRecords.collectLatest { records ->
+                    adapter.changeHistory(
+                        records.map {
+                            EntryItem(
+                                it.end,
+                                destinationDesc(it.end, requireActivity().applicationContext),
+                                true
+                            )
+                        }
+                    )
+                }
+
+            }
         }
 
         binding.searchInput.viewRequestInput()
