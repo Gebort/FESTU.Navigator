@@ -78,7 +78,6 @@ class PreviewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        //TODO process pause and resume
         pathAdapter = PathAdapter(
             drawerHelper,
             binding.sceneView,

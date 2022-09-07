@@ -26,6 +26,7 @@
             android:theme="@style/Theme.FESTUNavigator"
             android:screenOrientation="portrait"
             android:exported="true"
+            android:hardwareAccelerated="true"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

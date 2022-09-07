@@ -48,7 +48,7 @@ class SearchFragment: Fragment() {
     }
 
     private val args: SearchFragmentArgs by navArgs()
-    val changeType by lazy { args.changeType }
+    private val changeType by lazy { args.changeType }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,12 +89,10 @@ class SearchFragment: Fragment() {
                 else getString(R.string.from)
         }
 
-        binding.entryRecyclerView.apply {
-            adapter = adapter
-            layoutManager = LinearLayoutManager(
-                requireActivity().applicationContext
-            )
-        }
+        binding.entryRecyclerView.adapter = adapter
+        binding.entryRecyclerView.layoutManager = LinearLayoutManager(
+            requireActivity().applicationContext
+        )
 
         var entriesList = listOf<EntryItem>()
         mainModel.onEvent(MainEvent.LoadRecords)

@@ -194,7 +194,7 @@ class MainShareModel @Inject constructor(
                 val record = Record(
                     start = start.number,
                     end = end.number,
-                    time = Calendar.getInstance().timeInMillis
+                    time = getCurrentWeekTime()
                 )
                 records.insertRecord(record)
             }
@@ -283,10 +283,7 @@ class MainShareModel @Inject constructor(
     private suspend fun loadRecords() {
         recordsJob?.cancel()
         recordsJob = viewModelScope.launch {
-            val time = Calendar.getInstance().run {
-                add(Calendar.MINUTE, 30)
-                timeInMillis
-            }
+            val time = getCurrentWeekTime() + 30*60*1000L
             records.getRecords(time, 5).collectLatest{ records ->
                 _timeRecords.emit(records)
             }
@@ -319,5 +316,15 @@ class MainShareModel @Inject constructor(
         viewModelScope.launch {
             tree.preload()
         }
+    }
+
+    private fun getCurrentWeekTime(): Long {
+        val calendar = Calendar.getInstance()
+        val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+        val hour = calendar.get(Calendar.HOUR)
+        val minutes = calendar.get(Calendar.MINUTE)
+        return (dayOfWeek-1)*24*60*60*1000L +
+                hour*60*60*1000L +
+                minutes*60*1000L
     }
 }

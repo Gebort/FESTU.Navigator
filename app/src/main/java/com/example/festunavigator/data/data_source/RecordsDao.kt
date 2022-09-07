@@ -10,7 +10,11 @@ interface RecordsDao {
     @Query("SELECT * FROM record")
     fun getRecords(): Flow<List<Record>>
 
-    @Query("SELECT * FROM record WHERE time < :time ORDER BY time LIMIT :limit")
+    @Query("SELECT * FROM record " +
+            "WHERE time < :time  " +
+            "GROUP BY `end`" +
+            "ORDER BY time DESC " +
+            "LIMIT :limit")
     fun getRecords(time: Long, limit: Int = 5): Flow<List<Record>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

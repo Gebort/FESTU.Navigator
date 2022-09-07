@@ -54,8 +54,8 @@ class EntriesAdapter(
     }
 
     fun changeHistory(records: List<EntryItem>){
-    //    recordsList = records
-    //    applyFilter(filter)
+        recordsList = records
+        applyFilter(filter)
     }
 
     fun applyFilter(filter: String){
