@@ -89,10 +89,14 @@ class SearchFragment: Fragment() {
                 else getString(R.string.from)
         }
 
-        binding.entryRecyclerView.adapter = adapter
-        binding.entryRecyclerView.layoutManager = LinearLayoutManager(
-            requireActivity().applicationContext
-        )
+        binding.entryRecyclerView.let {
+            it.adapter = adapter
+            it.itemAnimator = null
+            it.layoutManager = LinearLayoutManager(
+                requireActivity().applicationContext
+            )
+        }
+
 
         var entriesList = listOf<EntryItem>()
         mainModel.onEvent(MainEvent.LoadRecords)

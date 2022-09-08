@@ -61,10 +61,10 @@ class EntriesAdapter(
     fun applyFilter(filter: String){
         this.filter = filter
         if (filter == "") {
-            submitList(recordsList + rawList)
+            submitList(recordsList)
         }
         else {
-            submitList((recordsList + rawList)
+            submitList((rawList)
                 .filter { it.number.startsWith(filter) }
             )
         }
