@@ -21,6 +21,7 @@ import com.example.festunavigator.presentation.preview.nodes_adapters.PathAdapte
 import com.example.festunavigator.presentation.preview.nodes_adapters.TreeAdapter
 import com.example.festunavigator.presentation.preview.state.PathState
 import com.google.android.material.snackbar.Snackbar
+import com.google.ar.core.Config
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.*
 import com.uchuhimo.collections.MutableBiMap
@@ -98,6 +99,12 @@ class PreviewFragment : Fragment() {
             instructions.enabled = false
             onArFrame = { frame ->
                 onDrawFrame(frame)
+            }
+            configureSession { arSession, config ->
+                config.depthMode = Config.DepthMode.AUTOMATIC
+                config.focusMode = Config.FocusMode.AUTO
+                config.lightEstimationMode = Config.LightEstimationMode.DISABLED
+                config.instantPlacementMode = Config.InstantPlacementMode.DISABLED
             }
             onTouch = {node, _ ->
                 if (App.mode == App.ADMIN_MODE) {
