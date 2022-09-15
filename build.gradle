@@ -1,6 +1,7 @@
 buildscript {
     ext.nav_version = "2.4.2"
     ext.hilt_version = "2.40.5"
+    ext.sceneView_version = "0.7.0"
 
     dependencies {
         classpath 'com.google.gms:google-services:4.3.13'

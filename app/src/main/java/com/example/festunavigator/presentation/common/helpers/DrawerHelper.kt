@@ -120,6 +120,7 @@ class DrawerHelper(
         val modelNode = ArNode()
         modelNode.loadModel(
             context = fragment.requireContext(),
+            lifecycle = fragment.lifecycle,
             glbFileLocation = model,
         )
         modelNode.position = position
@@ -237,7 +238,7 @@ class DrawerHelper(
             .setSizer { Vector3(0f, 0f, 0f) }
             .setVerticalAlignment(ViewRenderable.VerticalAlignment.CENTER)
             .setHorizontalAlignment(ViewRenderable.HorizontalAlignment.CENTER)
-            .build()
+            .build(fragment.lifecycle)
             .thenAccept { renderable: ViewRenderable ->
                 renderable.let {
                     it.isShadowCaster = false
@@ -308,10 +309,11 @@ class DrawerHelper(
         val colorOrange = com.google.ar.sceneform.rendering.Color(Color.parseColor("#ffffff"))
 
         // 1. make a material by the color
-        MaterialFactory.makeOpaqueWithColor(fragment.requireContext(), colorOrange)
+        MaterialFactory.makeOpaqueWithColor(fragment.requireContext(), fragment.lifecycle, colorOrange)
             .thenAccept { material: Material? ->
                 // 2. make a model by the material
                 val model = ShapeFactory.makeCylinder(
+                    fragment.lifecycle,
                     0.01f, lineLength,
                     Vector3(0f, lineLength / 2, 0f), material
                 )
