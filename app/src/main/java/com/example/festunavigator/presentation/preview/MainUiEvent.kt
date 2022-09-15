@@ -2,10 +2,11 @@ package com.example.festunavigator.presentation.preview
 
 import com.example.festunavigator.domain.tree.TreeNode
 import com.google.ar.core.Anchor
+import java.lang.Exception
 
 sealed interface MainUiEvent {
     object InitSuccess: MainUiEvent
-    object InitFailed: MainUiEvent
+    class InitFailed(val error: Exception? = null): MainUiEvent
     object PathNotFound: MainUiEvent
     object EntryAlreadyExists: MainUiEvent
     object EntryCreated: MainUiEvent

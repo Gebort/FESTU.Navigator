@@ -15,6 +15,7 @@ import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.databinding.FragmentPreviewBinding
 import com.example.festunavigator.domain.tree.TreeNode
+import com.example.festunavigator.domain.tree.WrongEntryException
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
 import com.example.festunavigator.presentation.preview.nodes_adapters.PathAdapter
@@ -191,7 +192,14 @@ class PreviewFragment : Fragment() {
                            // onInitializeSuccess()
                         }
                         is MainUiEvent.InitFailed -> {
-                            showSnackbar(getString(R.string.init_failed))
+                            when (uiEvent.error) {
+                                is WrongEntryException -> {
+                                    showSnackbar(getString(R.string.incorrect_number))
+                                }
+                                else -> {
+                                    showSnackbar(getString(R.string.init_failed))
+                                }
+                            }
                         }
                         is MainUiEvent.NodeCreated -> {
                             showSnackbar(getString(R.string.node_created))
