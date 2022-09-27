@@ -84,18 +84,20 @@ To enable the audience graph editing mode, change the build variant to adminDebu
 
 <br>
 
-By default, the application is installed with a pre-installed FESTU university classrooms graph. To run the application without a pre-installed graph, in festunavigator/data/App.kt find:
+By default, the application is installed with a pre-installed FESTU university classrooms graph. To run the application without a pre-installed graph, in festunavigator/domain/di/ModuleApp.kt find:
 ```kotlin
-35 database = Room.databaseBuilder(this, GraphDatabase::class.java, DATABASE_NAME)
-36     .createFromAsset(DATABASE_DIR)
-37     .allowMainThreadQueries()
-38     .build()
+32 return Room.databaseBuilder(this, GraphDatabase::class.java, DATABASE_NAME)
+33     .createFromAsset(DATABASE_DIR)
+34     .allowMainThreadQueries()
+35     .addMigrations()
+36     .build()
 ```
 Remove line - .createFromAsset(DATABASE_DIR):
 ```kotlin
-35 database = Room.databaseBuilder(this, GraphDatabase::class.java, DATABASE_NAME)
-36     .allowMainThreadQueries()
-37     .build()
+32 return Room.databaseBuilder(this, GraphDatabase::class.java, DATABASE_NAME)
+33     .allowMainThreadQueries()
+35     .addMigrations()
+34     .build()
 ```
 
 Now you can run the app and experience it anywhere
