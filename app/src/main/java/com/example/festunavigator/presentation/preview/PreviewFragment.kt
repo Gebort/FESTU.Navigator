@@ -15,6 +15,7 @@ import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.databinding.FragmentPreviewBinding
 import com.example.festunavigator.domain.tree.TreeNode
+import com.example.festunavigator.domain.tree.WrongEntryException
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
 import com.example.festunavigator.presentation.preview.nodes_adapters.PathAdapter
@@ -106,7 +107,7 @@ class PreviewFragment : Fragment() {
                 config.lightEstimationMode = Config.LightEstimationMode.DISABLED
                 config.instantPlacementMode = Config.InstantPlacementMode.DISABLED
             }
-            onTouch = {node, _ ->
+            onTap = { node, _, _ ->
                 if (App.mode == App.ADMIN_MODE) {
                     node?.let { it ->
                         if (!mainModel.linkPlacementMode.value) {
@@ -119,7 +120,6 @@ class PreviewFragment : Fragment() {
                         }
                     }
                 }
-                true
             }
 
             onArSessionFailed = { exception ->
@@ -192,7 +192,14 @@ class PreviewFragment : Fragment() {
                            // onInitializeSuccess()
                         }
                         is MainUiEvent.InitFailed -> {
-                            showSnackbar(getString(R.string.init_failed))
+                            when (uiEvent.error) {
+                                is WrongEntryException -> {
+                                    showSnackbar(getString(R.string.incorrect_number))
+                                }
+                                else -> {
+                                    showSnackbar(getString(R.string.init_failed))
+                                }
+                            }
                         }
                         is MainUiEvent.NodeCreated -> {
                             showSnackbar(getString(R.string.node_created))
@@ -273,9 +280,8 @@ class PreviewFragment : Fragment() {
     }
     
     private fun selectNode(node: ArNode?){
-        //User selected entry can be stored in PreviewFragment nodes map,
-        // if this node displayed as PathState start or end
-        val treeNode = treeNodesToModels.inverse[node] ?: treeAdapter.getTreeNode(node)
+        val treeNode = checkTreeNode(node) ?: checkTreeNode(node?.parentNode as ArNode?)
+
         selectionJob?.cancel()
         selectionNode?.let { drawerHelper.removeNode(it) }
         treeNode?.let {
@@ -327,6 +333,14 @@ class PreviewFragment : Fragment() {
             }
         }
 
+    }
+
+    private fun checkTreeNode(node: ArNode?): TreeNode? {
+        //User selected entry can be stored in PreviewFragment nodes map,
+        // if this node displayed as PathState start or end
+        treeNodesToModels.inverse[node]?.let { return it }
+        treeAdapter.getTreeNode(node)?.let { return it }
+        return null
     }
 
     private fun showSnackbar(message: String) {

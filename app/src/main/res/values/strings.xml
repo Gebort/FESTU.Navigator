@@ -35,6 +35,7 @@
     <string name="node_created" translatable="false">Node created</string>
     <string name="node_deleted" translatable="false">Node deleted</string>
     <string name="link_created" translatable="false">Link created</string>
+    <string name="start_typing" >Start typing…</string>
 
 
 </resources>
