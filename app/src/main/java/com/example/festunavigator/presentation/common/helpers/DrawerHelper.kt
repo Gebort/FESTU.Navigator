@@ -49,6 +49,7 @@ class DrawerHelper(
     private var arrowAnimationDelay = 2L
     private var labelAnimationPart = 10
     private var arrowAnimationPart = 15
+    private val bias = 0.15f
 
     private val animationJobs = mutableMapOf<ArNode, Job>()
 
@@ -155,40 +156,25 @@ class DrawerHelper(
         surfaceView: ArSceneView,
         anchor: Anchor? = null
     ): ArNode {
-        if (App.isAdmin) {
-            val bias = 0.2f
-            return drawArNode(
-                model = entryModel,
-                scale = entryScale,
-                position = treeNode.position.copy(y = treeNode.position.y - bias),
-                orientation = treeNode.forwardVector,
-                surfaceView = surfaceView,
-                anchor = anchor
-            ).apply {
+        return placeLabel(
+            treeNode.number,
+            OrientatedPosition(treeNode.position, treeNode.forwardVector),
+            surfaceView
+        ).apply {
+            if (App.isAdmin) {
                 addChild(
-                    placeRend(
-                        label = treeNode.number,
-                        pos = OrientatedPosition(
-                            Position(0f,bias*10,0f),
-                            dev.romainguy.kotlin.math.Quaternion()
-                        ),
+                    drawArNode(
+                        model = entryModel,
+                        scale = entryScale,
+                        position = Position(0f, -bias, 0f),
+                        orientation = dev.romainguy.kotlin.math.Quaternion(),
                         surfaceView = surfaceView,
-                        scale = Scale(1f),
                         anchor = anchor
                     )
                 )
             }
         }
-        else if (App.isUser) {
-            return placeLabel(
-                treeNode.number,
-                OrientatedPosition(treeNode.position, treeNode.forwardVector),
-                surfaceView
-            )
-        }
-        else {
-            throw Exception("No realisation for the app mode: ${App.mode}")
-        }
+
     }
 
     suspend fun drawTree(

@@ -280,9 +280,8 @@ class PreviewFragment : Fragment() {
     }
     
     private fun selectNode(node: ArNode?){
-        //User selected entry can be stored in PreviewFragment nodes map,
-        // if this node displayed as PathState start or end
-        val treeNode = treeNodesToModels.inverse[node] ?: treeAdapter.getTreeNode(node)
+        val treeNode = checkTreeNode(node) ?: checkTreeNode(node?.parentNode as ArNode?)
+
         selectionJob?.cancel()
         selectionNode?.let { drawerHelper.removeNode(it) }
         treeNode?.let {
@@ -334,6 +333,14 @@ class PreviewFragment : Fragment() {
             }
         }
 
+    }
+
+    private fun checkTreeNode(node: ArNode?): TreeNode? {
+        //User selected entry can be stored in PreviewFragment nodes map,
+        // if this node displayed as PathState start or end
+        treeNodesToModels.inverse[node]?.let { return it }
+        treeAdapter.getTreeNode(node)?.let { return it }
+        return null
     }
 
     private fun showSnackbar(message: String) {
