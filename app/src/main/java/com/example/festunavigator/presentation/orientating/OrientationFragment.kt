@@ -45,7 +45,7 @@ class OrientationFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainModel.frame.collect { frame ->
                     frame?.let {
-                        if (frame.session.allPlanes.any { it.type == Plane.Type.HORIZONTAL_UPWARD_FACING }) {
+                        if (frame.session.allPlanes.any { it.type == Plane.Type.VERTICAL }) {
                             if (!navigating){
                                 navigating = true
                                 val bundle = Bundle()

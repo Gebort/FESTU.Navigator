@@ -107,7 +107,7 @@ class PreviewFragment : Fragment() {
                 config.lightEstimationMode = Config.LightEstimationMode.DISABLED
                 config.instantPlacementMode = Config.InstantPlacementMode.DISABLED
             }
-            onTap = {node, _, _ ->
+            onTap = { node, _, _ ->
                 if (App.mode == App.ADMIN_MODE) {
                     node?.let { it ->
                         if (!mainModel.linkPlacementMode.value) {
