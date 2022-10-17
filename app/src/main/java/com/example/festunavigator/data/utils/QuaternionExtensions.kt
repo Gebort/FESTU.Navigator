@@ -3,6 +3,8 @@ package com.example.festunavigator.domain.use_cases
 import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Quaternion
 import dev.romainguy.kotlin.math.inverse
+import io.github.sceneview.math.Rotation
+import io.github.sceneview.math.toFloat3
 import io.github.sceneview.math.toNewQuaternion
 import io.github.sceneview.math.toOldQuaternion
 
@@ -23,5 +25,12 @@ fun Quaternion.Companion.lookRotation(forward: Vector3, up: Vector3 = Vector3.up
     return com.google.ar.sceneform.math.Quaternion.multiply(
         rotationFromAtoB,
         com.google.ar.sceneform.math.Quaternion.axisAngle(Vector3(1.0f, 0.0f, 0.0f), 270f)
+    ).toNewQuaternion()
+}
+
+fun Quaternion.Companion.fromVector(vector: Vector3): Quaternion {
+    return com.google.ar.sceneform.math.Quaternion.lookRotation(
+        vector,
+        Vector3.up()
     ).toNewQuaternion()
 }

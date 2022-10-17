@@ -23,6 +23,8 @@ import com.example.festunavigator.presentation.preview.nodes_adapters.TreeAdapte
 import com.example.festunavigator.presentation.preview.state.PathState
 import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.Config
+import com.google.ar.core.Plane
+import com.google.ar.core.Trackable
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.*
 import com.uchuhimo.collections.MutableBiMap
@@ -107,6 +109,7 @@ class PreviewFragment : Fragment() {
                 config.lightEstimationMode = Config.LightEstimationMode.DISABLED
                 config.instantPlacementMode = Config.InstantPlacementMode.DISABLED
             }
+
             onTap = { node, _, _ ->
                 if (App.mode == App.ADMIN_MODE) {
                     node?.let { it ->

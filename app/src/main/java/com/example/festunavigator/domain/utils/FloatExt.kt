@@ -11,3 +11,7 @@ fun Float3.getApproxDif(pos: Float3): Float {
             + abs(pow(z - pos.z, 2f))
     )
 }
+
+fun Float3.meanPoint(pos: Float3): Float3 {
+    return (this + pos)/2f
+}
