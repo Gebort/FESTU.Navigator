@@ -14,6 +14,7 @@ import androidx.navigation.findNavController
 import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.databinding.FragmentPreviewBinding
+import com.example.festunavigator.domain.pathfinding.path_restoring.PathAnalyzer
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.domain.tree.WrongEntryException
 import com.example.festunavigator.presentation.LabelObject
@@ -54,6 +55,7 @@ class PreviewFragment : Fragment() {
     private var lastPositionTime = 0L
     private lateinit var pathAdapter: PathAdapter
     private lateinit var treeAdapter: TreeAdapter
+    private var pathAnalyzer: PathAnalyzer? = null
 
 
     private var lastConfObject: LabelObject? = null

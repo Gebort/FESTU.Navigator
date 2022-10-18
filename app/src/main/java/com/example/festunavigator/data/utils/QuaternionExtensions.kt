@@ -12,6 +12,10 @@ fun Quaternion.convert(quaternion2: Quaternion): Quaternion {
     return this * quaternion2
 }
 
+fun Quaternion.transition(endQuaternion: Quaternion): Quaternion {
+    return (this.convert(endQuaternion.inverted()) * -1f).apply { this.w *= -1f }
+}
+
 fun Quaternion.inverted(): Quaternion {
     return toOldQuaternion().inverted().toNewQuaternion()
 }

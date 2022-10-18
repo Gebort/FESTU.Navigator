@@ -1,10 +1,9 @@
 package com.example.festunavigator
 
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
-import com.example.festunavigator.domain.pathfinding.DirectionTracker
+import com.example.festunavigator.domain.pathfinding.path_restoring.DirectionTracker
 import com.example.festunavigator.domain.use_cases.fromVector
 import com.example.festunavigator.domain.utils.meanPoint
-import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.toVector3

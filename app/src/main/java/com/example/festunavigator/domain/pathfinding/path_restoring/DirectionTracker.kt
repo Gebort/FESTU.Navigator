@@ -1,4 +1,4 @@
-package com.example.festunavigator.domain.pathfinding
+package com.example.festunavigator.domain.pathfinding.path_restoring
 
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.use_cases.fromVector
@@ -13,9 +13,7 @@ import kotlin.math.cos
 class DirectionTracker(
     private val initialPos: Position
 ) {
-
-
-    val directions: MutableList<Segment> = mutableListOf()
+    private val directions: MutableList<Segment> = mutableListOf()
 
     private var lastPos: Position? = null
 
@@ -49,7 +47,8 @@ class DirectionTracker(
         }
         if (lastPos == null) {
             lastPos = pos
-            directions.add(Segment(
+            directions.add(
+                Segment(
                 startPos = initialPos,
                 vector = (pos - initialPos).toVector3())
             )
