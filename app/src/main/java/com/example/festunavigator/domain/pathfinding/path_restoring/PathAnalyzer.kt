@@ -1,17 +1,16 @@
 package com.example.festunavigator.domain.pathfinding.path_restoring
 
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
-import com.example.festunavigator.domain.use_cases.transition
+import com.example.festunavigator.data.utils.transition
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.toRotation
 
 class PathAnalyzer(
-    private val initialPos: Float3,
     private val onChangeNeeded: (Quaternion) -> Unit
 ) {
 
-    private val directionTracker = DirectionTracker(initialPos)
+    private val directionTracker = DirectionTracker()
     //Degrees
     private val directionDiff = 10
 

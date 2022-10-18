@@ -1,19 +1,20 @@
-package com.example.festunavigator.domain.use_cases
+package com.example.festunavigator.data.utils
 
 import com.google.ar.sceneform.math.Vector3
+import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import dev.romainguy.kotlin.math.inverse
-import io.github.sceneview.math.Rotation
 import io.github.sceneview.math.toFloat3
 import io.github.sceneview.math.toNewQuaternion
 import io.github.sceneview.math.toOldQuaternion
+import io.github.sceneview.math.toVector3
 
-fun Quaternion.convert(quaternion2: Quaternion): Quaternion {
+fun Quaternion.multiply(quaternion2: Quaternion): Quaternion {
     return this * quaternion2
 }
 
 fun Quaternion.transition(endQuaternion: Quaternion): Quaternion {
-    return (this.convert(endQuaternion.inverted()) * -1f).apply { this.w *= -1f }
+    return (this.multiply(endQuaternion.inverted()) * -1f).apply { this.w *= -1f }
 }
 
 fun Quaternion.inverted(): Quaternion {
@@ -22,6 +23,28 @@ fun Quaternion.inverted(): Quaternion {
 
 fun Quaternion.opposite(): Quaternion {
     return inverse(this)
+}
+
+fun Quaternion.convertPosition(
+    position: Float3,
+    pivotPosition: Float3,
+    translocation: Float3 = Float3(0f)
+): Float3 {
+    return (com.google.ar.sceneform.math.Quaternion.rotateVector(
+        this.toOldQuaternion(),
+        (position - pivotPosition).toVector3()
+    ).toFloat3() + pivotPosition) - translocation
+}
+
+fun  Quaternion.undoConvertPosition(
+    position: Float3,
+    pivotPosition: Float3,
+    translocation: Float3 = Float3(0f)
+): Float3 {
+    return (com.google.ar.sceneform.math.Quaternion.rotateVector(
+        this.toOldQuaternion(),
+        (position - pivotPosition - translocation).toVector3()
+    ).toFloat3() + pivotPosition)
 }
 
 fun Quaternion.Companion.lookRotation(forward: Vector3, up: Vector3 = Vector3.up()): Quaternion {

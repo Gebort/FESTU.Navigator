@@ -1,7 +1,7 @@
 package com.example.festunavigator.domain.pathfinding.path_restoring
 
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
-import com.example.festunavigator.domain.use_cases.fromVector
+import com.example.festunavigator.data.utils.fromVector
 import com.example.festunavigator.domain.utils.getApproxDif
 import com.example.festunavigator.domain.utils.meanPoint
 import com.google.ar.sceneform.math.Vector3
@@ -10,9 +10,7 @@ import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.*
 import kotlin.math.cos
 
-class DirectionTracker(
-    private val initialPos: Position
-) {
+class DirectionTracker {
     private val directions: MutableList<Segment> = mutableListOf()
 
     private var lastPos: Position? = null
@@ -47,11 +45,16 @@ class DirectionTracker(
         }
         if (lastPos == null) {
             lastPos = pos
-            directions.add(
-                Segment(
-                startPos = initialPos,
-                vector = (pos - initialPos).toVector3())
-            )
+            return
+        }
+        else if (directions.isEmpty()) {
+            lastPos?.let { lp ->
+                directions.add(
+                    Segment(
+                        startPos = pos,
+                        vector = (pos - lp).toVector3())
+                )
+            }
             return
         }
 

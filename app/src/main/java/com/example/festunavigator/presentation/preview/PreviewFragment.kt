@@ -13,6 +13,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.findNavController
 import com.example.festunavigator.R
 import com.example.festunavigator.data.App
+import com.example.festunavigator.data.utils.convertPosition
 import com.example.festunavigator.databinding.FragmentPreviewBinding
 import com.example.festunavigator.domain.pathfinding.path_restoring.PathAnalyzer
 import com.example.festunavigator.domain.tree.TreeNode
@@ -31,6 +32,7 @@ import com.google.ar.core.exceptions.*
 import com.uchuhimo.collections.MutableBiMap
 import com.uchuhimo.collections.mutableBiMapOf
 import dev.romainguy.kotlin.math.Float3
+import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.node.ArNode
 import kotlinx.coroutines.Dispatchers
@@ -166,6 +168,7 @@ class PreviewFragment : Fragment() {
                                     )
                                 }
                             }
+
                         }
                         if (currentPathState?.startEntry != pathState.startEntry) {
                             startPlacingJob?.cancel()
@@ -184,6 +187,13 @@ class PreviewFragment : Fragment() {
                             }
                         }
            //         }
+                    if (currentPathState?.startEntry != pathState.startEntry) {
+                        if (pathState.startEntry != null && pathState.endEntry != null) {
+                            pathAnalyzer = PathAnalyzer {
+                                moveCamera(it, pathState.startEntry.position)
+                            }
+                        }
+                    }
                     currentPathState = pathState
                 }
             }
@@ -320,8 +330,10 @@ class PreviewFragment : Fragment() {
             val nodes = currentPathState?.path?.getNearNodes(
                 number = VIEWABLE_PATH_NODES,
                 position = userPosition
-            )
-            pathAdapter.commit(nodes ?: listOf())
+            ) ?: listOf()
+            pathAdapter.commit(nodes)
+            //TODO постоянно считаем направление всех узлов пути. нужно отслеживать направление только новых
+            pathAnalyzer?.newPosition(userPosition, nodes)
         }
     }
 
@@ -346,6 +358,18 @@ class PreviewFragment : Fragment() {
         treeNodesToModels.inverse[node]?.let { return it }
         treeAdapter.getTreeNode(node)?.let { return it }
         return null
+    }
+
+    //TODO мы не учитываем ситуацию, когда человек просканировал точку инициализации с ошибкой,
+    //TODO а после сменил начальную точку маршрута. тогда простой поворот не поможет, нужен еще перенос
+    private fun moveCamera(rotation: Quaternion, pivot: Float3){
+        binding.sceneView.camera.worldPosition.apply {
+            rotation.convertPosition(
+                this,
+                currentPathState?.startEntry?.position ?: throw Exception("Null start entry")
+            )
+        }
+        binding.sceneView.camera.worldQuaternion *= rotation
     }
 
     private fun showSnackbar(message: String) {

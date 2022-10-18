@@ -1,5 +1,6 @@
 package com.example.festunavigator.domain.use_cases
 
+import com.example.festunavigator.data.utils.lookRotation
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.smoothing.BezierPoint
 import com.example.festunavigator.domain.tree.TreeNode

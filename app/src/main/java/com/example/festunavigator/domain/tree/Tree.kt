@@ -3,8 +3,8 @@ package com.example.festunavigator.domain.tree
 import android.util.Log
 import com.example.festunavigator.data.model.TreeNodeDto
 import com.example.festunavigator.domain.repository.GraphRepository
-import com.example.festunavigator.domain.use_cases.convert
-import com.example.festunavigator.domain.use_cases.inverted
+import com.example.festunavigator.data.utils.inverted
+import com.example.festunavigator.data.utils.multiply
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.*
@@ -99,7 +99,7 @@ class Tree @Inject constructor(
 
             pivotPosition = entry.position
             translocation = entry.position - position
-            rotation = entry.forwardVector.convert(newRotation.inverted()) * -1f
+            rotation = entry.forwardVector.multiply(newRotation.inverted()) * -1f
             rotation.w *= -1f
 
             initialized = true
@@ -230,7 +230,7 @@ class Tree @Inject constructor(
     private fun translocateNode(node: TreeNode) {
         node.position = convertPosition(node.position, translocation, rotation, pivotPosition)
         if (node is TreeNode.Entry){
-            node.forwardVector = node.forwardVector.convert(rotation)
+            node.forwardVector = node.forwardVector.multiply(rotation)
         }
         _translocatedPoints[node] = true
     }
@@ -399,6 +399,7 @@ class Tree @Inject constructor(
         repository.clearNodes()
     }
 
+    //TODO заменить на Quarterion.convertPosition
     private fun convertPosition(
         position: Float3,
         translocation: Float3,

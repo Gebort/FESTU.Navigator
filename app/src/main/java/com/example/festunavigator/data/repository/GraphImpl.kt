@@ -2,10 +2,10 @@ package com.example.festunavigator.data.repository
 
 import com.example.festunavigator.data.data_source.Database
 import com.example.festunavigator.data.model.TreeNodeDto
+import com.example.festunavigator.data.utils.multiply
 import com.example.festunavigator.domain.repository.GraphRepository
 import com.example.festunavigator.domain.tree.TreeNode
-import com.example.festunavigator.domain.use_cases.convert
-import com.example.festunavigator.domain.use_cases.opposite
+import com.example.festunavigator.data.utils.opposite
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.toFloat3
@@ -41,7 +41,7 @@ class GraphImpl @Inject constructor(
                             position = undoPositionConvert(
                                 node.position, undoTranslocation, undoQuaternion, pivotPosition
                             ),
-                            forwardVector = node.forwardVector.convert(undoQuaternion)
+                            forwardVector = node.forwardVector.multiply(undoQuaternion)
                         )
                     }
                     is TreeNode.Path -> {
@@ -80,7 +80,7 @@ class GraphImpl @Inject constructor(
                             position = undoPositionConvert(
                                 node.position, undoTranslocation, undoQuarterion, pivotPosition
                             ),
-                            forwardVector = node.forwardVector.convert(undoQuarterion)
+                            forwardVector = node.forwardVector.multiply(undoQuarterion)
                         )
                     }
                     is TreeNode.Path -> {
@@ -100,6 +100,7 @@ class GraphImpl @Inject constructor(
         dao.clearNodes()
     }
 
+    //TODO заменить на использование Quarterion.undoConvertPosition
     private fun undoPositionConvert(
         position: Float3,
         translocation: Float3,
