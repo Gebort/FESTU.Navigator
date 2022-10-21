@@ -1,7 +1,10 @@
 package com.example.festunavigator.presentation.preview.nodes_adapters
 
 import androidx.lifecycle.LifecycleCoroutineScope
+import com.example.festunavigator.data.utils.multiply
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
+import dev.romainguy.kotlin.math.Float3
+import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
 import kotlinx.coroutines.Dispatchers
@@ -13,10 +16,13 @@ abstract class NodesAdapter<T>(
     val drawerHelper: DrawerHelper,
     val previewView: ArSceneView,
     bufferSize: Int,
-    scope: LifecycleCoroutineScope
+    scope: LifecycleCoroutineScope,
+    needParentNode: Boolean = false,
 ) {
 
     protected val nodes = mutableMapOf<T, ArNode>()
+    var parentNode: ArNode? = null
+        private set
     private val changesFlow = MutableSharedFlow<DiffOperation<T>>(
         replay = 0,
         extraBufferCapacity = bufferSize,
@@ -25,17 +31,24 @@ abstract class NodesAdapter<T>(
 
     init {
         scope.launchWhenStarted {
+            if (needParentNode) {
+                parentNode = placeParentNode()
+            }
             changesFlow.collect { change ->
                 when (change) {
                     is DiffOperation.Deleted -> {
                         nodes[change.item]?.let {
                             nodes.remove(change.item)
+                            parentNode?.removeChild(it)
                             onRemoved(change.item, it)
                         }
                     }
                     is DiffOperation.Added -> {
                         if (nodes[change.item] == null){
-                            nodes[change.item] = onInserted(change.item)
+                            onInserted(change.item).let {
+                                nodes[change.item] = it
+                                parentNode?.addChild(it)
+                            }
                         }
                     }
                 }
@@ -58,6 +71,27 @@ abstract class NodesAdapter<T>(
             .map { item -> DiffOperation.Added(item) }
             .forEach { change -> changesFlow.tryEmit(change) }
     }
+
+    private suspend fun placeParentNode(): ArNode {
+        return drawerHelper.placeBlankNode(previewView)
+    }
+
+    fun changeParentPos(newParentPos: Float3? = null, transition: Quaternion? = null) {
+        newParentPos?.let {
+        parentNode?.position = it
+        }
+        transition?.let { q2 ->
+            parentNode?.quaternion?.let { q1 ->
+                parentNode?.quaternion = q1.multiply(q2)
+            }
+        }
+    }
+
+//    private fun removeParentNode() {
+//        parentNode?.let {
+//            drawerHelper.removeNode(it)
+//        }
+//    }
 
     abstract suspend fun onInserted(item: T): ArNode
     abstract suspend fun onRemoved(item: T, node: ArNode)

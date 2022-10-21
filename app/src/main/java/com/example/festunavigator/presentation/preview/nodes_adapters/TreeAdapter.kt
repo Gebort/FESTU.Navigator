@@ -14,7 +14,8 @@ class TreeAdapter(
     previewView: ArSceneView,
     bufferSize: Int,
     scope: LifecycleCoroutineScope,
-): NodesAdapter<TreeNode>(drawerHelper, previewView, bufferSize, scope) {
+    needParentNode: Boolean
+): NodesAdapter<TreeNode>(drawerHelper, previewView, bufferSize, scope, needParentNode) {
 
     private val modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode> = mutableBiMapOf()
 
@@ -30,6 +31,7 @@ class TreeAdapter(
                             modelsToLinkModels,
                             previewView
                         )
+                        modelsToLinkModels[Pair(node1, node2)]?.let { parentNode?.addChild(it) }
                     }
                 }
             }
@@ -42,6 +44,7 @@ class TreeAdapter(
         modelsToLinkModels.keys
             .filter { it.first == node || it.second == node }
             .forEach { pair ->
+                modelsToLinkModels[pair]?.let { parentNode?.removeChild(it) }
                 drawerHelper.removeLink(pair, modelsToLinkModels)
             }
     }
@@ -56,6 +59,7 @@ class TreeAdapter(
                 modelsToLinkModels,
                 previewView
             )
+            modelsToLinkModels[Pair(node1, node2)]?.let { parentNode?.addChild(it) }
         }
     }
 

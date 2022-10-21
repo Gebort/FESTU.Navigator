@@ -15,7 +15,8 @@ class PathAdapter(
     previewView: ArSceneView,
     bufferSize: Int,
     scope: LifecycleCoroutineScope,
-): NodesAdapter<OrientatedPosition>(drawerHelper, previewView, bufferSize, scope)
+    needParentNode: Boolean
+): NodesAdapter<OrientatedPosition>(drawerHelper, previewView, bufferSize, scope, needParentNode)
 {
 
     override suspend fun onInserted(item: OrientatedPosition): ArNode =

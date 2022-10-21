@@ -35,10 +35,10 @@ import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.node.ArNode
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import io.github.sceneview.math.toRotation
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 class PreviewFragment : Fragment() {
 
@@ -91,14 +91,16 @@ class PreviewFragment : Fragment() {
             drawerHelper,
             binding.sceneView,
             VIEWABLE_PATH_NODES,
-            viewLifecycleOwner.lifecycleScope
+            viewLifecycleOwner.lifecycleScope,
+            true
         )
 
         treeAdapter = TreeAdapter(
             drawerHelper,
             binding.sceneView,
             DEFAULT_BUFFER_SIZE,
-            viewLifecycleOwner.lifecycleScope
+            viewLifecycleOwner.lifecycleScope,
+            true
         )
 
         binding.sceneView.apply {
@@ -187,10 +189,16 @@ class PreviewFragment : Fragment() {
                             }
                         }
            //         }
-                    if (currentPathState?.startEntry != pathState.startEntry) {
-                        if (pathState.startEntry != null && pathState.endEntry != null) {
-                            pathAnalyzer = PathAnalyzer {
-                                moveCamera(it, pathState.startEntry.position)
+                    if (pathState.startEntry != null) {
+                        if (pathState.endEntry != null) {
+                            //pathState.startEntry.position
+                            pathAdapter.changeParentPos(Float3(0f))
+                            treeAdapter.changeParentPos(Float3(0f))
+                            //TODO мы не учитываем ситуацию, когда человек просканировал точку инициализации с ошибкой,
+                            //TODO а после сменил начальную точку маршрута. тогда простой поворот не поможет, нужен еще перенос
+                            pathAnalyzer = PathAnalyzer(debug = { s -> launch { withContext(Dispatchers.Main) { binding.textDebug.text = s }}}) {
+                                pathAdapter.changeParentPos(transition = it)
+                                treeAdapter.changeParentPos(transition = it)
                             }
                         }
                     }
@@ -204,7 +212,7 @@ class PreviewFragment : Fragment() {
                 mainModel.mainUiEvents.collectLatest { uiEvent ->
                     when (uiEvent) {
                         is MainUiEvent.InitSuccess -> {
-                           // onInitializeSuccess()
+                            treeAdapter.changeParentPos(Float3(0f))
                         }
                         is MainUiEvent.InitFailed -> {
                             when (uiEvent.error) {
@@ -272,6 +280,7 @@ class PreviewFragment : Fragment() {
             return
         }
 
+
         mainModel.onEvent(
             MainEvent.NewFrame(frame)
         )
@@ -285,7 +294,7 @@ class PreviewFragment : Fragment() {
         if (System.currentTimeMillis() - lastPositionTime > POSITION_DETECT_DELAY){
             lastPositionTime = System.currentTimeMillis()
             changeViewablePath(userPos)
-            if (App.mode == App.ADMIN_MODE) {
+            if (App.isAdmin) {
                 changeViewableTree(userPos)
                 mainModel.selectedNode.value?.let { node ->
                     checkSelectedNode(node)
@@ -333,7 +342,14 @@ class PreviewFragment : Fragment() {
             ) ?: listOf()
             pathAdapter.commit(nodes)
             //TODO постоянно считаем направление всех узлов пути. нужно отслеживать направление только новых
-            pathAnalyzer?.newPosition(userPosition, nodes)
+            pathAdapter.parentNode?.quaternion?.let { parentQ ->
+                pathAnalyzer?.newPosition(
+                    userPosition,
+                    nodes.drop(nodes.size/2-2)
+                        .dropLast(nodes.size/2-2),
+                    parentQ
+                )
+            }
         }
     }
 
@@ -358,18 +374,6 @@ class PreviewFragment : Fragment() {
         treeNodesToModels.inverse[node]?.let { return it }
         treeAdapter.getTreeNode(node)?.let { return it }
         return null
-    }
-
-    //TODO мы не учитываем ситуацию, когда человек просканировал точку инициализации с ошибкой,
-    //TODO а после сменил начальную точку маршрута. тогда простой поворот не поможет, нужен еще перенос
-    private fun moveCamera(rotation: Quaternion, pivot: Float3){
-        binding.sceneView.camera.worldPosition.apply {
-            rotation.convertPosition(
-                this,
-                currentPathState?.startEntry?.position ?: throw Exception("Null start entry")
-            )
-        }
-        binding.sceneView.camera.worldQuaternion *= rotation
     }
 
     private fun showSnackbar(message: String) {

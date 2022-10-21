@@ -36,15 +36,23 @@ fun Quaternion.convertPosition(
     ).toFloat3() + pivotPosition) - translocation
 }
 
-fun  Quaternion.undoConvertPosition(
+fun Quaternion.undoConvertPosition(
     position: Float3,
     pivotPosition: Float3,
     translocation: Float3 = Float3(0f)
 ): Float3 {
-    return (com.google.ar.sceneform.math.Quaternion.rotateVector(
-        this.toOldQuaternion(),
+    return rotateVector(
         (position - pivotPosition - translocation).toVector3()
-    ).toFloat3() + pivotPosition)
+    ).toFloat3() + pivotPosition
+}
+
+fun Quaternion.rotateVector(vector3: Vector3) = com.google.ar.sceneform.math.Quaternion.rotateVector(
+    this.toOldQuaternion(),
+    vector3
+)
+
+fun Quaternion.Companion.axisAngle(vector: Vector3, degrees: Float): Quaternion {
+    return com.google.ar.sceneform.math.Quaternion.axisAngle(vector, degrees).toNewQuaternion()
 }
 
 fun Quaternion.Companion.lookRotation(forward: Vector3, up: Vector3 = Vector3.up()): Quaternion {

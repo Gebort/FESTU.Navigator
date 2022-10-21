@@ -1,11 +1,11 @@
 package com.example.festunavigator.domain.pathfinding.path_restoring
 
+import com.example.festunavigator.data.utils.angleBetween
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.data.utils.fromVector
 import com.example.festunavigator.domain.utils.getApproxDif
 import com.example.festunavigator.domain.utils.meanPoint
 import com.google.ar.sceneform.math.Vector3
-import com.google.ar.sceneform.math.Vector3.angleBetweenVectors
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.*
 import kotlin.math.cos
@@ -15,9 +15,9 @@ class DirectionTracker {
 
     private var lastPos: Position? = null
 
-    private val idleDiff = 0.01
+    private val idleDiff = 0.001
     //Degrees
-    private val directionDiff = 10
+    private val directionDiff = 30
     //Minimum length for vector to change path coordinates
     private val lengthThreshold = 1
 
@@ -29,7 +29,7 @@ class DirectionTracker {
             if (d.vector.length() >= lengthThreshold) {
                 return OrientatedPosition(
                     position = d.startPos.meanPoint(d.endPos),
-                    orientation = Quaternion.fromVector(d.vector)
+                    orientation = Quaternion.fromVector(d.vector.apply { y = 0f })
                 )
             }
             else {
@@ -60,7 +60,7 @@ class DirectionTracker {
 
         val startPos = directions.last().startPos
         val testVector = (pos - startPos).toVector3()
-        angleBetweenVectors(directions.last().vector, testVector).let {
+        directions.last().vector.angleBetween(testVector).let {
             directions.last().let { lastSegment ->
                 if (it < directionDiff) {
                     val newLength = testVector.length() * cos(it)
