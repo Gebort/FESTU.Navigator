@@ -179,7 +179,7 @@ class PreviewFragment : Fragment() {
                                     drawerHelper.removeNode(it)
                                 }
                             }
-                            startPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
+                             startPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
                                 pathState.startEntry?.let { start ->
                                     treeNodesToModels[start] = drawerHelper.drawNode(
                                         start,
@@ -192,8 +192,8 @@ class PreviewFragment : Fragment() {
                     if (pathState.startEntry != null) {
                         if (pathState.endEntry != null) {
                             //pathState.startEntry.position
-                            pathAdapter.changeParentPos(Float3(0f))
-                            treeAdapter.changeParentPos(Float3(0f))
+                            pathAdapter.changeParentPos(pathState.startEntry.position)
+                            treeAdapter.changeParentPos(pathState.startEntry.position)
                             //TODO мы не учитываем ситуацию, когда человек просканировал точку инициализации с ошибкой,
                             //TODO а после сменил начальную точку маршрута. тогда простой поворот не поможет, нужен еще перенос
                             pathAnalyzer = PathAnalyzer(debug = { s -> launch { withContext(Dispatchers.Main) { binding.textDebug.text = s }}}) {

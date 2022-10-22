@@ -1,11 +1,14 @@
 package com.example.festunavigator.presentation.preview.nodes_adapters
 
 import androidx.lifecycle.LifecycleCoroutineScope
+import com.example.festunavigator.data.utils.multiply
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
 import com.google.android.material.snackbar.Snackbar
 import com.uchuhimo.collections.MutableBiMap
 import com.uchuhimo.collections.mutableBiMapOf
+import dev.romainguy.kotlin.math.Float3
+import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
 
@@ -60,6 +63,27 @@ class TreeAdapter(
                 previewView
             )
             modelsToLinkModels[Pair(node1, node2)]?.let { parentNode?.addChild(it) }
+        }
+    }
+
+    override fun changeParentPos(newParentPos: Float3?, transition: Quaternion?) {
+        if (parentNode == null) {
+            throw Exception("Parent node is not set")
+        }
+        newParentPos?.let {
+            val diff = it - parentNode!!.position
+            nodes.values.forEach { node ->
+                node.position -= diff
+            }
+            modelsToLinkModels.values.forEach { node ->
+                node.position -= diff
+            }
+            parentNode?.position = it
+        }
+        transition?.let { q2 ->
+            parentNode?.quaternion?.let { q1 ->
+                parentNode?.quaternion = q1.multiply(q2)
+            }
         }
     }
 

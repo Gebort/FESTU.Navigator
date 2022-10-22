@@ -47,7 +47,10 @@ abstract class NodesAdapter<T>(
                         if (nodes[change.item] == null){
                             onInserted(change.item).let {
                                 nodes[change.item] = it
-                                parentNode?.addChild(it)
+                                parentNode?.let { pn ->
+                                    it.position -= pn.position
+                                    pn.addChild(it)
+                                }
                             }
                         }
                     }
@@ -76,9 +79,16 @@ abstract class NodesAdapter<T>(
         return drawerHelper.placeBlankNode(previewView)
     }
 
-    fun changeParentPos(newParentPos: Float3? = null, transition: Quaternion? = null) {
+    open fun changeParentPos(newParentPos: Float3? = null, transition: Quaternion? = null) {
+        if (parentNode == null) {
+            throw Exception("Parent node is not set")
+        }
         newParentPos?.let {
-        parentNode?.position = it
+            val diff = it - parentNode!!.position
+            nodes.values.forEach { node ->
+                node.position -= diff
+            }
+            parentNode?.position = it
         }
         transition?.let { q2 ->
             parentNode?.quaternion?.let { q1 ->
@@ -86,12 +96,6 @@ abstract class NodesAdapter<T>(
             }
         }
     }
-
-//    private fun removeParentNode() {
-//        parentNode?.let {
-//            drawerHelper.removeNode(it)
-//        }
-//    }
 
     abstract suspend fun onInserted(item: T): ArNode
     abstract suspend fun onRemoved(item: T, node: ArNode)
