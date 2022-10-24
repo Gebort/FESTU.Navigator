@@ -10,25 +10,26 @@ class GetDestinationDesc {
         var building = ""
         var floor = 0
         val floorStr = context.getString(R.string.floor)
+        val tnumber = if (number.last().isDigit()) number else number.dropLast(1)
 
-        if (number.length == 1){
+        if (tnumber.length == 1){
             building = context.getString(R.string.main)
             floor = 0
             return "$building, $floorStr$floor"
         }
-        else if (number.length == 3 || number.length == 2){
-            if (number[number.length - 2].digitToInt() > 4)
+        else if (tnumber.length == 3 || tnumber.length == 2){
+            if (tnumber[tnumber.length - 2].digitToInt() > 4)
                 building = context.getString(R.string.lab)
             else {
                 building = context.getString(R.string.main)
             }
-            if (number.length == 2 ){
+            if (tnumber.length == 2 ){
                 floor = 0
                 return "$building, $floorStr$floor"
             }
         }
-        else if (number.length == 4){
-            when (number[0]) {
+        else if (tnumber.length == 4){
+            when (tnumber[0]) {
                 '1' -> {
                     building = context.getString(R.string.first_tower)
                 }
@@ -44,7 +45,7 @@ class GetDestinationDesc {
             return ""
         }
 
-        floor = number[number.length - 3].digitToInt()
+        floor = tnumber[tnumber.length - 3].digitToInt()
         return "$building, $floorStr$floor"
     }
 
