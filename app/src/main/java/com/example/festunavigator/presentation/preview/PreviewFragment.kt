@@ -189,18 +189,18 @@ class PreviewFragment : Fragment() {
                             }
                         }
            //         }
-                    if (pathState.startEntry != null) {
-                        if (pathState.endEntry != null) {
-                            //pathState.startEntry.position
-                            pathAdapter.changeParentPos(pathState.startEntry.position)
-                            treeAdapter.changeParentPos(pathState.startEntry.position)
-                            //TODO мы не учитываем ситуацию, когда человек просканировал точку инициализации с ошибкой,
-                            //TODO а после сменил начальную точку маршрута. тогда простой поворот не поможет, нужен еще перенос
-                            pathAnalyzer = PathAnalyzer(debug = { s -> launch { withContext(Dispatchers.Main) { binding.textDebug.text = s }}}) {
-                                pathAdapter.changeParentPos(transition = it)
-                                treeAdapter.changeParentPos(transition = it)
-                            }
+                    if (pathState.startEntry != null && pathState.endEntry != null) {
+                        pathAdapter.changeParentPos(pathState.startEntry.position)
+                        treeAdapter.changeParentPos(pathState.startEntry.position)
+                        //TODO мы не учитываем ситуацию, когда человек просканировал точку инициализации с ошибкой,
+                        //TODO а после сменил начальную точку маршрута. тогда простой поворот не поможет, нужен еще перенос
+                        pathAnalyzer = PathAnalyzer(debug = { s -> launch { withContext(Dispatchers.Main) { binding.textDebug.text = s }}}) {
+                            pathAdapter.changeParentPos(transition = it)
+                            treeAdapter.changeParentPos(transition = it)
                         }
+                    }
+                    else {
+                        pathAnalyzer = null
                     }
                     currentPathState = pathState
                 }
