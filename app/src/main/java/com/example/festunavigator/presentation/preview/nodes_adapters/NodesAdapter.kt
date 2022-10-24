@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 
 abstract class NodesAdapter<T>(
     val drawerHelper: DrawerHelper,
@@ -68,11 +69,16 @@ abstract class NodesAdapter<T>(
             .minus(newList)
             .map { item -> DiffOperation.Deleted(item) }
             .forEach { change ->
-                changesFlow.tryEmit(change)}
+                changesFlow.tryEmit(change)
+                yield()
+            }
         newList.asSequence()
             .minus(nodes.keys)
             .map { item -> DiffOperation.Added(item) }
-            .forEach { change -> changesFlow.tryEmit(change) }
+            .forEach { change ->
+                changesFlow.tryEmit(change)
+                yield()
+            }
     }
 
     private suspend fun placeParentNode(): ArNode {

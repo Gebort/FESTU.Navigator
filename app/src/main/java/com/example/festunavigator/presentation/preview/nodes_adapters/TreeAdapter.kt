@@ -11,6 +11,7 @@ import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
+import io.github.sceneview.math.Position
 
 class TreeAdapter(
     drawerHelper: DrawerHelper,
@@ -29,12 +30,15 @@ class TreeAdapter(
                 nodes[treeNode]?.let { node2 ->
                     if (modelsToLinkModels[Pair(node1, node2)] == null ){
                         drawerHelper.drawLine(
-                            node1,
-                            node2,
-                            modelsToLinkModels,
-                            previewView
-                        )
-                        modelsToLinkModels[Pair(node1, node2)]?.let { parentNode?.addChild(it) }
+                            node1.position - (parentNode?.position ?: Position(0f)),
+                            node2.position,
+                            parentNode ?: previewView
+                        ).let { node ->
+//                            parentNode?.let { pn ->
+//                                pn.addChild(node)
+//                            }
+                            modelsToLinkModels[Pair(node1, node2)] = node
+                        }
                     }
                 }
             }
@@ -57,12 +61,13 @@ class TreeAdapter(
         val node2 = nodes[treeNode2]
         if (node1 != null && node2 != null) {
             drawerHelper.drawLine(
-                node1,
-                node2,
-                modelsToLinkModels,
+                node1.position,
+                node2.position,
                 previewView
-            )
-            modelsToLinkModels[Pair(node1, node2)]?.let { parentNode?.addChild(it) }
+            ).let { node ->
+                parentNode?.addChild(node)
+                modelsToLinkModels[Pair(node1, node2)] = node
+            }
         }
     }
 

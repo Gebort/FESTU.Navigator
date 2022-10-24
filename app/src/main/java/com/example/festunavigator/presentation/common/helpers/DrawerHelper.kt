@@ -25,6 +25,7 @@ import io.github.sceneview.math.Position
 import io.github.sceneview.math.Scale
 import io.github.sceneview.math.toNewQuaternion
 import io.github.sceneview.math.toVector3
+import io.github.sceneview.node.NodeParent
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
@@ -235,7 +236,7 @@ class DrawerHelper(
     ): ArNode = placeRend(
         label = label,
         pos = pos,
-        surfaceView = surfaceView,
+        parent = surfaceView,
         scale = labelScale,
         anchor = anchor
     )
@@ -245,14 +246,14 @@ class DrawerHelper(
         surfaceView: ArSceneView
     ): ArNode = placeRend(
         pos = pos,
-        surfaceView = surfaceView,
+        parent = surfaceView,
         scale = arrowScale
     )
 
     private suspend fun placeRend(
         label: String? = null,
         pos: OrientatedPosition,
-        surfaceView: ArSceneView,
+        parent: NodeParent,
         scale: Scale,
         anchor: Anchor? = null
     ): ArNode {
@@ -278,7 +279,7 @@ class DrawerHelper(
                     setModel(
                         renderable = renderable
                     )
-                    position = Position(pos.position.x, pos.position.y, pos.position.z)
+                    position = pos.position
                     quaternion = pos.orientation
                     if (anchor != null){
                         this.anchor = anchor
@@ -287,7 +288,7 @@ class DrawerHelper(
                         this.anchor = this.createAnchor()
                     }
                 }
-                surfaceView.addChild(textNode)
+                parent.addChild(textNode)
                 node = textNode
                 textNode.animateViewAppear(
                     scale,
@@ -316,15 +317,13 @@ class DrawerHelper(
         node.animateViewDisappear(arrowScale, labelAnimationDelay, labelAnimationPart)
     }
 
-    fun drawLine(
-        from: ArNode,
-        to: ArNode,
-        modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode>,
-        surfaceView: ArSceneView
-    ) {
-
-        val fromVector = from.position.toVector3()
-        val toVector = to.position.toVector3()
+    suspend fun drawLine(
+        from: Position,
+        to: Position,
+        parentNode: NodeParent
+    ): ArNode {
+        val fromVector = from.toVector3()
+        val toVector = to.toVector3()
 
         // Compute a line's length
         val lineLength = Vector3.subtract(fromVector, toVector).length()
@@ -333,6 +332,7 @@ class DrawerHelper(
         val colorOrange = com.google.ar.sceneform.rendering.Color(Color.parseColor("#ffffff"))
 
         // 1. make a material by the color
+        val node = ArNode()
         MaterialFactory.makeOpaqueWithColor(fragment.requireContext(), fragment.lifecycle, colorOrange)
             .thenAccept { material: Material? ->
                 // 2. make a model by the material
@@ -346,16 +346,15 @@ class DrawerHelper(
                 model.isShadowReceiver = false
 
                 // 3. make node
-                val node = ArNode()
                 node.setModel(model)
-                node.parent = from
-                surfaceView.addChild(node)
+                //from.addChild(node)
+                //node.anchor = from.anchor
+                parentNode.addChild(node)
 
                 // 4. set rotation
                 val difference = Vector3.subtract(toVector, fromVector)
                 val directionFromTopToBottom = difference.normalized()
-                val rotationFromAToB: Quaternion =
-                    Quaternion.lookRotation(
+                val rotationFromAToB = Quaternion.lookRotation(
                         directionFromTopToBottom,
                         Vector3.up()
                     )
@@ -365,11 +364,10 @@ class DrawerHelper(
                     Quaternion.axisAngle(Vector3(1.0f, 0.0f, 0.0f), 270f)
                 )
 
-                node.modelQuaternion = rotation.toNewQuaternion()
-                node.position = from.position
-
-                modelsToLinkModels[Pair(from, to)] = node
-            }
+                node.quaternion = rotation.toNewQuaternion()
+                node.position = from
+            }.await()
+        return node
     }
 
     private fun ArNode.animateViewAppear(targetScale: Scale, delay: Long, part: Int) {
