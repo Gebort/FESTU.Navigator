@@ -49,8 +49,6 @@ class PreviewFragment : Fragment() {
 
     private val drawerHelper = DrawerHelper(this)
 
-    private var endPlacingJob: Job? = null
-    private var startPlacingJob: Job? = null
     private var wayBuildingJob: Job? = null
     private var treeBuildingJob: Job? = null
     private var currentPathState: PathState? = null
@@ -62,7 +60,6 @@ class PreviewFragment : Fragment() {
 
     private var lastConfObject: LabelObject? = null
     private var confObjectJob: Job? = null
-    private val treeNodesToModels: MutableBiMap<TreeNode, ArNode> = mutableBiMapOf()
     private var selectionJob: Job? = null
     private var selectionNode: ArNode? = null
 
@@ -150,44 +147,6 @@ class PreviewFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                 mainModel.pathState.collectLatest { pathState ->
-                    //In ADMIN_MODE, all entry labels are drawn automatically, so another redraw from this function
-                    //will cause node
-                 //   if (App.mode == App.USER_MODE) {
-
-//                        if (currentPathState?.endEntry != pathState.endEntry) {
-//                            endPlacingJob?.cancel()
-//                            currentPathState?.endEntry?.let { end ->
-//                                treeNodesToModels[end]?.let {
-//                                    drawerHelper.removeNode(it)
-//                                }
-//                            }
-//                            endPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
-//                                pathState.endEntry?.let { end ->
-//                                    treeNodesToModels[end] = drawerHelper.drawNode(
-//                                        end,
-//                                        binding.sceneView,
-//                                    )
-//                                }
-//                            }
-//
-//                        }
-//                        if (currentPathState?.startEntry != pathState.startEntry) {
-//                            startPlacingJob?.cancel()
-//                            currentPathState?.startEntry?.let { start ->
-//                                treeNodesToModels[start]?.let {
-//                                    drawerHelper.removeNode(it)
-//                                }
-//                            }
-//                             startPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
-//                                pathState.startEntry?.let { start ->
-//                                    treeNodesToModels[start] = drawerHelper.drawNode(
-//                                        start,
-//                                        binding.sceneView,
-//                                    )
-//                                }
-//                            }
-//                        }
-           //         }
                     if (pathState.startEntry != null && pathState.endEntry != null) {
                         pathAdapter.changeParentPos(pathState.startEntry.position)
                         treeAdapter.changeParentPos(pathState.startEntry.position)
@@ -368,9 +327,6 @@ class PreviewFragment : Fragment() {
     }
 
     private fun checkTreeNode(node: ArNode?): TreeNode? {
-        //User selected entry can be stored in PreviewFragment nodes map,
-        // if this node displayed as PathState start or end
-        treeNodesToModels.inverse[node]?.let { return it }
         treeAdapter.getTreeNode(node)?.let { return it }
         return null
     }

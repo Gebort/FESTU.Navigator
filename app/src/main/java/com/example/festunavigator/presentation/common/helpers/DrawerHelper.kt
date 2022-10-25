@@ -178,56 +178,6 @@ class DrawerHelper(
 
     }
 
-//    suspend fun drawTree(
-//        tree: Tree,
-//        treeNodesToModels: MutableBiMap<TreeNode, ArNode>,
-//        modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode>,
-//        surfaceView: ArSceneView
-//    ){
-//            for (node in tree.getAllNodes()){
-//                treeNodesToModels[node]?.let { removeNode(it) }
-//                treeNodesToModels[node] = drawNode(
-//                    node,
-//                    surfaceView
-//                )
-//
-//                yield()
-//            }
-//            for (treeNode1 in tree.getNodesWithLinks()){
-//                val node1 = treeNodesToModels[treeNode1]!!
-//                val others = tree.getNodeLinks(treeNode1)!!
-//                for (treeNode2 in others) {
-//                    val node2 = treeNodesToModels[treeNode2]!!
-//                    if (modelsToLinkModels[Pair(node1, node2)] == null ){
-//                        drawLine(
-//                            node1,
-//                            node2,
-//                            modelsToLinkModels,
-//                            surfaceView
-//                        )
-//                    }
-//                }
-//                yield()
-//            }
-//    }
-//
-//    suspend fun drawWay(
-//        way: Path?,
-//        routeLabels: MutableList<ArNode>,
-//        surfaceView: ArSceneView
-//    ){
-//
-//        routeLabels.forEach { it.destroy() }
-//        routeLabels.clear()
-//
-//        way?.let {
-//            for (pos in way.nodes) {
-//                routeLabels.add(placeArrow(pos, surfaceView))
-//                yield()
-//            }
-//        }
-//    }
-
     suspend fun placeLabel(
         label: String,
         pos: OrientatedPosition,
