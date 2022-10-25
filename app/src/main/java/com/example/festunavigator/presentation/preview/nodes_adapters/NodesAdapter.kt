@@ -18,7 +18,6 @@ abstract class NodesAdapter<T>(
     val previewView: ArSceneView,
     bufferSize: Int,
     scope: LifecycleCoroutineScope,
-    needParentNode: Boolean = false,
 ) {
 
     protected val nodes = mutableMapOf<T, ArNode>()
@@ -32,9 +31,7 @@ abstract class NodesAdapter<T>(
 
     init {
         scope.launchWhenStarted {
-            if (needParentNode) {
-                parentNode = placeParentNode()
-            }
+            parentNode = placeParentNode()
             changesFlow.collect { change ->
                 when (change) {
                     is DiffOperation.Deleted -> {

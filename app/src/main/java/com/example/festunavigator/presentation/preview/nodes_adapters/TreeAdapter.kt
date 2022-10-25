@@ -18,12 +18,15 @@ class TreeAdapter(
     previewView: ArSceneView,
     bufferSize: Int,
     scope: LifecycleCoroutineScope,
-    needParentNode: Boolean
-): NodesAdapter<TreeNode>(drawerHelper, previewView, bufferSize, scope, needParentNode) {
+    private val onlyEntries: Boolean,
+): NodesAdapter<TreeNode>(drawerHelper, previewView, bufferSize, scope) {
 
     private val modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode> = mutableBiMapOf()
 
     override suspend fun onInserted(item: TreeNode): ArNode {
+        if (onlyEntries && item is TreeNode.Entry) {
+            return drawerHelper.drawNode(item, previewView)
+        }
         val node1 = drawerHelper.drawNode(item, previewView)
         for (id in item.neighbours) {
             nodes.keys.firstOrNull { it.id == id }?.let { treeNode ->
@@ -34,9 +37,6 @@ class TreeAdapter(
                             node2.position,
                             parentNode ?: previewView
                         ).let { node ->
-//                            parentNode?.let { pn ->
-//                                pn.addChild(node)
-//                            }
                             modelsToLinkModels[Pair(node1, node2)] = node
                         }
                     }
@@ -63,9 +63,8 @@ class TreeAdapter(
             drawerHelper.drawLine(
                 node1.position,
                 node2.position,
-                previewView
+                parentNode ?: previewView
             ).let { node ->
-                parentNode?.addChild(node)
                 modelsToLinkModels[Pair(node1, node2)] = node
             }
         }

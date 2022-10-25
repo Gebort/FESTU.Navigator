@@ -92,7 +92,6 @@ class PreviewFragment : Fragment() {
             binding.sceneView,
             VIEWABLE_PATH_NODES,
             viewLifecycleOwner.lifecycleScope,
-            true
         )
 
         treeAdapter = TreeAdapter(
@@ -100,7 +99,7 @@ class PreviewFragment : Fragment() {
             binding.sceneView,
             DEFAULT_BUFFER_SIZE,
             viewLifecycleOwner.lifecycleScope,
-            true
+            onlyEntries = App.isUser
         )
 
         binding.sceneView.apply {
@@ -155,39 +154,39 @@ class PreviewFragment : Fragment() {
                     //will cause node
                  //   if (App.mode == App.USER_MODE) {
 
-                        if (currentPathState?.endEntry != pathState.endEntry) {
-                            endPlacingJob?.cancel()
-                            currentPathState?.endEntry?.let { end ->
-                                treeNodesToModels[end]?.let {
-                                    drawerHelper.removeNode(it)
-                                }
-                            }
-                            endPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
-                                pathState.endEntry?.let { end ->
-                                    treeNodesToModels[end] = drawerHelper.drawNode(
-                                        end,
-                                        binding.sceneView,
-                                    )
-                                }
-                            }
-
-                        }
-                        if (currentPathState?.startEntry != pathState.startEntry) {
-                            startPlacingJob?.cancel()
-                            currentPathState?.startEntry?.let { start ->
-                                treeNodesToModels[start]?.let {
-                                    drawerHelper.removeNode(it)
-                                }
-                            }
-                             startPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
-                                pathState.startEntry?.let { start ->
-                                    treeNodesToModels[start] = drawerHelper.drawNode(
-                                        start,
-                                        binding.sceneView,
-                                    )
-                                }
-                            }
-                        }
+//                        if (currentPathState?.endEntry != pathState.endEntry) {
+//                            endPlacingJob?.cancel()
+//                            currentPathState?.endEntry?.let { end ->
+//                                treeNodesToModels[end]?.let {
+//                                    drawerHelper.removeNode(it)
+//                                }
+//                            }
+//                            endPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
+//                                pathState.endEntry?.let { end ->
+//                                    treeNodesToModels[end] = drawerHelper.drawNode(
+//                                        end,
+//                                        binding.sceneView,
+//                                    )
+//                                }
+//                            }
+//
+//                        }
+//                        if (currentPathState?.startEntry != pathState.startEntry) {
+//                            startPlacingJob?.cancel()
+//                            currentPathState?.startEntry?.let { start ->
+//                                treeNodesToModels[start]?.let {
+//                                    drawerHelper.removeNode(it)
+//                                }
+//                            }
+//                             startPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
+//                                pathState.startEntry?.let { start ->
+//                                    treeNodesToModels[start] = drawerHelper.drawNode(
+//                                        start,
+//                                        binding.sceneView,
+//                                    )
+//                                }
+//                            }
+//                        }
            //         }
                     if (pathState.startEntry != null && pathState.endEntry != null) {
                         pathAdapter.changeParentPos(pathState.startEntry.position)
