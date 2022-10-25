@@ -56,15 +56,15 @@ class DrawerHelper(
 
     suspend fun drawNode(
         treeNode: TreeNode,
-        surfaceView: ArSceneView,
+        parentNode: NodeParent,
         anchor: Anchor? = null
     ): ArNode {
         return when (treeNode){
             is TreeNode.Path -> {
-                drawPath(treeNode, surfaceView, anchor)
+                drawPath(treeNode, parentNode, anchor)
             }
             is TreeNode.Entry -> {
-                drawEntry(treeNode, surfaceView, anchor)
+                drawEntry(treeNode, parentNode, anchor)
             }
         }
 
@@ -99,28 +99,28 @@ class DrawerHelper(
 
     suspend fun drawSelection(
         treeNode: TreeNode,
-        surfaceView: ArSceneView,
+        parentNode: NodeParent,
     ): ArNode = when (treeNode) {
         is TreeNode.Entry -> {
-            drawArNode(selectionModel, selectionEntryScale, treeNode.position, treeNode.forwardVector, surfaceView, null)
+            drawArNode(selectionModel, selectionEntryScale, treeNode.position, treeNode.forwardVector, parentNode, null)
         }
         is TreeNode.Path -> {
-            drawArNode(selectionModel, selectionPathScale, treeNode.position, null, surfaceView, null)
+            drawArNode(selectionModel, selectionPathScale, treeNode.position, null, parentNode, null)
         }
     }
 
     private suspend fun drawPath(
         treeNode: TreeNode.Path,
-        surfaceView: ArSceneView,
+        parentNode: NodeParent,
         anchor: Anchor? = null
-    ): ArNode = drawArNode(pathModel, pathScale, treeNode.position, null, surfaceView, anchor)
+    ): ArNode = drawArNode(pathModel, pathScale, treeNode.position, null, parentNode, anchor)
 
     private suspend fun drawArNode(
         model: String,
         scale: Scale,
         position: Float3,
         orientation: dev.romainguy.kotlin.math.Quaternion?,
-        surfaceView: ArSceneView,
+        parentNode: NodeParent,
         anchor: Anchor?
     ): ArNode {
         val modelNode = ArModelNode().apply {
@@ -147,20 +147,20 @@ class DrawerHelper(
             }
         }
 
-        surfaceView.addChild(modelNode)
+        parentNode.addChild(modelNode)
 
         return modelNode
     }
 
     private suspend fun drawEntry(
         treeNode: TreeNode.Entry,
-        surfaceView: ArSceneView,
+        parentNode: NodeParent,
         anchor: Anchor? = null
     ): ArNode {
         return placeLabel(
             treeNode.number,
             OrientatedPosition(treeNode.position, treeNode.forwardVector),
-            surfaceView
+            parentNode
         ).apply {
             if (App.isAdmin) {
                 addChild(
@@ -169,7 +169,7 @@ class DrawerHelper(
                         scale = entryScale,
                         position = Position(0f, -bias, 0f),
                         orientation = dev.romainguy.kotlin.math.Quaternion(),
-                        surfaceView = surfaceView,
+                        parentNode = parentNode,
                         anchor = anchor
                     )
                 )
@@ -181,29 +181,29 @@ class DrawerHelper(
     suspend fun placeLabel(
         label: String,
         pos: OrientatedPosition,
-        surfaceView: ArSceneView,
+        parentNode: NodeParent,
         anchor: Anchor? = null
     ): ArNode = placeRend(
         label = label,
         pos = pos,
-        parent = surfaceView,
+        parentNode = parentNode,
         scale = labelScale,
         anchor = anchor
     )
 
     suspend fun placeArrow(
         pos: OrientatedPosition,
-        surfaceView: ArSceneView
+        parentNode: NodeParent
     ): ArNode = placeRend(
         pos = pos,
-        parent = surfaceView,
+        parentNode = parentNode,
         scale = arrowScale
     )
 
     private suspend fun placeRend(
         label: String? = null,
         pos: OrientatedPosition,
-        parent: NodeParent,
+        parentNode: NodeParent,
         scale: Scale,
         anchor: Anchor? = null
     ): ArNode {
@@ -238,7 +238,7 @@ class DrawerHelper(
                         this.anchor = this.createAnchor()
                     }
                 }
-                parent.addChild(textNode)
+                parentNode.addChild(textNode)
                 node = textNode
                 textNode.animateViewAppear(
                     scale,
@@ -362,7 +362,7 @@ class DrawerHelper(
     }
 
     suspend fun placeBlankNode(
-        surfaceView: ArSceneView,
+        parentNode: NodeParent,
         position: Float3? = null,
         anchor: Anchor? = null
     ): ArNode {
@@ -378,7 +378,7 @@ class DrawerHelper(
                 this.anchor = createAnchor()
             }
         }
-        surfaceView.addChild(node)
+        parentNode.addChild(node)
         return node
     }
 
