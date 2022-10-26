@@ -19,8 +19,6 @@ class Tree @Inject constructor(
     private val _entryPoints: MutableMap<String, TreeNode.Entry> = mutableMapOf()
     private val _allPoints: MutableMap<Int, TreeNode> = mutableMapOf()
     private val _links: MutableMap<Int, MutableList<Int>> = mutableMapOf()
-    //Nodes without links. Needed for near nodes calculation in TreeDiffUtils
-    private val _freeNodes: MutableList<Int> = mutableListOf()
     private val _regions: MutableMap<Int, Int> = mutableMapOf()
 
     private val _translocatedPoints: MutableMap<TreeNode, Boolean> = mutableMapOf()
@@ -73,9 +71,6 @@ class Tree @Inject constructor(
             }
             _allPoints[node.id] = node
             _links[node.id] = node.neighbours
-            if (node.neighbours.isEmpty()) {
-                _freeNodes.add(node.id)
-            }
             if (node.id+1 > availableId){
                 availableId = node.id+1
             }
@@ -152,7 +147,7 @@ class Tree @Inject constructor(
         }
     }
 
-    fun getNodes(nodes: List<Int>): List<TreeNode> {
+    private fun getNodes(nodes: List<Int>): List<TreeNode> {
         if (!initialized){
             throw Exception("Tree isnt initialized")
         }
@@ -161,38 +156,31 @@ class Tree @Inject constructor(
         }
     }
 
-    fun getFreeNodes(): List<TreeNode> {
-        if (!initialized){
-            throw Exception("Tree isnt initialized")
-        }
-        return _freeNodes.mapNotNull { id -> getNode(id) }
-    }
+//    fun getAllNodes(): List<TreeNode> {
+//        if (!initialized){
+//            throw Exception("Tree isnt initialized")
+//        }
+//        val nodes = mutableListOf<TreeNode>()
+//        for (key in _allPoints.keys) {
+//            getNode(key)?.let {
+//                nodes.add(it)
+//            }
+//        }
+//        return nodes
+//    }
 
-    fun getAllNodes(): List<TreeNode> {
-        if (!initialized){
-            throw Exception("Tree isnt initialized")
-        }
-        val nodes = mutableListOf<TreeNode>()
-        for (key in _allPoints.keys) {
-            getNode(key)?.let {
-                nodes.add(it)
-            }
-        }
-        return nodes
-    }
-
-    fun getAllEntries(): List<TreeNode> {
-        if (!initialized){
-            throw Exception("Tree isnt initialized")
-        }
-        val nodes = mutableListOf<TreeNode>()
-        for (entry in _entryPoints.values) {
-            getNode(entry.id)?.let {
-                nodes.add(it)
-            }
-        }
-        return nodes
-    }
+//    fun getAllEntries(): List<TreeNode> {
+//        if (!initialized){
+//            throw Exception("Tree isnt initialized")
+//        }
+//        val nodes = mutableListOf<TreeNode>()
+//        for (entry in _entryPoints.values) {
+//            getNode(entry.id)?.let {
+//                nodes.add(it)
+//            }
+//        }
+//        return nodes
+//    }
 
     fun getEntriesNumbers(): Set<String> {
         return _entryPoints.keys
@@ -202,19 +190,19 @@ class Tree @Inject constructor(
 //        return _links.keys
 //    }
 
-    fun getNodesWithLinks(): List<TreeNode> {
-        if (!initialized){
-            throw Exception("Tree isnt initialized")
-        }
-       return _links.keys.mapNotNull {
-            getNode(it)
-        }
-    }
+//    fun getNodesWithLinks(): List<TreeNode> {
+//        if (!initialized){
+//            throw Exception("Tree isnt initialized")
+//        }
+//       return _links.keys.mapNotNull {
+//            getNode(it)
+//        }
+//    }
 
-    fun getNodeLinks(node: TreeNode): List<TreeNode>? {
-        return _links[node.id]?.mapNotNull { getNode(it) }
-
-    }
+//    fun getNodeLinks(node: TreeNode): List<TreeNode>? {
+//        return _links[node.id]?.mapNotNull { getNode(it) }
+//
+//    }
 
     fun getNodeFromEachRegion(): Map<Int, TreeNode> {
         return _regions.entries
@@ -271,7 +259,6 @@ class Tree @Inject constructor(
 
         _allPoints[newNode.id] = newNode
         _translocatedPoints[newNode] = true
-        _freeNodes.add(newNode.id)
         setRegion(newNode.id)
         availableId++
         repository.insertNodes(listOf(newNode), translocation, rotation, pivotPosition)
@@ -288,7 +275,6 @@ class Tree @Inject constructor(
         removeAllLinks(node)
         _translocatedPoints.remove(node)
         _allPoints.remove(node.id)
-        _freeNodes.remove(node.id)
         _regions.remove(node.id)
         if (node is TreeNode.Entry) {
             _entryPoints.remove(node.number)
@@ -322,8 +308,6 @@ class Tree @Inject constructor(
         node2.neighbours.add(node1.id)
         _links[node1.id] = node1.neighbours
         _links[node2.id] = node2.neighbours
-        _freeNodes.remove(node1.id)
-        _freeNodes.remove(node2.id)
         val reg = _regions[node2.id]!!
         setRegion(node1.id, reg, overlap = true, blacklist = listOf(reg))
         repository.updateNodes(listOf(node1, node2), translocation, rotation, pivotPosition)
@@ -364,14 +348,10 @@ class Tree @Inject constructor(
             _allPoints[id]?.let {
                 it.neighbours.remove(node.id)
                 _links[it.id] = it.neighbours
-                if (it.neighbours.isEmpty()){
-                    _freeNodes.add(it.id)
-                }
             }
         }
         node.neighbours.clear()
         _links[node.id] = node.neighbours
-        _freeNodes.add(node.id)
 
         //change regions
         val blacklist = mutableListOf<Int>()
@@ -390,7 +370,6 @@ class Tree @Inject constructor(
         _allPoints.clear()
         _entryPoints.clear()
         _translocatedPoints.clear()
-        _freeNodes.clear()
         availableId = 0
         availableRegion = 0
         translocation = Float3(0f, 0f, 0f)

@@ -39,6 +39,7 @@ abstract class NodesAdapter<T>(
                             nodes.remove(change.item)
                             parentNode?.removeChild(it)
                             onRemoved(change.item, it)
+                            yield()
                         }
                     }
                     is DiffOperation.Added -> {
@@ -49,6 +50,7 @@ abstract class NodesAdapter<T>(
                                     it.position -= pn.position
                                     pn.addChild(it)
                                 }
+                                yield()
                             }
                         }
                     }
@@ -67,14 +69,12 @@ abstract class NodesAdapter<T>(
             .map { item -> DiffOperation.Deleted(item) }
             .forEach { change ->
                 changesFlow.tryEmit(change)
-                yield()
             }
         newList.asSequence()
             .minus(nodes.keys)
             .map { item -> DiffOperation.Added(item) }
             .forEach { change ->
                 changesFlow.tryEmit(change)
-                yield()
             }
     }
 

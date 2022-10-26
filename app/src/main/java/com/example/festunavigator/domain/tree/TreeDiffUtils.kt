@@ -3,17 +3,18 @@ package com.example.festunavigator.domain.tree
 import com.example.festunavigator.domain.utils.getApproxDif
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.radians
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class TreeDiffUtils(
     private val tree: Tree
     ) {
 
     private var closestNodes = mutableMapOf<Int, TreeNode>()
- //   private var closestNode: TreeNode? = null
 
-    suspend fun getNearNodes(position: Float3, radius: Float): List<TreeNode>{
+    suspend fun getNearNodes(position: Float3, radius: Float): List<TreeNode> = withContext(Dispatchers.Default) {
         if (!tree.initialized) {
-            return listOf()
+            return@withContext listOf()
         }
         else {
             val nodes = tree.getNodeFromEachRegion().toMutableMap()
@@ -28,19 +29,12 @@ class TreeDiffUtils(
                 closestNodes[item.key] = getNewCentralNode(position, item.value)
             }
 
-
-//            if (closestNode == null) {
-//                closestNode = getClosestInArray(position, tree.getAllEntries())
-//            }
-//            val closestNode = getNewCentralNode(position, closestNode!!)
-
             val nearNodes = mutableListOf<TreeNode>()
             closestNodes.values.forEach { node ->
                 getNodesByRadius(position, node, radius, nearNodes)
             }
 
-            //getClosestFreeNodes(position, radius, nearNodes)
-            return nearNodes
+            return@withContext nearNodes
         }
     }
 
@@ -102,24 +96,16 @@ class TreeDiffUtils(
         }
     }
 
-    private fun getClosestFreeNodes(position: Float3, radius: Float, list: MutableList<TreeNode>) {
-        tree.getFreeNodes().forEach { node ->
-            if (position.getApproxDif(node.position) <= radius) {
-                list.add(node)
-            }
-        }
-    }
-
-    private fun getClosestInArray(position: Float3, list: List<TreeNode>): TreeNode {
-        val first = list.first()
-        var min = Pair(first, position.getApproxDif(first.position))
-        list.forEach { node2 ->
-            val dist = position.getApproxDif(node2.position)
-            if (dist < min.second) {
-                min = Pair(node2, dist)
-            }
-        }
-        return min.first
-    }
+//    private fun getClosestInArray(position: Float3, list: List<TreeNode>): TreeNode {
+//        val first = list.first()
+//        var min = Pair(first, position.getApproxDif(first.position))
+//        list.forEach { node2 ->
+//            val dist = position.getApproxDif(node2.position)
+//            if (dist < min.second) {
+//                min = Pair(node2, dist)
+//            }
+//        }
+//        return min.first
+//    }
 
 }
