@@ -24,6 +24,8 @@ class DirectionTracker(
     private val lengthThreshold = 1
     //Minimum points amount to calculate initial direction vector
     private val minPoints = 20
+    //Minimum R^2 to use direction predicted with LinearRegressionModel
+    private val r2Threshold = 0.8
 
     private var direction: Segment? = null
     private val lastPoints: MutableList<Position> = mutableListOf()
@@ -40,7 +42,12 @@ class DirectionTracker(
 
         if (lastPoints.size >= minPoints && direction == null) {
             direction = approximateSegment(lastPoints)
-            checkForCallback()
+            if (direction == null) {
+                lastPoints.clear()
+            }
+            else {
+                checkForCallback()
+            }
             return
         }
 
@@ -61,7 +68,6 @@ class DirectionTracker(
             else {
                 lastPoints.clear()
                 direction = null
-                //direction = approximateSegment(lastPoints)
             }
 
         }
@@ -80,17 +86,32 @@ class DirectionTracker(
         }
     }
 
-    private fun approximateSegment(points: List<Position>): Segment {
+    private fun approximateSegment(points: List<Position>): Segment? {
         val xList = mutableListOf<Float>()
         val zList = mutableListOf<Float>()
-        for ((x, _, z) in points) {
+        val xTest = mutableListOf<Float>()
+        val zTest = mutableListOf<Float>()
+        points.forEachIndexed { index, (x, _, z) ->
             xList.add(x)
             zList.add(z)
+            if (index % 2 == 0){
+                xTest.add(x)
+                zTest.add(z)
+            }
         }
         val model = LinearRegressionModel(
             independentVariables = xList,
             dependentVariables = zList
         )
+
+        val r2 = model.test(
+            xTest = xTest,
+            yTest = zTest
+        )
+
+        if (r2 < r2Threshold) {
+            return null
+        }
 
         val z1 = model.predict(xList.first())
         val z2 = model.predict(xList.last())

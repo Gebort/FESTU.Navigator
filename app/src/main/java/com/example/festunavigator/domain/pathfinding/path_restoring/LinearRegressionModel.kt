@@ -26,4 +26,17 @@ class LinearRegressionModel(
 
     fun predict(independentVariable: Float) = b0 + b1 * independentVariable
 
+    fun test(xTest: List<Float>, yTest: List<Float>): Float {
+        var sst = 0f
+        var ssr = 0f
+        for (i in 0 until xTest.count()) {
+            val x = xTest[i]
+            val y = yTest[i]
+            val yPred = predict(x)
+            sst += (y - meanY).pow(2)
+            ssr += (y - yPred).pow(2)
+        }
+        return 1 - (ssr / sst)
+    }
+
 }
