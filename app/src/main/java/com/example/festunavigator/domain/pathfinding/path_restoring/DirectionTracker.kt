@@ -9,89 +9,103 @@ import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.*
 import kotlin.math.cos
+import kotlin.math.sin
 
-class DirectionTracker {
-    private val directions: MutableList<Segment> = mutableListOf()
+class DirectionTracker(
+    private val onNewDirection: (OrientatedPosition) -> Unit
+) {
 
-    private var lastPos: Position? = null
-
+    //Minimum position difference to count the point as "non idle"
     private val idleDiff = 0.001
-    //Degrees
-    private val directionDiff = 30
+    //Maximum length between direction vector and a new point, to continue the vector
+    private val directionDiff = 0.01
     //Minimum length for vector to change path coordinates
     private val lengthThreshold = 1
+    //Minimum points amount to calculate initial direction vector
+    private val minPoints = 20
 
-    fun getStraightOrientation(): OrientatedPosition? {
-        if (directions.isEmpty()) {
-            return null
-        }
-        directions.last().let { d ->
-            if (d.vector.length() >= lengthThreshold) {
-                return OrientatedPosition(
-                    position = d.startPos.meanPoint(d.endPos),
-                    orientation = Quaternion.fromVector(d.vector.apply { y = 0f })
-                )
-            }
-            else {
-                return null
-            }
-        }
-
-    }
+    private var direction: Segment? = null
+    private val lastPoints: MutableList<Position> = mutableListOf()
 
     fun newPosition(pos: Position) {
-        if (lastPos != null && lastPos?.getApproxDif(pos)!! < idleDiff) {
+        if (lastPoints.isNotEmpty() && lastPoints.last().getApproxDif(pos) < idleDiff) {
             return
         }
-        if (lastPos == null) {
-            lastPos = pos
+        if (lastPoints.size >= minPoints) {
+            lastPoints.removeFirst()
+        }
+        lastPoints.add(pos)
+
+        if (lastPoints.size >= minPoints && direction == null) {
+            direction = approximateSegment(lastPoints)
             return
         }
-        else if (directions.isEmpty()) {
-            lastPos?.let { lp ->
-                directions.add(
-                    Segment(
-                        startPos = pos,
-                        vector = (pos - lp).toVector3())
+
+        direction?.let {
+            val pVector = (pos - it.startPos).toVector3()
+            val angle = pVector.angleBetween(it.vector)
+            val diff = pVector.length() * sin(angle)
+            if (diff <= directionDiff) {
+                val newLength = pVector.length() * cos(angle)
+                direction = it.copy(
+                    vector = it.vector.scaled(newLength / it.vector.length())
+                )
+                return
+            }
+            else {
+                direction = approximateSegment(lastPoints)
+            }
+            checkForCallback()
+        }
+    }
+
+    private fun checkForCallback() {
+        direction?.let {
+            if (it.vector.length() >= lengthThreshold) {
+                onNewDirection(
+                    OrientatedPosition(
+                        position = it.startPos.meanPoint(it.endPos),
+                        orientation = Quaternion.fromVector(it.vector)
+                    )
                 )
             }
-            return
         }
+    }
 
-        val startPos = directions.last().startPos
-        val testVector = (pos - startPos).toVector3()
-        directions.last().vector.angleBetween(testVector).let {
-            directions.last().let { lastSegment ->
-                if (it < directionDiff) {
-                    val newLength = testVector.length() * cos(it)
-
-                    directions[directions.lastIndex] = lastSegment.copy(
-                        vector = lastSegment.vector.scaled(newLength / lastSegment.vector.length())
-                    )
-                } else {
-                    val newStartPos = lastSegment.endPos
-                    val newVector = (pos - newStartPos).toVector3()
-                    directions.add(
-                        Segment(
-                            startPos = newStartPos,
-                            vector = newVector
-                        )
-                    )
-                }
-            }
+    private fun approximateSegment(points: List<Position>): Segment {
+        val xList = mutableListOf<Float>()
+        val zList = mutableListOf<Float>()
+        for ((x, _, z) in points) {
+            xList.add(x)
+            zList.add(z)
         }
-        lastPos = pos
+        val model = LinearRegressionModel(
+            independentVariables = xList,
+            dependentVariables = zList
+        )
+
+        val z1 = model.predict(xList.first())
+        val z2 = model.predict(xList.last())
+
+        val p1 = Position(xList.first(), 0f, z1)
+        val p2 = Position(xList.last(), 0f, z2)
+
+        return Segment(
+            startPos = p1,
+            vector =  (p2 - p1).toVector3()
+        )
     }
 
 }
 
-//represents a vector but with a start and end points
+//represents a vector but with a start and an end points
 //same as OrientatedPosition, but using vectors instead of quaternions
 data class Segment(
     val startPos: Position,
     val vector: Vector3
 ) {
     val endPos get() = startPos + vector.toFloat3()
+
 }
 
 

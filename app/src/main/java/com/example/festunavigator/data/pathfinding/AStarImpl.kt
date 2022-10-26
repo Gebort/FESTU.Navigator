@@ -4,6 +4,8 @@ import com.example.festunavigator.domain.pathfinding.Path
 import com.example.festunavigator.domain.pathfinding.Pathfinder
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.use_cases.SmoothPath
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AStarImpl @Inject constructor(
@@ -12,7 +14,7 @@ class AStarImpl @Inject constructor(
 
 
 
-    override suspend fun findWay(from: String, to: String, tree: Tree): Path? {
+    override suspend fun findWay(from: String, to: String, tree: Tree): Path? = withContext(Dispatchers.Default) {
 
         val finalNode = AStarNode(tree.getEntry(to)!!, null)
         val initialNode = AStarNode(tree.getEntry(from)!!, finalNode)
@@ -29,7 +31,7 @@ class AStarImpl @Inject constructor(
 
             if (currentNode == finalNode) {
 
-                return Path(
+                return@withContext Path(
                     smoothPath(
                         getPath(currentNode).map { aStarNode ->
                             aStarNode.node
@@ -40,7 +42,7 @@ class AStarImpl @Inject constructor(
                 addAdjacentNodes(currentNode, openList, closedSet, finalNode, tree)
             }
         }
-        return null
+        return@withContext null
 
     }
 

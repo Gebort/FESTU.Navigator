@@ -303,8 +303,8 @@ class PreviewFragment : Fragment() {
             pathAdapter.parentNode?.quaternion?.let { parentQ ->
                 pathAnalyzer?.newPosition(
                     userPosition,
-                    nodes.drop(nodes.size/2-2)
-                        .dropLast(nodes.size/2-2),
+                    nodes.drop(maxOf(nodes.size/2-2, 0))
+                        .dropLast(maxOf(nodes.size/2-2,0)),
                     parentQ
                 )
             }

@@ -8,8 +8,6 @@ import androidx.lifecycle.lifecycleScope
 import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
-import com.example.festunavigator.domain.pathfinding.Path
-import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
 import com.google.ar.core.Anchor
 import com.google.ar.sceneform.math.Quaternion
@@ -17,7 +15,6 @@ import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.*
 import com.uchuhimo.collections.MutableBiMap
 import dev.romainguy.kotlin.math.Float3
-import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.ArNode
 import io.github.sceneview.ar.scene.destroy
@@ -30,7 +27,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
 
 
 class DrawerHelper(
@@ -70,7 +66,7 @@ class DrawerHelper(
 
     }
 
-    suspend fun removeLink(
+    fun removeLink(
         pair: Pair<ArNode, ArNode>,
         modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode>
     ) {
@@ -78,7 +74,7 @@ class DrawerHelper(
         modelsToLinkModels.remove(pair)
     }
 
-    suspend fun removeNode(
+    fun removeNode(
         treeNode: TreeNode,
         modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode>,
         treeNodesToModels: MutableBiMap<TreeNode, ArNode>,
