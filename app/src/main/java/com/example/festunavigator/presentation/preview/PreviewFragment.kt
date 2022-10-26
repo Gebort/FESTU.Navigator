@@ -100,7 +100,7 @@ class PreviewFragment : Fragment() {
         )
 
         binding.sceneView.apply {
-            planeRenderer.isVisible = App.mode == App.ADMIN_MODE
+            planeRenderer.isVisible = true
             instructions.enabled = false
             onArFrame = { frame ->
                 onDrawFrame(frame)
@@ -171,6 +171,7 @@ class PreviewFragment : Fragment() {
                     when (uiEvent) {
                         is MainUiEvent.InitSuccess -> {
                             treeAdapter.changeParentPos(Float3(0f))
+                            binding.sceneView.planeRenderer.isVisible = App.isAdmin
                         }
                         is MainUiEvent.InitFailed -> {
                             when (uiEvent.error) {
