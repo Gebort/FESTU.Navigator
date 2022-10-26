@@ -13,7 +13,9 @@ class PathAnalyzer(
     private val onChangeNeeded: (Quaternion) -> Unit,
 ) {
 
-    private val directionTracker = DirectionTracker() { onNewDirection(it) }
+
+    private val directionTracker = DirectionTracker(debug) { onNewDirection(it) }
+    private var lastUserDirection: OrientatedPosition? = null
     //Degrees
     private val maxDirectionDiff = 50
     private val minDirectionDiff = 1
@@ -28,6 +30,8 @@ class PathAnalyzer(
     }
 
     private fun onNewDirection(pos: OrientatedPosition) {
+        if (pos == lastUserDirection) return
+        lastUserDirection = pos
         val trustQ = pos.orientation
         val path = pathSegment ?: return
         val segmentQ = path.first().orientation

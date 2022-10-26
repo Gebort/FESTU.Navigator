@@ -12,13 +12,14 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class DirectionTracker(
+    private val debug: (String) -> Unit,
     private val onNewDirection: (OrientatedPosition) -> Unit
 ) {
 
     //Minimum position difference to count the point as "non idle"
-    private val idleDiff = 0.001
+    private val idleDiff = 0.08
     //Maximum length between direction vector and a new point, to continue the vector
-    private val directionDiff = 0.01
+    private val directionDiff = 0.1
     //Minimum length for vector to change path coordinates
     private val lengthThreshold = 1
     //Minimum points amount to calculate initial direction vector
@@ -35,9 +36,11 @@ class DirectionTracker(
             lastPoints.removeFirst()
         }
         lastPoints.add(pos)
+        debug(lastPoints.size.toString())
 
         if (lastPoints.size >= minPoints && direction == null) {
             direction = approximateSegment(lastPoints)
+            checkForCallback()
             return
         }
 
@@ -45,17 +48,22 @@ class DirectionTracker(
             val pVector = (pos - it.startPos).toVector3()
             val angle = pVector.angleBetween(it.vector)
             val diff = pVector.length() * sin(angle)
-            if (diff <= directionDiff) {
+            if (diff <= directionDiff && angle < 90) {
                 val newLength = pVector.length() * cos(angle)
-                direction = it.copy(
-                    vector = it.vector.scaled(newLength / it.vector.length())
-                )
+                if (newLength > it.vector.length()) {
+                    direction = it.copy(
+                        vector = it.vector.scaled(newLength / it.vector.length())
+                    )
+                    checkForCallback()
+                }
                 return
             }
             else {
-                direction = approximateSegment(lastPoints)
+                lastPoints.clear()
+                direction = null
+                //direction = approximateSegment(lastPoints)
             }
-            checkForCallback()
+
         }
     }
 
