@@ -3,7 +3,8 @@
     <string name="app_name_admin" translatable="false">Navigator Admin</string>
     <string name="initialize">Initialize the graph please</string>
     <string name="scan">Point the camera at the auditorium number</string>
-    <string name="orientate">Move the phone while pointing it at the audience number</string>
+    <string name="orientate_wall">Slowly point the phone at the audience number</string>
+    <string name="orientate_floor">Slowly move the phone while pointing it at the floor</string>
     <string name="link" translatable="false">Link</string>
     <string name="delete" translatable="false">Delete</string>
     <string name="entry" translatable="false">Entry</string>

@@ -31,6 +31,7 @@ class OrientationFragment : Fragment() {
     private val mainModel: MainShareModel by activityViewModels()
 
     private var navigating = false
+    private var scanningWall = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -45,6 +46,12 @@ class OrientationFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainModel.frame.collect { frame ->
                     frame?.let {
+                        if (frame.session.allPlanes.any { it.type == Plane.Type.HORIZONTAL_UPWARD_FACING }) {
+                            if (!scanningWall) {
+                                scanningWall = true
+                                binding.textView2.setText(R.string.orientate_wall)
+                            }
+                        }
                         if (frame.session.allPlanes.any { it.type == Plane.Type.VERTICAL }) {
                             if (!navigating){
                                 navigating = true
