@@ -6,10 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.festunavigator.data.App
 import com.example.festunavigator.data.model.Record
-import com.example.festunavigator.data.utils.Reaction
-import com.example.festunavigator.data.utils.convertPosition
-import com.example.festunavigator.data.utils.multiply
-import com.example.festunavigator.data.utils.undoConvertPosition
+import com.example.festunavigator.data.utils.*
 import com.example.festunavigator.domain.hit_test.HitTestResult
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.repository.RecordsRepository
@@ -246,15 +243,15 @@ class MainShareModel @Inject constructor(
         if (position == null && hitTestResult == null){
             throw Exception("No position was provided")
         }
-     //   if (position == null) {
+
         if (number != null && tree.hasEntry(number)){
             _mainUiEvents.emit(MainUiEvent.EntryAlreadyExists)
             return
         }
-        //we need to undoConvertPosition, because if the admin placing new node when other nodes corrected,
+        //we need to convert position, because if the admin placing new node when other nodes corrected,
         //after reloading new node will be in another place
         treePivot.value.let { tp ->
-            val position2 = tp?.orientation?.undoConvertPosition(
+            val position2 = tp?.orientation?.reverseConvertPosition(
                 position = position ?: hitTestResult!!.orientatedPosition.position,
                 pivotPosition = tp.position,
             )
@@ -275,19 +272,6 @@ class MainShareModel @Inject constructor(
                 ))
             }
         }
-//        } else {
-//            val treeNode = tree.addNode(
-//                position,
-//                number,
-//                orientation
-//            )
-//            treeNode.let {
-//                _mainUiEvents.emit(MainUiEvent.NodeCreated(
-//                    treeNode,
-//                    hitTestResult.hitResult.createAnchor()
-//                ))
-//            }
-//        }
     }
 
     private suspend fun linkNodes(node1: TreeNode, node2: TreeNode){

@@ -44,10 +44,12 @@ class DirectionTrackerUnitTest {
 
     @Test
     fun test4() {
-        val p1 = Position(-3f, -12f, 6f)
-        val pivot = Position (5f, 10f, 0f)
-        val q = Quaternion()
-        val p2 = q.undoConvertPosition(p1, pivot)
-        assertEquals(p1, p2)
+        val p1 = Position(1f, 0f, 0f)
+        val pivot = Position(0f)
+        val v = Vector3(1f,0f,0f)
+        val q = Quaternion.fromVector(v)
+        val p3 = q.convertPosition(p1, pivot)
+        val p4 = q.reverseConvertPosition(p3, pivot)
+        assertEquals(p1, p4)
     }
 }
