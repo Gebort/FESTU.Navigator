@@ -7,6 +7,7 @@ import com.example.festunavigator.domain.utils.meanPoint
 import dev.romainguy.kotlin.math.Float3
 import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Quaternion
+import io.github.sceneview.math.Position
 import io.github.sceneview.math.toRotation
 import io.github.sceneview.math.toVector3
 import junit.framework.TestCase.assertEquals
@@ -26,34 +27,6 @@ class DirectionTrackerUnitTest {
     val pos10 = Float3(18f,12f,0f)
     var path = listOf(pos1, pos2, pos3, pos4, pos5, pos6, pos7, pos8, pos9, pos10)
 
-    @Test
-    fun test1() {
-        val tracker = DirectionTracker()
-        path.drop(1).take(4).forEach { pos ->
-            tracker.newPosition(pos)
-        }
-        val tpos1 = tracker.getStraightOrientation()
-        val tpos2 = OrientatedPosition(
-            position = pos1.meanPoint(pos5),
-            orientation = Quaternion.fromVector((pos2 - pos1).toVector3())
-        )
-        assertEquals(tpos2, tpos1)
-
-    }
-
-    @Test
-    fun test2() {
-        val tracker = DirectionTracker()
-        path.drop(1).forEach { pos ->
-            tracker.newPosition(pos)
-        }
-        val tpos1 = tracker.getStraightOrientation()
-        val tpos2 = OrientatedPosition(
-            position = pos6.meanPoint(pos10),
-            orientation = Quaternion.fromVector((pos7 - pos6).toVector3())
-        )
-        assertEquals(tpos2, tpos1)
-    }
 
     @Test
     fun test3() {
@@ -71,14 +44,10 @@ class DirectionTrackerUnitTest {
 
     @Test
     fun test4() {
-        val n = 5
-        val list = MutableList(n) {0}
-        list.add(1)
-        list.add(2)
-        list.add(3)
-        list.add(4)
-        list.add(5)
-        list.add(6)
-        assertEquals(mutableSetOf(2,3,4,5,6), list)
+        val p1 = Position(-3f, -12f, 6f)
+        val pivot = Position (5f, 10f, 0f)
+        val q = Quaternion()
+        val p2 = q.undoConvertPosition(p1, pivot)
+        assertEquals(p1, p2)
     }
 }

@@ -248,9 +248,9 @@ class DrawerHelper(
     }
 
     fun removeNode(node: ArNode) {
+        animationJobs[node]?.cancel()
         node.destroy()
         node.anchor?.destroy()
-        animationJobs[node]?.cancel()
     }
 
     fun removeArrowWithAnim(node: ArNode) {

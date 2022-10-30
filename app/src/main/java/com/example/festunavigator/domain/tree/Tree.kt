@@ -2,6 +2,7 @@ package com.example.festunavigator.domain.tree
 
 import android.util.Log
 import com.example.festunavigator.data.model.TreeNodeDto
+import com.example.festunavigator.data.utils.Reaction
 import com.example.festunavigator.domain.repository.GraphRepository
 import com.example.festunavigator.data.utils.inverted
 import com.example.festunavigator.data.utils.multiply
@@ -206,13 +207,17 @@ class Tree @Inject constructor(
 
     fun getNodeFromEachRegion(): Map<Int, TreeNode> {
         return _regions.entries
-            .distinctBy { it.value }
+            .distinctBy { it.value}
             .filter { getNode(it.key) != null }
             .associate { it.value to getNode(it.key)!! }
     }
 
     fun hasEntry(number: String): Boolean {
         return _entryPoints.keys.contains(number)
+    }
+
+    fun hasNode(node: TreeNode): Boolean {
+        return _allPoints.keys.contains(node.id)
     }
 
     private fun translocateNode(node: TreeNode) {
@@ -271,7 +276,9 @@ class Tree @Inject constructor(
         if (!initialized){
             throw Exception("Tree isnt initialized")
         }
-      //  val nodesForUpdate = getNodes(node.neighbours.toMutableList())
+        if (!_allPoints.containsKey(node.id)) {
+            throw Exception("Unknown node")
+        }
         removeAllLinks(node)
         _translocatedPoints.remove(node)
         _allPoints.remove(node.id)
@@ -285,7 +292,7 @@ class Tree @Inject constructor(
     suspend fun addLink(
         node1: TreeNode,
         node2: TreeNode
-    ): Boolean {
+    ): Reaction<Unit> {
         if (!initialized){
             throw Exception("Tree isnt initialized")
         }
@@ -294,7 +301,7 @@ class Tree @Inject constructor(
         }
         else {
             if (_links[node1.id]!!.contains(node2.id)) {
-                throw Exception("Link already exists")
+                return Reaction.Error(Exception("Link already exists"))
             }
         }
         if (_links[node2.id] == null) {
@@ -302,7 +309,7 @@ class Tree @Inject constructor(
         }
         else {
             if (_links[node2.id]!!.contains(node1.id))
-                throw Exception("Link already exists")
+                return Reaction.Error(Exception("Link already exists"))
         }
         node1.neighbours.add(node2.id)
         node2.neighbours.add(node1.id)
@@ -311,7 +318,7 @@ class Tree @Inject constructor(
         val reg = _regions[node2.id]!!
         setRegion(node1.id, reg, overlap = true, blacklist = listOf(reg))
         repository.updateNodes(listOf(node1, node2), translocation, rotation, pivotPosition)
-        return true
+        return Reaction.Success(Unit)
 
     }
 

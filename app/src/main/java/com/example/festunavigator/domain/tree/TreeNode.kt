@@ -8,6 +8,13 @@ sealed class TreeNode(
     var position: Float3,
     var neighbours: MutableList<Int> = mutableListOf()
 ) {
+
+    abstract fun copy(
+        id: Int = this.id,
+        position: Float3 = this.position,
+        neighbours: MutableList<Int> = this.neighbours
+    ): TreeNode
+
     class Entry(
         var number: String,
         var forwardVector: Quaternion,
@@ -16,19 +23,17 @@ sealed class TreeNode(
         neighbours: MutableList<Int> = mutableListOf(),
     ): TreeNode(id, position, neighbours){
 
-        fun copy(
-            number: String = this.number,
-            id: Int = this.id,
-            position: Float3 = this.position,
-            neighbours: MutableList<Int> = this.neighbours,
-            forwardVector: Quaternion = this.forwardVector
+        override fun copy(
+            id: Int,
+            position: Float3,
+            neighbours: MutableList<Int>,
         ): Entry {
             return Entry(
-                number,
-                forwardVector,
-                id,
-                position,
-                neighbours,
+                number = this.number,
+                forwardVector = this.forwardVector,
+                id = id,
+                position = position,
+                neighbours = neighbours
             )
         }
     }
@@ -39,15 +44,15 @@ sealed class TreeNode(
         neighbours: MutableList<Int> = mutableListOf()
     ): TreeNode(id, position, neighbours) {
 
-        fun copy(
-            id: Int = this.id,
-            position: Float3 = this.position,
-            neighbours: MutableList<Int> = this.neighbours
+        override fun copy(
+            id: Int,
+            position: Float3,
+            neighbours: MutableList<Int>
         ): Path {
             return Path(
-                id,
-                position,
-                neighbours
+                id = id,
+                position = position,
+                neighbours = neighbours
             )
         }
     }

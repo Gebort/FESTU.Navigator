@@ -2,9 +2,12 @@ package com.example.festunavigator.domain.tree
 
 import com.example.festunavigator.domain.utils.getApproxDif
 import dev.romainguy.kotlin.math.Float3
-import dev.romainguy.kotlin.math.radians
+import dev.romainguy.kotlin.math.sqr
+import io.github.sceneview.light.position
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 class TreeDiffUtils(
     private val tree: Tree
@@ -19,8 +22,10 @@ class TreeDiffUtils(
         else {
             val nodes = tree.getNodeFromEachRegion().toMutableMap()
             closestNodes.keys.forEach { key ->
-                if (nodes.containsKey(key)) {
-                    nodes[key] = closestNodes[key]!!
+                closestNodes[key]?.let {
+                    if (nodes.containsKey(key) && tree.hasNode(it)) {
+                        nodes[key] = it
+                    }
                 }
             }
             closestNodes = nodes
@@ -36,6 +41,27 @@ class TreeDiffUtils(
 
             return@withContext nearNodes
         }
+    }
+
+    fun getClosestSegment(pos: Float3): Pair<TreeNode, TreeNode>? {
+        val min1 = getClosestInArray(pos, closestNodes.values) ?: return null
+        min1.neighbours.firstOrNull()?.let { it ->
+            tree.getNode(it)?.let { m ->
+                var minDist = segmentDistance(min1.position, m.position, pos)
+                var min2 = m
+                min1.neighbours.forEach { id ->
+                    tree.getNode(id)?.let { n ->
+                        val dist = segmentDistance(min1.position, n.position, pos)
+                        if (dist < minDist) {
+                            minDist = dist
+                            min2 = n
+                        }
+                    }
+                }
+                return Pair(min1, min2)
+            }
+        }
+        return null
     }
 
     private fun getNodesByRadius(position: Float3, central: TreeNode, radius: Float, list: MutableList<TreeNode>) {
@@ -96,16 +122,26 @@ class TreeDiffUtils(
         }
     }
 
-//    private fun getClosestInArray(position: Float3, list: List<TreeNode>): TreeNode {
-//        val first = list.first()
-//        var min = Pair(first, position.getApproxDif(first.position))
-//        list.forEach { node2 ->
-//            val dist = position.getApproxDif(node2.position)
-//            if (dist < min.second) {
-//                min = Pair(node2, dist)
-//            }
-//        }
-//        return min.first
-//    }
+    private fun getClosestInArray(position: Float3, list: Collection<TreeNode>): TreeNode? {
+        val first = list.firstOrNull()
+        first?.let {
+            var min = first
+            var minDist = position.getApproxDif(first.position)
+            list.forEach { node2 ->
+                val dist = position.getApproxDif(node2.position)
+                if (dist < minDist) {
+                    min = node2
+                    minDist = dist
+                }
+            }
+            return min
+        }
+        return null
+    }
+
+    private fun segmentDistance(start: Float3, end: Float3, point: Float3): Float {
+        return abs((end.x - start.x)*(start.z - point.z) - (start.x - point.x)*(end.z - start.z)) /
+                sqrt(sqr(end.x - start.x) + sqr(end.z - start.z))
+    }
 
 }

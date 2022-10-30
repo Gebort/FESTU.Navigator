@@ -2,6 +2,7 @@ package com.example.festunavigator.presentation.preview.nodes_adapters
 
 import androidx.lifecycle.LifecycleCoroutineScope
 import com.example.festunavigator.data.utils.multiply
+import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
@@ -14,15 +15,14 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 
 abstract class NodesAdapter<T>(
-    val drawerHelper: DrawerHelper,
-    val previewView: ArSceneView,
+    protected val drawerHelper: DrawerHelper,
+    protected val previewView: ArSceneView,
     bufferSize: Int,
-    scope: LifecycleCoroutineScope,
+    protected val scope: LifecycleCoroutineScope,
 ) {
 
     protected val nodes = mutableMapOf<T, ArNode>()
-    var parentNode: ArNode? = null
-        private set
+    protected var parentNode: ArNode? = null
     private val changesFlow = MutableSharedFlow<DiffOperation<T>>(
         replay = 0,
         extraBufferCapacity = bufferSize,
@@ -82,22 +82,32 @@ abstract class NodesAdapter<T>(
         return drawerHelper.placeBlankNode(previewView)
     }
 
-    open fun changeParentPos(newParentPos: Float3? = null, transition: Quaternion? = null) {
+    open fun changeParentPos(newParentPos: Float3? = null, orientation: Quaternion? = null) {
         if (parentNode == null) {
             throw Exception("Parent node is not set")
         }
         newParentPos?.let {
             val diff = it - parentNode!!.position
-            nodes.values.forEach { node ->
-                node.position -= diff
-            }
-            parentNode?.position = it
-        }
-        transition?.let { q2 ->
-            parentNode?.quaternion?.let { q1 ->
-                parentNode?.quaternion = q1.multiply(q2)
+            if (diff != Float3(0f)) {
+                nodes.values.forEach { arNode ->
+                    arNode.position -= diff
+                }
+                parentNode?.position = it
             }
         }
+        orientation?.let { q ->
+            parentNode?.quaternion = q
+        }
+    }
+
+    fun getPivot(): OrientatedPosition? {
+        parentNode?.let { pn ->
+            return OrientatedPosition(
+                position = pn.position,
+                orientation = pn.quaternion
+            )
+        }
+        return null
     }
 
     abstract suspend fun onInserted(item: T): ArNode

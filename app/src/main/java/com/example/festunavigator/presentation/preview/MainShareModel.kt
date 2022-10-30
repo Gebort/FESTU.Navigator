@@ -6,7 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.festunavigator.data.App
 import com.example.festunavigator.data.model.Record
+import com.example.festunavigator.data.utils.Reaction
+import com.example.festunavigator.data.utils.convertPosition
+import com.example.festunavigator.data.utils.multiply
+import com.example.festunavigator.data.utils.undoConvertPosition
 import com.example.festunavigator.domain.hit_test.HitTestResult
+import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.repository.RecordsRepository
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
@@ -59,6 +64,9 @@ class MainShareModel @Inject constructor(
 
     private var _timeRecords = MutableStateFlow<List<Record>>(listOf())
     val timeRecords = _timeRecords.asStateFlow()
+
+    private var _treePivot = MutableStateFlow<OrientatedPosition?>(null)
+    val treePivot = _treePivot.asStateFlow()
 
     val treeDiffUtils = tree.diffUtils
     val entriesNumber = tree.getEntriesNumbers()
@@ -155,6 +163,13 @@ class MainShareModel @Inject constructor(
                     removeNode(event.node)
                 }
             }
+            is MainEvent.PivotTransform -> {
+                viewModelScope.launch {
+                    _treePivot.value?.let { tp ->
+                        _treePivot.update { tp.copy(orientation = tp.orientation.multiply(event.transition)) }
+                    }
+                }
+            }
         }
     }
 
@@ -182,7 +197,7 @@ class MainShareModel @Inject constructor(
                 )
             }
         }
-        //Поиск окончился удачно
+        //Search successful
         pathfindJob?.cancel()
         pathfindJob = viewModelScope.launch {
             pathfind()
@@ -236,20 +251,29 @@ class MainShareModel @Inject constructor(
             _mainUiEvents.emit(MainUiEvent.EntryAlreadyExists)
             return
         }
-        val treeNode = tree.addNode(
-            position ?: hitTestResult!!.orientatedPosition.position,
-            number,
-            orientation
-        )
-
-        treeNode.let {
-            if (number != null){
-                _mainUiEvents.emit(MainUiEvent.EntryCreated)
+        //we need to undoConvertPosition, because if the admin placing new node when other nodes corrected,
+        //after reloading new node will be in another place
+        treePivot.value.let { tp ->
+            val position2 = tp?.orientation?.undoConvertPosition(
+                position = position ?: hitTestResult!!.orientatedPosition.position,
+                pivotPosition = tp.position,
+            )
+                ?: position
+                ?: hitTestResult!!.orientatedPosition.position
+            val treeNode = tree.addNode(
+                position2,
+                number,
+                orientation
+            )
+            treeNode.let {
+                if (number != null){
+                    _mainUiEvents.emit(MainUiEvent.EntryCreated)
+                }
+                _mainUiEvents.emit(MainUiEvent.NodeCreated(
+                    treeNode,
+                    hitTestResult?.hitResult?.createAnchor()
+                ))
             }
-            _mainUiEvents.emit(MainUiEvent.NodeCreated(
-                treeNode,
-                hitTestResult?.hitResult?.createAnchor()
-            ))
         }
 //        } else {
 //            val treeNode = tree.addNode(
@@ -267,9 +291,14 @@ class MainShareModel @Inject constructor(
     }
 
     private suspend fun linkNodes(node1: TreeNode, node2: TreeNode){
-        if (tree.addLink(node1, node2)) {
-            _linkPlacementMode.update { false }
-            _mainUiEvents.emit(MainUiEvent.LinkCreated(node1, node2))
+        when (tree.addLink(node1, node2)) {
+            is Reaction.Success -> {
+                _linkPlacementMode.update { false }
+                _mainUiEvents.emit(MainUiEvent.LinkCreated(node1, node2))
+            }
+            is Reaction.Error -> {
+                _mainUiEvents.emit(MainUiEvent.LinkAlreadyExists)
+            }
         }
     }
 
@@ -302,8 +331,12 @@ class MainShareModel @Inject constructor(
             ))
             return false
         }
-        _mainUiEvents.emit(MainUiEvent.InitSuccess)
         val entry = tree.getEntry(entryNumber)
+        _mainUiEvents.emit(MainUiEvent.InitSuccess(entry))
+        _treePivot.update { OrientatedPosition(
+            position = entry?.position ?: Float3(0f),
+            orientation = Quaternion()
+        ) }
         if (entry != null){
             _pathState.update { PathState(
                 startEntry = entry

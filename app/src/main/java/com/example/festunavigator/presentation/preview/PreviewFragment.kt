@@ -14,6 +14,7 @@ import androidx.navigation.findNavController
 import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.data.utils.convertPosition
+import com.example.festunavigator.data.utils.undoConvertPosition
 import com.example.festunavigator.databinding.FragmentPreviewBinding
 import com.example.festunavigator.domain.pathfinding.path_restoring.PathAnalyzer
 import com.example.festunavigator.domain.tree.TreeNode
@@ -60,8 +61,6 @@ class PreviewFragment : Fragment() {
 
     private var lastConfObject: LabelObject? = null
     private var confObjectJob: Job? = null
-    private var selectionJob: Job? = null
-    private var selectionNode: ArNode? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -105,7 +104,7 @@ class PreviewFragment : Fragment() {
             onArFrame = { frame ->
                 onDrawFrame(frame)
             }
-            configureSession { arSession, config ->
+            configureSession { _, config ->
                 config.depthMode = Config.DepthMode.AUTOMATIC
                 config.focusMode = Config.FocusMode.AUTO
                 config.lightEstimationMode = Config.LightEstimationMode.DISABLED
@@ -119,7 +118,7 @@ class PreviewFragment : Fragment() {
                             selectNode(it as ArNode)
                         } else {
                             val treeNode = mainModel.selectedNode.value
-                            treeAdapter.getArNode(treeNode)?.let { node1 ->
+                            (treeAdapter.getArNode(treeNode))?.let { node1 ->
                                 linkNodes(node1, it as ArNode)
                             }
                         }
@@ -147,19 +146,6 @@ class PreviewFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                 mainModel.pathState.collectLatest { pathState ->
-                    if (pathState.startEntry != null && pathState.endEntry != null) {
-                        pathAdapter.changeParentPos(pathState.startEntry.position)
-                        treeAdapter.changeParentPos(pathState.startEntry.position)
-                        //TODO мы не учитываем ситуацию, когда человек просканировал точку инициализации с ошибкой,
-                        //TODO а после сменил начальную точку маршрута. тогда простой поворот не поможет, нужен еще перенос
-                        pathAnalyzer = PathAnalyzer(debug = { s -> launch { withContext(Dispatchers.Main) { binding.textDebug.text = s }}}) {
-                            pathAdapter.changeParentPos(transition = it)
-                            treeAdapter.changeParentPos(transition = it)
-                        }
-                    }
-                    else {
-                        pathAnalyzer = null
-                    }
                     currentPathState = pathState
                 }
             }
@@ -170,7 +156,13 @@ class PreviewFragment : Fragment() {
                 mainModel.mainUiEvents.collectLatest { uiEvent ->
                     when (uiEvent) {
                         is MainUiEvent.InitSuccess -> {
-                            treeAdapter.changeParentPos(Float3(0f))
+                            treeAdapter.changeParentPos(uiEvent.initialEntry?.position)
+                            pathAdapter.changeParentPos(uiEvent.initialEntry?.position)
+                            uiEvent.initialEntry?.let {
+                                pathAnalyzer = PathAnalyzer(debug = { s, w -> launch { withContext(Dispatchers.Main) { debug(s,w) }}}) { t ->
+                                    mainModel.onEvent(MainEvent.PivotTransform(t))
+                                }
+                            }
                             binding.sceneView.planeRenderer.isVisible = App.isAdmin
                         }
                         is MainUiEvent.InitFailed -> {
@@ -201,6 +193,9 @@ class PreviewFragment : Fragment() {
                         is MainUiEvent.EntryAlreadyExists -> {
                             showSnackbar(getString(R.string.entry_already_exists))
                         }
+                        is MainUiEvent.LinkAlreadyExists -> {
+                            showSnackbar(getString(R.string.link_already_exists))
+                        }
                         else -> {}
                     }
                 }
@@ -227,7 +222,26 @@ class PreviewFragment : Fragment() {
                 }
                 }
             }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainModel.selectedNode.collectLatest { selectedNode ->
+                    treeAdapter.updateSelection(selectedNode)
+                }
+            }
         }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainModel.treePivot.collectLatest { pivot ->
+                    pivot?.let {
+                        treeAdapter.changeParentPos(it.position, it.orientation)
+                        pathAdapter.changeParentPos(it.position, it.orientation)
+                    }
+                }
+            }
+        }
+    }
 
 
     private fun onDrawFrame(frame: ArFrame) {
@@ -244,17 +258,24 @@ class PreviewFragment : Fragment() {
             MainEvent.NewFrame(frame)
         )
 
-        val userPos = Float3(
+        val userPosReal = Float3(
             frame.camera.displayOrientedPose.tx(),
             frame.camera.displayOrientedPose.ty(),
             frame.camera.displayOrientedPose.tz()
         )
+        //we need to find the translocated position, because of possible orientation correction
+        val userPosTrans = treeAdapter.getPivot()?.let { pn ->
+            pn.orientation.undoConvertPosition(
+                position = userPosReal,
+                pivotPosition = pn.position,
+            )
+        } ?: userPosReal.copy()
 
         if (System.currentTimeMillis() - lastPositionTime > POSITION_DETECT_DELAY){
             lastPositionTime = System.currentTimeMillis()
-            changeViewablePath(userPos)
+            changeViewablePath(userPosTrans)
+            changeViewableTree(userPosReal, userPosTrans)
             if (App.isAdmin) {
-                changeViewableTree(userPos)
                 mainModel.selectedNode.value?.let { node ->
                     checkSelectedNode(node)
                 }
@@ -264,14 +285,6 @@ class PreviewFragment : Fragment() {
     
     private fun selectNode(node: ArNode?){
         val treeNode = checkTreeNode(node) ?: checkTreeNode(node?.parentNode as ArNode?)
-
-        selectionJob?.cancel()
-        selectionNode?.let { drawerHelper.removeNode(it) }
-        treeNode?.let {
-            selectionJob = viewLifecycleOwner.lifecycleScope.launch {
-                selectionNode = drawerHelper.drawSelection(it, binding.sceneView)
-            }
-        }
         mainModel.onEvent(MainEvent.NewSelectedNode(treeNode))
     }
 
@@ -283,8 +296,8 @@ class PreviewFragment : Fragment() {
 
     private fun linkNodes(node1: ArNode, node2: ArNode){
         viewLifecycleOwner.lifecycleScope.launch {
-            val path1: TreeNode? = treeAdapter.getTreeNode(node1)
-            val path2: TreeNode? = treeAdapter.getTreeNode(node2)
+            val path1: TreeNode? = checkTreeNode(node1) ?: checkTreeNode(node1.parentNode as ArNode)
+            val path2: TreeNode? = checkTreeNode(node2) ?: checkTreeNode(node2.parentNode as ArNode)
 
             if (path1 != null && path2 != null){
                 mainModel.onEvent(MainEvent.LinkNodes(path1, path2))
@@ -292,56 +305,59 @@ class PreviewFragment : Fragment() {
         }
     }
 
-    private fun changeViewablePath(userPosition: Float3){
+    private fun changeViewablePath(userPositionTrans: Float3){
         wayBuildingJob?.cancel()
         wayBuildingJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
             val nodes = currentPathState?.path?.getNearNodes(
                 number = VIEWABLE_PATH_NODES,
-                position = userPosition
+                position = userPositionTrans
             ) ?: listOf()
             pathAdapter.commit(nodes)
-            //TODO постоянно считаем направление всех узлов пути. нужно отслеживать направление только новых
-            pathAdapter.parentNode?.quaternion?.let { parentQ ->
-                pathAnalyzer?.newPosition(
-                    userPosition,
-                    nodes.drop(maxOf(nodes.size/2-2, 0))
-                        .dropLast(maxOf(nodes.size/2-2,0)),
-                    parentQ
-                )
-            }
         }
     }
 
-    //ONLY FOR ADMIN MODE
-    private fun changeViewableTree(userPosition: Float3){
+    private fun changeViewableTree(userPositionReal: Float3, userPositionTrans: Float3){
         if (treeBuildingJob?.isCompleted == true || treeBuildingJob?.isCancelled == true || treeBuildingJob == null) {
             treeBuildingJob?.cancel()
             treeBuildingJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
                 val nodes = mainModel.treeDiffUtils.getNearNodes(
-                    radius = VIEWABLE_ADMIN_NODES,
-                    position = userPosition
+                    radius = VIEWABLE_ADMIN_NODES_DISTANCE,
+                    position = userPositionTrans
                 )
+
                 treeAdapter.commit(nodes)
+                pathAdapter.getPivot()?.orientation?.let { parentQ ->
+                    val pathSegment = mainModel.treeDiffUtils.getClosestSegment(userPositionTrans)
+                    pathAnalyzer?.newPosition(
+                        userPositionReal,
+                        pathSegment,
+                        parentQ
+                    )
+                }
             }
         }
 
     }
 
-    private fun checkTreeNode(node: ArNode?): TreeNode? {
-        treeAdapter.getTreeNode(node)?.let { return it }
-        return null
-    }
+    private fun checkTreeNode(arNode: ArNode?): TreeNode? = treeAdapter.getTreeNode(arNode)
 
     private fun showSnackbar(message: String) {
         Snackbar.make(binding.sceneView, message, Snackbar.LENGTH_SHORT)
             .show()
     }
 
+    fun debug (text: String, which: Int) {
+        when (which) {
+            1 -> binding.textDebug.text = text
+            2 -> binding.textDebug2.text = text
+        }
+    }
+
     companion object {
         //how many path nodes will be displayed at the moment
         const val VIEWABLE_PATH_NODES = 31
         //distance of viewable nodes for admin mode
-        const val VIEWABLE_ADMIN_NODES = 8f
+        const val VIEWABLE_ADMIN_NODES_DISTANCE = 8f
         //how often the check for path and tree redraw will be
         const val POSITION_DETECT_DELAY = 100L
         //image crop for recognition

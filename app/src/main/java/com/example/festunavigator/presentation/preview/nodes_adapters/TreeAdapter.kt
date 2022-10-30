@@ -12,6 +12,8 @@ import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
 import io.github.sceneview.math.Position
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 class TreeAdapter(
     drawerHelper: DrawerHelper,
@@ -22,6 +24,7 @@ class TreeAdapter(
 ): NodesAdapter<TreeNode>(drawerHelper, previewView, bufferSize, scope) {
 
     private val modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode> = mutableBiMapOf()
+    private var selectionNode: ArNode? = null
 
     override suspend fun onInserted(item: TreeNode): ArNode {
         if (onlyEntries && item is TreeNode.Entry) {
@@ -47,13 +50,16 @@ class TreeAdapter(
     }
 
     override suspend fun onRemoved(item: TreeNode, node: ArNode) {
-        drawerHelper.removeNode(node)
         modelsToLinkModels.keys
             .filter { it.first == node || it.second == node }
             .forEach { pair ->
-                modelsToLinkModels[pair]?.let { parentNode?.removeChild(it) }
-                drawerHelper.removeLink(pair, modelsToLinkModels)
+                modelsToLinkModels[pair]?.let {
+                    parentNode?.removeChild(it)
+                    drawerHelper.removeNode(it)
+                }
+                modelsToLinkModels.remove(pair)
             }
+        drawerHelper.removeNode(node)
     }
 
     suspend fun createLink(treeNode1: TreeNode, treeNode2: TreeNode) {
@@ -70,24 +76,22 @@ class TreeAdapter(
         }
     }
 
-    override fun changeParentPos(newParentPos: Float3?, transition: Quaternion?) {
+    override fun changeParentPos(newParentPos: Float3?, orientation: Quaternion?) {
         if (parentNode == null) {
             throw Exception("Parent node is not set")
         }
         newParentPos?.let {
             val diff = it - parentNode!!.position
-            nodes.values.forEach { node ->
-                node.position -= diff
+            nodes.values.forEach { arNode ->
+                arNode.position -= diff
             }
-            modelsToLinkModels.values.forEach { node ->
-                node.position -= diff
+            modelsToLinkModels.values.forEach { arNode ->
+                arNode.position -= diff
             }
             parentNode?.position = it
         }
-        transition?.let { q2 ->
-            parentNode?.quaternion?.let { q1 ->
-                parentNode?.quaternion = q1.multiply(q2)
-            }
+        orientation?.let { q ->
+            parentNode?.quaternion = q
         }
     }
 
@@ -98,5 +102,19 @@ class TreeAdapter(
             return nodes.entries.find { it.value == node }?.key
         }
         return null
+    }
+
+    suspend fun updateSelection(node: TreeNode?) {
+            selectionNode?.let {
+                parentNode?.removeChild(it)
+                drawerHelper.removeNode(it)
+            }
+            node?.let {
+                val trans = parentNode?.position ?: Float3(0f)
+                val n = it.copy(position = it.position - trans)
+                selectionNode = drawerHelper.drawSelection(n, previewView).also { arNode ->
+                    parentNode?.addChild(arNode)
+                }
+        }
     }
 }

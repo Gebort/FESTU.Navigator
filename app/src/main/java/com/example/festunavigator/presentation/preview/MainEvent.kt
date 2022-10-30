@@ -24,5 +24,6 @@ sealed interface MainEvent{
     ): MainEvent
     class DeleteNode(val node: TreeNode): MainEvent
     class LinkNodes(val node1: TreeNode, val node2: TreeNode): MainEvent
+    class PivotTransform(val transition: Quaternion): MainEvent
     object LoadRecords: MainEvent
 }

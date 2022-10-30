@@ -12,20 +12,20 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class DirectionTracker(
-    private val debug: (String) -> Unit,
+    private val debug: (String, Int) -> Unit,
     private val onNewDirection: (OrientatedPosition) -> Unit
 ) {
 
     //Minimum position difference to count the point as "non idle"
     private val idleDiff = 0.08
     //Maximum length between direction vector and a new point, to continue the vector
-    private val directionDiff = 0.1
+    private val directionDiff = 0.8
     //Minimum length for vector to change path coordinates
     private val lengthThreshold = 1
     //Minimum points amount to calculate initial direction vector
     private val minPoints = 20
     //Minimum R^2 to use direction predicted with LinearRegressionModel
-    private val r2Threshold = 0.8
+    private val r2Threshold = 0.6
 
     private var direction: Segment? = null
     private val lastPoints: MutableList<Position> = mutableListOf()
@@ -38,7 +38,7 @@ class DirectionTracker(
             lastPoints.removeFirst()
         }
         lastPoints.add(pos)
-        debug(lastPoints.size.toString())
+        debug(lastPoints.size.toString(), 2)
 
         if (lastPoints.size >= minPoints && direction == null) {
             direction = approximateSegment(lastPoints)
@@ -52,20 +52,25 @@ class DirectionTracker(
         }
 
         direction?.let {
-            val pVector = (pos - it.startPos).toVector3()
+            val pVector = (pos - it.startPos).toVector3().apply {
+                y = 0f
+            }
             val angle = pVector.angleBetween(it.vector)
-            val diff = pVector.length() * sin(angle)
-            if (diff <= directionDiff && angle < 90) {
-                val newLength = pVector.length() * cos(angle)
-                if (newLength > it.vector.length()) {
-                    direction = it.copy(
-                        vector = it.vector.scaled(newLength / it.vector.length())
-                    )
-                    checkForCallback()
-                }
+            val h = pVector.length() * sin(Math.toRadians(angle.toDouble()))
+            val newBase = pVector.length() * cos(angle)
+            val oldBase = it.vector.length()
+            if (h <= directionDiff && newBase > oldBase) {
+                direction = it.copy(
+                    vector = it.vector.scaled(newBase / oldBase)
+                )
+                checkForCallback()
                 return
             }
             else {
+                if (h > directionDiff) {
+                    debug("Cleared, big h $h", 1)
+                }
+                if (newBase > oldBase) debug("Cleared, reverse direction", 1)
                 lastPoints.clear()
                 direction = null
             }
@@ -78,7 +83,7 @@ class DirectionTracker(
             if (it.vector.length() >= lengthThreshold) {
                 onNewDirection(
                     OrientatedPosition(
-                        position = it.startPos.meanPoint(it.endPos),
+                        position = lastPoints.last(),
                         orientation = Quaternion.fromVector(it.vector)
                     )
                 )
@@ -92,12 +97,15 @@ class DirectionTracker(
         val xTest = mutableListOf<Float>()
         val zTest = mutableListOf<Float>()
         points.forEachIndexed { index, (x, _, z) ->
-            xList.add(x)
-            zList.add(z)
-            if (index % 2 == 0){
+            if (index % 3 == 0){
                 xTest.add(x)
                 zTest.add(z)
             }
+            else {
+                xList.add(x)
+                zList.add(z)
+            }
+
         }
         val model = LinearRegressionModel(
             independentVariables = xList,
@@ -110,6 +118,7 @@ class DirectionTracker(
         )
 
         if (r2 < r2Threshold) {
+            debug("Bad r^2: $r2", 1)
             return null
         }
 
