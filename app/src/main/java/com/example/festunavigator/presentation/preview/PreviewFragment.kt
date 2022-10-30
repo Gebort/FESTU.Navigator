@@ -14,6 +14,7 @@ import androidx.navigation.findNavController
 import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.data.utils.convertPosition
+import com.example.festunavigator.data.utils.reverseConvertPosition
 import com.example.festunavigator.data.utils.undoConvertPosition
 import com.example.festunavigator.databinding.FragmentPreviewBinding
 import com.example.festunavigator.domain.pathfinding.path_restoring.PathAnalyzer
@@ -265,7 +266,7 @@ class PreviewFragment : Fragment() {
         )
         //we need to find the translocated position, because of possible orientation correction
         val userPosTrans = treeAdapter.getPivot()?.let { pn ->
-            pn.orientation.undoConvertPosition(
+            pn.orientation.reverseConvertPosition(
                 position = userPosReal,
                 pivotPosition = pn.position,
             )
