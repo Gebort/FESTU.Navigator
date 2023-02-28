@@ -30,7 +30,8 @@ object AppModule {
     @Singleton
     fun provideDatabase(app: Application): Database {
         return Room.databaseBuilder(app, Database::class.java, DATABASE_NAME)
-            .createFromAsset(DATABASE_DIR)
+            //The line below makes a pre-prepared database to be inserted from the file nodes.db
+            //.createFromAsset(DATABASE_DIR)
             .allowMainThreadQueries()
             .addMigrations()
             .build()
