@@ -13,7 +13,8 @@ import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.domain.tree.WrongEntryException
 import com.example.festunavigator.domain.use_cases.FindWay
 import com.example.festunavigator.presentation.LabelObject
-import com.example.festunavigator.presentation.confirmer.ConfirmFragment
+// NO CONFIRM
+//import com.example.festunavigator.presentation.confirmer.ConfirmFragment
 import com.example.festunavigator.presentation.preview.state.PathState
 import com.example.festunavigator.presentation.search.SearchFragment
 import com.example.festunavigator.presentation.search.SearchUiEvent
@@ -21,12 +22,20 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
+import io.github.sceneview.math.Position
+import io.github.sceneview.math.Rotation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+//MainShareModel is a ViewModel class that handles the shared state between the various components
+// in the preview feature of an app. It is responsible for managing the current path state, current
+// AR frame, events, and UI states that are used across different parts of the app.
+
+//it takes in three dependencies on construction:a Tree instance, a FindWay instance, and a RecordsRepository instance.
+// These dependencies are used by the MainShareModel to perform various operations that affect the shared state of the app.
 
 @HiltViewModel
 class MainShareModel @Inject constructor(
@@ -34,6 +43,10 @@ class MainShareModel @Inject constructor(
     private val findWay: FindWay,
     private val records: RecordsRepository
 ): ViewModel() {
+
+    //The MainShareModel contains several private variables that are exposed to the rest of the app
+    // through public StateFlow variables.
+    // Each of these variables represents a different aspect of the shared state of the app.
 
     private var _pathState = MutableStateFlow(PathState())
     val pathState = _pathState.asStateFlow()
@@ -70,9 +83,14 @@ class MainShareModel @Inject constructor(
         preload()
     }
 
+    //The onEvent() function uses the various dependencies and state variables of the MainShareModel
+    //to perform these operations and update the shared state of the app.
     fun onEvent(event: MainEvent) {
         when (event){
             is MainEvent.NewFrame -> {
+                //The code is using the viewModelScope.launch function to run the code in a
+                // coroutine scope that is tied to the ViewModel.
+                // This ensures that the coroutine is cancelled if the ViewModel is destroyed.
                 viewModelScope.launch {
                     _frame.emit(event.frame)
                 }
@@ -80,41 +98,65 @@ class MainShareModel @Inject constructor(
             is MainEvent.NewConfirmationObject -> {
                 _confirmationObject.update { event.confObject }
             }
+            //TrySearch before changes
+//            is MainEvent.TrySearch -> {
+//                viewModelScope.launch {
+//                    processSearch(event.number, event.changeType)
+//                }
+//            }
+
+            //TrySearch After
             is MainEvent.TrySearch -> {
+//
                 viewModelScope.launch {
-                    processSearch(event.number, event.changeType)
-                }
-            }
-            is MainEvent.AcceptConfObject -> {
-                when (event.confirmType) {
-                    ConfirmFragment.CONFIRM_INITIALIZE -> {
-                        viewModelScope.launch {
-                            _confirmationObject.value?.let {
-                                initialize(
-                                    it.label,
-                                    it.pos.position,
-                                    it.pos.orientation
-                                )
-                                _confirmationObject.update { null }
-
-                            }
-                        }
-                    }
-                    ConfirmFragment.CONFIRM_ENTRY -> {
-                        viewModelScope.launch {
-                            _confirmationObject.value?.let {
-                                createNode(
-                                    number = it.label,
-                                    position = it.pos.position,
-                                    orientation = it.pos.orientation
-                                )
-                                _confirmationObject.update { null }
-
-                            }
-                        }
+                    event.let {
+                        //moved initialization here instead of in confirmFragment
+                        initialize(
+                            it.number,
+                            //@sahar TODO: position and Quaternion should be changed to number's pos & Quat
+                            // but since tree isn't initialized yet we set them to center of sceneView for now
+                            //Maybe change initialization to RouterFragment and then re-initialize with number's correct pos and Quat
+                            Position(0.0f,0.0f,0.0f),
+                            Quaternion(0f,0f,0f)
+//                            it.pos.position,
+//                            it.pos.orientation
+                        )
+                        processSearch(event.number, event.changeType)
                     }
                 }
             }
+
+            //NO CONFIRMFragment
+//            is MainEvent.AcceptConfObject -> {
+//                when (event.confirmType) {
+//                    ConfirmFragment.CONFIRM_INITIALIZE -> {
+//                        viewModelScope.launch {
+//                            _confirmationObject.value?.let {
+//                                initialize(
+//                                    it.label,
+//                                    it.pos.position,
+//                                    it.pos.orientation
+//                                )
+//                                _confirmationObject.update { null }
+//
+//                            }
+//                        }
+//                    }
+//                    ConfirmFragment.CONFIRM_ENTRY -> {
+//                        viewModelScope.launch {
+//                            _confirmationObject.value?.let {
+//                                createNode(
+//                                    number = it.label,
+//                                    position = it.pos.position,
+//                                    orientation = it.pos.orientation
+//                                )
+//                                _confirmationObject.update { null }
+//
+//                            }
+//                        }
+//                    }
+//                }
+//            }
             is MainEvent.RejectConfObject -> {
                 viewModelScope.launch {
                     _confirmationObject.update { null }
@@ -158,50 +200,66 @@ class MainShareModel @Inject constructor(
         }
     }
 
+    //processSearch : takes two arguments: number of type String and changeType of type Int.
     private suspend fun processSearch(number: String, changeType: Int) {
+
+        //the entry with the given number is retrieved from a tree data structure using the getEntry function
         val entry = tree.getEntry(number)
+
+        //If the entry is not found, a SearchInvalid event is emitted using the _searchUiEvents Flow
         if (entry == null) {
             _searchUiEvents.emit(SearchUiEvent.SearchInvalid)
             return
-        } else {
+        }
 
+        // If the entry is found, the PathState is updated based on the value of changeType.
+        else {
+            //If changeType is SearchFragment.TYPE_START, the startEntry of PathState is updated with the entry
             if (changeType == SearchFragment.TYPE_START) {
                 val endEntry = pathState.value.endEntry
                 _pathState.update {
                     PathState(
                         startEntry = entry,
                         endEntry = if (entry.number == endEntry?.number) null else endEntry
-                 )
+                    )
                 }
-            } else {
+            }
+            //if changeType is not SearchFragment.TYPE_START, the endEntry of PathState is updated
+            // with the entry and the startEntry is updated to null if it has the same number as entry
+            else {
                 val startEntry = pathState.value.startEntry
-            _pathState.update {
-                PathState(
-                    startEntry = if (entry.number == startEntry?.number) null else startEntry,
-                    endEntry = entry
-                )
+                _pathState.update {
+                    PathState(
+                        startEntry = if (entry.number == startEntry?.number) null else startEntry,
+                        endEntry = entry
+                    )
+                }
             }
-        }
-        //Поиск окончился удачно
-        pathfindJob?.cancel()
-        pathfindJob = viewModelScope.launch {
-            pathfind()
-        }
-        _searchUiEvents.emit(SearchUiEvent.SearchSuccess)
-
-         //saving route to the database
-        pathState.value.startEntry?.let { start ->
-            pathState.value.endEntry?.let { end ->
-                val record = Record(
-                    start = start.number,
-                    end = end.number,
-                    time = getCurrentWeekTime()
-                )
-                records.insertRecord(record)
+            //Поиск окончился удачно // Search completed successfully
+            //After the PathState has been updated, the pathfindJob is canceled if it exists and
+            // a new job is launched using viewModelScope.launch to call the pathfind function.        pathfindJob?.cancel()
+            pathfindJob = viewModelScope.launch {
+                pathfind()
             }
-        }
+            _searchUiEvents.emit(SearchUiEvent.SearchSuccess)
 
-    }
+            //saving route to the database
+
+            //Finally, a SearchSuccess event is emitted using the _searchUiEvents Flow and a Record is
+            // created and inserted into a database if both startEntry and endEntry of the PathState are not null.
+            // The Record contains the number of the startEntry, number of the endEntry, and a timestamp generated using the getCurrentWeekTime function.
+            pathState.value.startEntry?.let { start ->
+                pathState.value.endEntry?.let { end ->
+                    val record = Record(
+                        start = start.number,
+                        end = end.number,
+                        time = getCurrentWeekTime()
+                    )
+                    records.insertRecord(record)
+                }
+            }
+
+        }
     }
 
     private suspend fun pathfind(){
@@ -231,7 +289,7 @@ class MainShareModel @Inject constructor(
         if (position == null && hitTestResult == null){
             throw Exception("No position was provided")
         }
-     //   if (position == null) {
+        //   if (position == null) {
         if (number != null && tree.hasEntry(number)){
             _mainUiEvents.emit(MainUiEvent.EntryAlreadyExists)
             return
@@ -284,6 +342,8 @@ class MainShareModel @Inject constructor(
     private suspend fun loadRecords() {
         recordsJob?.cancel()
         recordsJob = viewModelScope.launch {
+            //The getRecords function is called on the records object to fetch the records from the
+            // database that have been created within the last 5 days, or 30 minutes in the future
             val time = getCurrentWeekTime() + 30*60*1000L
             records.getRecords(time, 5).collectLatest{ records ->
                 _timeRecords.emit(records)

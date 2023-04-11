@@ -49,6 +49,7 @@ class Tree @Inject constructor(
             throw Exception("Already initialized, cant preload")
         }
         preloaded = false
+        //@sahar : where we're getting all the nodes from the database
         val rawNodesList = repository.getNodes()
         for (nodeDto in rawNodesList) {
             var node: TreeNode
@@ -87,11 +88,27 @@ class Tree @Inject constructor(
     suspend fun initialize(entryNumber: String, position: Float3, newRotation: Quaternion): Result<Unit?> {
         initialized = false
         if (_entryPoints.isEmpty()) {
+            //stable change
+            System.out.println("////////////////////////////////////////")
+            System.out.println( "//////// EMPTY TREE INITIALIZED ///////" )
+            System.out.println("////////////////////////////////////////")
+
             clearTree()
             initialized = true
             return Result.success(null)
+
         }
         else {
+            //stable change
+            Log.d("tag",":)////////////////////////////////////")
+            System.out.println( "//////// Loaded TREE INITIALIZED ///////" )
+            Log.d("tag","////////////////////////////////////")
+
+            //@sahar : to test
+            System.out.println("#########################################")
+            System.out.println("############### $_entryPoints ###########")
+            System.out.println("#########################################")
+
             val entry = _entryPoints[entryNumber]
                 ?: return Result.failure(
                     exception = WrongEntryException(_entryPoints.keys)
@@ -141,9 +158,14 @@ class Tree @Inject constructor(
     }
 
     fun getEntry(number: String): TreeNode.Entry? {
+        //TREE INITIALIZED EXCEPTION
         if (!initialized){
             throw Exception("Tree isnt initialized")
         }
+        //stable change
+        System.out.println("TTTTTTTTTTTTTTTTTTTTTTTT")
+        System.out.println("TTT TREE initialized TTT")
+        System.out.println("TTTTTTTTTTTTTTTTTTTTTTTT")
         val entry = _entryPoints[number]
         return if (entry != null) {
             getNode(entry.id) as TreeNode.Entry

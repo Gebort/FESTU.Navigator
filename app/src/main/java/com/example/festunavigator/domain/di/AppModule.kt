@@ -3,10 +3,12 @@ package com.example.festunavigator.domain.di
 import android.app.Application
 import androidx.room.Room
 import com.example.festunavigator.data.data_source.Database
+//TEMP : textAnalyzer
 import com.example.festunavigator.data.ml.classification.TextAnalyzer
 import com.example.festunavigator.data.pathfinding.AStarImpl
 import com.example.festunavigator.data.repository.GraphImpl
 import com.example.festunavigator.data.repository.RecordsImpl
+//TEMP
 import com.example.festunavigator.domain.ml.ObjectDetector
 import com.example.festunavigator.domain.pathfinding.Pathfinder
 import com.example.festunavigator.domain.repository.GraphRepository
@@ -31,7 +33,8 @@ object AppModule {
     fun provideDatabase(app: Application): Database {
         return Room.databaseBuilder(app, Database::class.java, DATABASE_NAME)
             //The line below makes a pre-prepared database to be inserted from the file nodes.db
-            //.createFromAsset(DATABASE_DIR)
+            //@sahar : TO COMMENT AFTER TESTING
+            .createFromAsset(DATABASE_DIR)
             .allowMainThreadQueries()
             .addMigrations()
             .build()

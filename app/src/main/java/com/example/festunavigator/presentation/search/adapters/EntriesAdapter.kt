@@ -14,7 +14,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 class EntriesAdapter(
-    private val onItemClick: (String) -> Unit
+    private val onItemClick: (String) -> Unit,
+    private val onEmptyList: () -> Unit,
+    private val onNotEmptyList: () -> Unit,
 ) : ListAdapter<EntryItem, EntriesAdapter.ItemViewholder>(DiffCallback())  {
 
     private var recordsList = listOf<EntryItem>()
@@ -62,11 +64,13 @@ class EntriesAdapter(
         this.filter = filter
         if (filter == "") {
             submitList(recordsList)
+            if (recordsList.isEmpty()) onEmptyList() else onNotEmptyList()
         }
         else {
             submitList((rawList)
                 .filter { it.number.startsWith(filter) }
             )
+            if (rawList.isEmpty()) onEmptyList() else onNotEmptyList()
         }
     }
 }

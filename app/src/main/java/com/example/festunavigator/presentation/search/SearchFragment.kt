@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import androidx.activity.OnBackPressedCallback
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -43,9 +45,11 @@ class SearchFragment: Fragment() {
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
 
-    private val adapter = EntriesAdapter(){ number ->
-         processSearchResult(number)
-    }
+    private val adapter = EntriesAdapter(
+        onItemClick = { number -> processSearchResult(number) },
+        onEmptyList = { binding.textEmpty.isVisible = true },
+        onNotEmptyList = { binding.textEmpty.isGone = true }
+    )
 
     private val args: SearchFragmentArgs by navArgs()
     private val changeType by lazy { args.changeType }
@@ -74,7 +78,7 @@ class SearchFragment: Fragment() {
 
         with(binding.searchInput){
             doOnTextChanged { text, _, _, _ ->
-                    adapter.applyFilter(text.toString())
+                adapter.applyFilter(text.toString())
             }
             setOnEditorActionListener { v, actionId, event ->
                 var handled = false
@@ -146,8 +150,8 @@ class SearchFragment: Fragment() {
                         }
                     }
                 }
-                }
             }
+        }
     }
 
     private fun processSearchResult(number: String) {

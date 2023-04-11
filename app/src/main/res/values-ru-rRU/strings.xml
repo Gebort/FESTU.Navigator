@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="initialize">Инициализируйте граф</string>
-    <string name="scan">Направьте камеру на номер аудитории</string>
+    <string name="initialize">Initializing Graph</string>
+    <string name="scan">Point the camera at the room number</string>
     <string name="orientate">Перемещайте телефон, направляя его на номер аудитории</string>
-    <string name="confirm_place">Текст установлен корректно?</string>
-    <string name="from">Начало</string>
-    <string name="to">Конец</string>
-    <string name="main">Главный корпус</string>
-    <string name="lab">Лабораторный корпус</string>
-    <string name="first_tower">Башня №1</string>
-    <string name="second_tower">Башня №2</string>
-    <string name="second_building">Второй корпус</string>
-    <string name="floor">этаж №</string>
+    <string name="confirm_place">Confirm place?</string>
+    <string name="from">Start point</string>
+    <string name="to">Destination</string>
+    <string name="main">Main Building</string>
+    <string name="lab">Laboratory building</string>
+    <string name="first_tower">Tower №1</string>
+    <string name="second_tower">Tower №2</string>
+    <string name="second_building">Second Building</string>
+    <string name="floor">Floor №</string>
     <string name="incorrect_number">Не можем найти номер</string>
     <string name="no_path">Нет маршрута</string>
     <string name="going">Идем в %s</string>

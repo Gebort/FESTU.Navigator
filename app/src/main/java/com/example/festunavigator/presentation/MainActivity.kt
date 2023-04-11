@@ -14,6 +14,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        //@sahar TODO : change splash screen logo
         installSplashScreen()
         super.onCreate(savedInstanceState)
 
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity() {
             session.cameraConfig = configs.sortedWith(sort)[0]
         }
 
+        //@sahar TODO mainActivity : try uncommenting this
         //lifecycle.addObserver(arCoreSessionHelper)
 
     }

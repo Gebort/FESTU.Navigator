@@ -11,8 +11,8 @@
         android:label="fragment_scanner"
         tools:layout="@layout/fragment_scanner" >
         <action
-            android:id="@+id/action_scannerFragment_to_confirmFragment"
-            app:destination="@id/confirmFragment"
+            android:id="@+id/action_scannerFragment_to_routerFragment"
+            app:destination="@id/routerFragment"
             app:enterAnim="@anim/slide_up"
             app:exitAnim="@android:anim/fade_out"
             app:popEnterAnim="@android:anim/fade_in"
@@ -22,23 +22,7 @@
             android:name="scanType"
             app:argType="integer"
             android:defaultValue="0" />
-    </fragment>
-    <fragment
-        android:id="@+id/confirmFragment"
-        android:name="com.example.festunavigator.presentation.confirmer.ConfirmFragment"
-        android:label="fragment_confirm"
-        tools:layout="@layout/fragment_confirm" >
-        <action
-            android:id="@+id/action_confirmFragment_to_routerFragment"
-            app:destination="@id/routerFragment"
-            app:popUpTo="@id/preview_nav_graph"
-            app:enterAnim="@anim/slide_up"
-            app:exitAnim="@anim/slide_down"
-            app:popEnterAnim="@anim/slide_up"
-            app:popExitAnim="@anim/slide_down"
-            app:popUpToInclusive="true" />
-        <argument android:name="confirmType"
-            app:argType="integer" />
+
     </fragment>
     <fragment
         android:id="@+id/routerFragment"

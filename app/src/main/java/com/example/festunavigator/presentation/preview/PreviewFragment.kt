@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
 
 class PreviewFragment : Fragment() {
 
+    //an instance of MainShareModel, which is a view model shared between several fragments and activities
     private val mainModel: MainShareModel by activityViewModels()
 
     private var _binding: FragmentPreviewBinding? = null
@@ -44,18 +45,30 @@ class PreviewFragment : Fragment() {
 
     private val drawerHelper = DrawerHelper(this)
 
+    // instances of Job that are used to manage coroutines that are started and stopped when certain events occur.
     private var endPlacingJob: Job? = null
     private var startPlacingJob: Job? = null
     private var wayBuildingJob: Job? = null
     private var treeBuildingJob: Job? = null
+
+    //an instance of MainShareModel, which is a view model shared between several fragments and activities
     private var currentPathState: PathState? = null
     private var lastPositionTime = 0L
+
+    // An instance of MainShareModel, which is a view model shared between several fragments and activities
     private lateinit var pathAdapter: PathAdapter
+
+    // An instance of TreeAdapter, which is an adapter for displaying the tree of objects in the scene.
     private lateinit var treeAdapter: TreeAdapter
 
-
+    // an instance of LabelObject, which is a data class that represents a label for an object in the scene
     private var lastConfObject: LabelObject? = null
+
+    // an instance of LabelObject, which is a data class that represents a label for an object in the scene
     private var confObjectJob: Job? = null
+
+
+    // an instance of MutableBiMap<TreeNode, ArNode>, which is a bidirectional map that maps TreeNode objects to ArNode objects.
     private val treeNodesToModels: MutableBiMap<TreeNode, ArNode> = mutableBiMapOf()
     private var selectionJob: Job? = null
     private var selectionNode: ArNode? = null
@@ -69,6 +82,8 @@ class PreviewFragment : Fragment() {
         return binding.root
     }
 
+
+    //This method is called when the fragment is resumed. It resumes the AR session (SceneView session)
     override fun onResume() {
         super.onResume()
         binding.sceneView.onResume(this)
@@ -79,6 +94,10 @@ class PreviewFragment : Fragment() {
         binding.sceneView.onPause(this)
     }
 
+
+
+    // This method is called when the fragment's view is created. It initializes the PathAdapter and TreeAdapter,
+// and sets up event listeners for tapping on nodes in the scene.
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         pathAdapter = PathAdapter(
@@ -107,12 +126,19 @@ class PreviewFragment : Fragment() {
                 config.lightEstimationMode = Config.LightEstimationMode.DISABLED
                 config.instantPlacementMode = Config.InstantPlacementMode.DISABLED
             }
+
+            //@sahar change : Linking
+//The onTap callback is called whenever the user taps the screen. In this case, it checks whether
+// the app is in ADMIN_MODE and then performs some actions on the tapped node.
             onTap = { node, _, _ ->
                 if (App.mode == App.ADMIN_MODE) {
                     node?.let { it ->
+                        //If the linkPlacementMode is off, it selects the node
                         if (!mainModel.linkPlacementMode.value) {
                             selectNode(it as ArNode)
-                        } else {
+                        }
+                        //otherwise it links the selected node with the tapped node.
+                        else {
                             val treeNode = mainModel.selectedNode.value
                             treeAdapter.getArNode(treeNode)?.let { node1 ->
                                 linkNodes(node1, it as ArNode)
@@ -137,59 +163,77 @@ class PreviewFragment : Fragment() {
             }
         }
 
+
+        //TAKEOFF
         selectNode(null)
 
+        //This code block is creating and launching several coroutines using the viewLifecycleOwner.
+        // lifecycleScope.launch function. The viewLifecycleOwner is a LifecycleOwner that represents
+        // the View associated with the current Fragment, and lifecycleScope is a CoroutineScope
+        // associated with the lifecycle of the View.
+
+        //ps : coroutines as “lightweight threads”. They are sort of tasks that the actual threads can execute.
+
+
+        //1.
+       // The first coroutine is launched to observe the pathState LiveData object in the mainModel
+       // ViewModel. Whenever the pathState value changes, the coroutine updates the 3D scene by
+       // removing the old start and end nodes and adding new ones.
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                 mainModel.pathState.collectLatest { pathState ->
                     //In ADMIN_MODE, all entry labels are drawn automatically, so another redraw from this function
                     //will cause node
-                 //   if (App.mode == App.USER_MODE) {
+                    //   if (App.mode == App.USER_MODE) {
 
-                        if (currentPathState?.endEntry != pathState.endEntry) {
-                            endPlacingJob?.cancel()
-                            currentPathState?.endEntry?.let { end ->
-                                treeNodesToModels[end]?.let {
-                                    drawerHelper.removeNode(it)
-                                }
-                            }
-                            endPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
-                                pathState.endEntry?.let { end ->
-                                    treeNodesToModels[end] = drawerHelper.drawNode(
-                                        end,
-                                        binding.sceneView,
-                                    )
-                                }
+                    if (currentPathState?.endEntry != pathState.endEntry) {
+                        endPlacingJob?.cancel()
+                        currentPathState?.endEntry?.let { end ->
+                            treeNodesToModels[end]?.let {
+                                drawerHelper.removeNode(it)
                             }
                         }
-                        if (currentPathState?.startEntry != pathState.startEntry) {
-                            startPlacingJob?.cancel()
-                            currentPathState?.startEntry?.let { start ->
-                                treeNodesToModels[start]?.let {
-                                    drawerHelper.removeNode(it)
-                                }
-                            }
-                            startPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
-                                pathState.startEntry?.let { start ->
-                                    treeNodesToModels[start] = drawerHelper.drawNode(
-                                        start,
-                                        binding.sceneView,
-                                    )
-                                }
+                        endPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
+                            pathState.endEntry?.let { end ->
+                                treeNodesToModels[end] = drawerHelper.drawNode(
+                                    end,
+                                    binding.sceneView,
+                                )
                             }
                         }
-           //         }
+                    }
+                    if (currentPathState?.startEntry != pathState.startEntry) {
+                        startPlacingJob?.cancel()
+                        currentPathState?.startEntry?.let { start ->
+                            treeNodesToModels[start]?.let {
+                                drawerHelper.removeNode(it)
+                            }
+                        }
+                        startPlacingJob = viewLifecycleOwner.lifecycleScope.launch {
+                            pathState.startEntry?.let { start ->
+                                treeNodesToModels[start] = drawerHelper.drawNode(
+                                    start,
+                                    binding.sceneView,
+                                )
+                            }
+                        }
+                    }
+                    //         }
                     currentPathState = pathState
                 }
             }
         }
 
+        //2.
+        //The second coroutine is launched to observe the mainUiEvents LiveData object in the mainModel
+        // ViewModel. Whenever a MainUiEvent object is emitted, the coroutine updates the UI accordingly,
+        // such as showing a snackbar with a message.
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                 mainModel.mainUiEvents.collectLatest { uiEvent ->
                     when (uiEvent) {
                         is MainUiEvent.InitSuccess -> {
-                           // onInitializeSuccess()
+                            // onInitializeSuccess()
                         }
                         is MainUiEvent.InitFailed -> {
                             when (uiEvent.error) {
@@ -225,6 +269,12 @@ class PreviewFragment : Fragment() {
             }
         }
 
+
+        //3.
+        //The third coroutine is launched to observe the confirmationObject LiveData object in the
+        // mainModel ViewModel. Whenever a ConfirmationObject object is emitted, the coroutine
+        // updates the 3D scene by removing the old confirmation node and adding a new one.
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                 mainModel.confirmationObject.collectLatest { confObject ->
@@ -243,9 +293,9 @@ class PreviewFragment : Fragment() {
                         }
                     }
                 }
-                }
             }
         }
+    }
 
 
     private fun onDrawFrame(frame: ArFrame) {
@@ -278,7 +328,7 @@ class PreviewFragment : Fragment() {
             }
         }
     }
-    
+
     private fun selectNode(node: ArNode?){
         val treeNode = checkTreeNode(node) ?: checkTreeNode(node?.parentNode as ArNode?)
 
@@ -309,6 +359,9 @@ class PreviewFragment : Fragment() {
         }
     }
 
+    //function updates the list of viewable nodes on the path based on the user's current position.
+    // It does this by calling the Path.getNearNodes() method of the currentPathState,
+    // which returns the nearest VIEWABLE_PATH_NODES
     private fun changeViewablePath(userPosition: Float3){
         wayBuildingJob?.cancel()
         wayBuildingJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
@@ -335,6 +388,9 @@ class PreviewFragment : Fragment() {
 
     }
 
+    //this fct checks if a given node is valid, i.e., if it corresponds to a tree node that is
+    // currently displayed on the screen. If the node is valid, it returns its corresponding
+    // TreeNode object.
     private fun checkTreeNode(node: ArNode?): TreeNode? {
         //User selected entry can be stored in PreviewFragment nodes map,
         // if this node displayed as PathState start or end

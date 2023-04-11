@@ -60,9 +60,11 @@ class RouterFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
+        //@sahar if Admin mode --> show adminPanel (basically the whole RouterFragment)
         if (App.mode == App.ADMIN_MODE) {
             binding.adminPanel.isVisible = true
         }
+        //if user mode don't show it --> should show Search fragment ??
         else {
             binding.adminPanel.isGone = true
         }
@@ -80,7 +82,7 @@ class RouterFragment: Fragment() {
                 createNode()
             }
         }
-
+//@sahar : i think this is being used to "re-enter" an entry point
         binding.entryButton.setOnClickListener {
             val bundle = Bundle()
             bundle.putInt(
