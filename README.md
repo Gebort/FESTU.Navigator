@@ -106,7 +106,6 @@ Now you can run the app and experience it anywhere
 
 An example of setting up navigation in a new space is available here (the video is too long for github): https://drive.google.com/file/d/11a_lTeQmXhMfE2AxJ8mg5ec34yCC1uoH/view?usp=sharing
 
-If you have any questions, you can email me: gerbort111@gmail.com
 
 
 
