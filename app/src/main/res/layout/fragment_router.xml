@@ -27,47 +27,61 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="vertical">
 
-                <Button
-                    android:id="@+id/delete_button"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:layout_weight="1"
-                    android:enabled="true"
-                    android:text="@string/delete"
-                    android:textSize="10sp" />
+                    android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/entry_button"
+                    <Button
+                        android:id="@+id/delete_button"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:layout_weight="1"
+                        android:enabled="true"
+                        android:text="@string/delete"
+                        android:textSize="14sp" />
+
+                    <Button
+                        android:id="@+id/link_button"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:layout_weight="1"
+                        android:enabled="true"
+                        android:text="@string/link"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:layout_weight="1"
-                    android:enabled="true"
-                    android:text="@string/entry"
-                    android:textSize="10sp" />
+                    android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/place_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:layout_weight="1"
-                    android:enabled="true"
-                    android:text="@string/path"
-                    android:textSize="10sp" />
+                    <Button
+                        android:id="@+id/place_button"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:layout_weight="1"
+                        android:enabled="true"
+                        android:text="@string/path"
+                        android:textSize="14sp" />
 
-                <Button
-                    android:id="@+id/link_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:layout_weight="1"
-                    android:enabled="true"
-                    android:text="@string/link"
-                    android:textSize="10sp" />
+                    <Button
+                        android:id="@+id/entry_button"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:layout_weight="1"
+                        android:enabled="true"
+                        android:text="@string/entry"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 

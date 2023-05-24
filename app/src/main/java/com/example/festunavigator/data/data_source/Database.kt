@@ -14,7 +14,7 @@ import com.example.festunavigator.data.model.TreeNodeDto
     version = 2,
     exportSchema = true,
     autoMigrations = [
-        AutoMigration (from = 1, to = 2)
+        AutoMigration (from = 1, to = 2),
     ]
 )
 @TypeConverters(NeighboursConverter::class)

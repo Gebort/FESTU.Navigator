@@ -9,7 +9,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/design_default_color_surface"
+        android:background="@drawable/search_background"
         android:orientation="vertical">
 
         <com.google.android.material.textfield.TextInputLayout

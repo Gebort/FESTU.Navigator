@@ -30,7 +30,7 @@ object AppModule {
     @Singleton
     fun provideDatabase(app: Application): Database {
         return Room.databaseBuilder(app, Database::class.java, DATABASE_NAME)
-            .createFromAsset(DATABASE_DIR)
+        //    .createFromAsset(DATABASE_DIR)
             .allowMainThreadQueries()
             .addMigrations()
             .build()

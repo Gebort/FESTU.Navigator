@@ -82,12 +82,8 @@ class RouterFragment: Fragment() {
         }
 
         binding.entryButton.setOnClickListener {
-            val bundle = Bundle()
-            bundle.putInt(
-                ScannerFragment.SCAN_TYPE,
-                ScannerFragment.TYPE_ENTRY
-            )
-            findNavController().navigate(R.id.action_global_scannerFragment, args = bundle)
+            val action = RouterFragmentDirections.actionRouterFragmentToScannerFragment(ScannerFragment.TYPE_ENTRY)
+            findNavController().navigate(action)
         }
 
         binding.fromInput.setOnFocusChangeListener { _, b ->

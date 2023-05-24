@@ -3,8 +3,4 @@
     <solid
         android:color="@color/cardview_light_background">
     </solid>
-    <corners
-        android:topLeftRadius="30dp"
-        android:topRightRadius="30dp">
-    </corners>
 </shape>

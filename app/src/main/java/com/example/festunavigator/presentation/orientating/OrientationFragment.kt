@@ -48,12 +48,8 @@ class OrientationFragment : Fragment() {
                         if (frame.session.allPlanes.any { it.type == Plane.Type.VERTICAL }) {
                             if (!navigating){
                                 navigating = true
-                                val bundle = Bundle()
-                                bundle.putInt(
-                                    ScannerFragment.SCAN_TYPE,
-                                    ScannerFragment.TYPE_INITIALIZE
-                                )
-                                findNavController().navigate(R.id.action_orientationFragment_to_scannerFragment, args = bundle)
+                                val action = OrientationFragmentDirections.actionOrientationFragmentToScannerFragment(ScannerFragment.TYPE_INITIALIZE)
+                                findNavController().navigate(action)
                             }
                         }
                     }

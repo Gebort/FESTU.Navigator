@@ -20,8 +20,7 @@
             app:popUpToInclusive="false" />
         <argument
             android:name="scanType"
-            app:argType="integer"
-            android:defaultValue="0" />
+            app:argType="integer" />
     </fragment>
     <fragment
         android:id="@+id/confirmFragment"
@@ -53,6 +52,15 @@
             app:popEnterAnim="@anim/slide_up"
             app:popExitAnim="@anim/slide_down"
             app:popUpToInclusive="false" />
+        <action
+            android:id="@+id/action_routerFragment_to_scannerFragment"
+            app:destination="@id/scannerFragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:exitAnim="@anim/slide_down"
+            app:popEnterAnim="@anim/slide_up"
+            app:popExitAnim="@android:anim/fade_out"
+            app:popUpTo="@id/routerFragment"
+            app:popUpToInclusive="false" />
     </fragment>
     <fragment
         android:id="@+id/searchFragment"
@@ -63,14 +71,6 @@
             android:name="changeType"
             app:argType="integer" />
     </fragment>
-    <action
-        android:id="@+id/action_global_scannerFragment"
-        app:destination="@id/scannerFragment"
-        app:enterAnim="@android:anim/fade_in"
-        app:exitAnim="@anim/slide_down"
-        app:popEnterAnim="@anim/slide_up"
-        app:popExitAnim="@android:anim/fade_out"
-        app:popUpTo="@id/routerFragment" />
     <fragment
         android:id="@+id/orientationFragment"
         android:name="com.example.festunavigator.presentation.orientating.OrientationFragment"
@@ -82,7 +82,9 @@
             app:enterAnim="@android:anim/fade_in"
             app:exitAnim="@android:anim/fade_out"
             app:popEnterAnim="@android:anim/fade_in"
-            app:popExitAnim="@android:anim/fade_out" />
+            app:popExitAnim="@android:anim/fade_out"
+            app:popUpTo="@id/preview_nav_graph"
+            app:popUpToInclusive="true" />
     </fragment>
     <action
         android:id="@+id/action_global_orientationFragment"
