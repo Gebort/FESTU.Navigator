@@ -6,10 +6,13 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.RotateAnimation
 import android.widget.Toast
+import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -36,6 +39,7 @@ import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.node.ArNode
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
+import kotlin.math.log
 
 class PreviewFragment : Fragment(), SensorEventListener {
 
@@ -59,24 +63,12 @@ class PreviewFragment : Fragment(), SensorEventListener {
     private var confObjectJob: Job? = null
 
     private lateinit var sensorManager: SensorManager
-    private var sensorAccelerometer: Sensor? = null
-    private var sensorGravity: Sensor? = null
-
-    private val mRotHist: MutableList<FloatArray> = ArrayList()
-    private var mRotHistIndex = 0
-
-    // Change the value so that the azimuth is stable and fit your requirement
-    private val mHistoryMaxLength = 40
-    var mGravity: FloatArray? = null
-    var mMagnetic: FloatArray? = null
-    var mRotationMatrix = FloatArray(9)
-
-    // the direction of the back camera, only valid if the device is tilted up by
-    // at least 25 degrees.
-    private var mFacing: Float = java.lang.Float.NaN
-
-    val TWENTY_FIVE_DEGREE_IN_RADIAN = 0.436332313f
-    val ONE_FIFTY_FIVE_DEGREE_IN_RADIAN = 2.7052603f
+    private lateinit var gsensor: Sensor
+    private lateinit var msensor: Sensor
+    private val mGravity = FloatArray(3)
+    private val mGeomagnetic = FloatArray(3)
+    private var azimuth = 0f
+    private var currectAzimuth = 0f
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -90,8 +82,10 @@ class PreviewFragment : Fragment(), SensorEventListener {
     override fun onResume() {
         super.onResume()
         binding.sceneView.onResume(this)
-        sensorManager.registerListener(this, sensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL)
-        sensorManager.registerListener(this, sensorGravity, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(this, gsensor,
+            SensorManager.SENSOR_DELAY_GAME)
+        sensorManager.registerListener(this, msensor,
+            SensorManager.SENSOR_DELAY_GAME)
     }
 
     override fun onPause() {
@@ -264,9 +258,10 @@ class PreviewFragment : Fragment(), SensorEventListener {
             }
         }
 
-        sensorManager = requireActivity().getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        sensorGravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        sensorManager = requireActivity()
+            .getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        gsensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        msensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
     }
 
 
@@ -391,62 +386,38 @@ class PreviewFragment : Fragment(), SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent) {
-        if (event.sensor.type == Sensor.TYPE_GRAVITY) {
-            mGravity = event.values.clone()
-        } else {
-            mMagnetic = event.values.clone()
-        }
-        if (mGravity != null && mMagnetic != null) {
-            if (SensorManager.getRotationMatrix(mRotationMatrix, null, mGravity, mMagnetic)) {
-                // inclination is the degree of tilt by the device independent of orientation (portrait or landscape)
-                // if less than 25 or more than 155 degrees the device is considered lying flat
-                val inclination = Math.acos(mRotationMatrix[8].toDouble()).toFloat()
-                mFacing = if (inclination < TWENTY_FIVE_DEGREE_IN_RADIAN
-                    || inclination > ONE_FIFTY_FIVE_DEGREE_IN_RADIAN
-                ) {
-                    // mFacing is undefined, so we need to clear the history
-                    clearRotHist()
-                    Float.NaN
-                } else {
-                    setRotHist()
-                    // mFacing = azimuth is in radian
-                    findFacing()
-                }
-                debug(String.format("%.2f", mFacing), 1)
+        val alpha = 0.97f
+
+            if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
+                mGravity[0] = alpha * mGravity[0] + (1 - alpha) * event.values[0]
+                mGravity[1] = alpha * mGravity[1] + (1 - alpha) * event.values[1]
+                mGravity[2] = alpha * mGravity[2] + (1 - alpha) * event.values[2]
+                // mGravity = event.values;
+//                Log.d(TAG, "GravityRaw: "+event.values.contentToString()+ " filtered: "+mGravity.contentToString());
             }
-        }
-    }
 
-    private fun clearRotHist() {
-        mRotHist.clear()
-        mRotHistIndex = 0
-    }
-
-    private fun setRotHist() {
-        val hist = mRotationMatrix.clone()
-        if (mRotHist.size == mHistoryMaxLength) {
-            mRotHist.removeAt(mRotHistIndex)
-        }
-        mRotHist.add(mRotHistIndex++, hist)
-        mRotHistIndex %= mHistoryMaxLength
-    }
-
-    private fun findFacing(): Float {
-        val averageRotHist = average(mRotHist)
-        return Math.atan2(-averageRotHist[2].toDouble(), -averageRotHist[5].toDouble()).toFloat()
-    }
-
-    fun average(values: List<FloatArray>): FloatArray {
-        val result = FloatArray(9)
-        for (value in values) {
-            for (i in 0..8) {
-                result[i] += value[i]
+            if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
+                // mGeomagnetic = event.values;
+                mGeomagnetic[0] = alpha * mGeomagnetic[0] + (1 - alpha) * event.values[0]
+                mGeomagnetic[1] = alpha * mGeomagnetic[1] + (1 - alpha) * event.values[1]
+                mGeomagnetic[2] = alpha * mGeomagnetic[2] + (1 - alpha) * event.values[2]
+//                Log.d(TAG,"MagneticRaw: "+event.values.contentToString()+ " Filtered: "+mGeomagnetic.contentToString());
             }
-        }
-        for (i in 0..8) {
-            result[i] = result[i] / values.size
-        }
-        return result
+
+            val R = FloatArray(9)
+            val I = FloatArray(9)
+            val success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic)
+//            Log.d(TAG,"Gravity: "+mGravity.contentToString()+ " Magnetic: "+mGeomagnetic.contentToString()
+//            + " R: "+ R.contentToString() +" I: "+ I.contentToString());
+            if (success) {
+//                Log.d(TAG,"Gravity: "+mGravity.contentToString()+ " Magnetic: "+mGeomagnetic.contentToString())
+                val orientation = FloatArray(3)
+                SensorManager.getOrientation(R, orientation)
+                // Log.d(TAG, "azimuth (rad): " + azimuth);
+                azimuth = Math.toDegrees(orientation[0].toDouble()).toFloat() // orientation
+                azimuth = (azimuth + 360) % 360
+                debug(String.format("%.0f", azimuth), 1)
+            }
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
