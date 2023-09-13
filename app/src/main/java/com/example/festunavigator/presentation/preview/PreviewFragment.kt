@@ -1,5 +1,10 @@
 package com.example.festunavigator.presentation.preview
 
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,12 +15,9 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.findNavController
 import com.example.festunavigator.R
 import com.example.festunavigator.data.App
-import com.example.festunavigator.data.utils.convertPosition
 import com.example.festunavigator.data.utils.reverseConvertPosition
-import com.example.festunavigator.data.utils.undoConvertPosition
 import com.example.festunavigator.databinding.FragmentPreviewBinding
 import com.example.festunavigator.domain.pathfinding.path_restoring.PathAnalyzer
 import com.example.festunavigator.domain.tree.TreeNode
@@ -27,22 +29,15 @@ import com.example.festunavigator.presentation.preview.nodes_adapters.TreeAdapte
 import com.example.festunavigator.presentation.preview.state.PathState
 import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.Config
-import com.google.ar.core.Plane
-import com.google.ar.core.Trackable
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.*
-import com.uchuhimo.collections.MutableBiMap
-import com.uchuhimo.collections.mutableBiMapOf
 import dev.romainguy.kotlin.math.Float3
-import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.node.ArNode
-import io.github.sceneview.math.toRotation
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
-import kotlin.math.roundToInt
 
-class PreviewFragment : Fragment() {
+class PreviewFragment : Fragment(), SensorEventListener {
 
     private val mainModel: MainShareModel by activityViewModels()
 
@@ -63,6 +58,26 @@ class PreviewFragment : Fragment() {
     private var lastConfObject: LabelObject? = null
     private var confObjectJob: Job? = null
 
+    private lateinit var sensorManager: SensorManager
+    private var sensorAccelerometer: Sensor? = null
+    private var sensorGravity: Sensor? = null
+
+    private val mRotHist: MutableList<FloatArray> = ArrayList()
+    private var mRotHistIndex = 0
+
+    // Change the value so that the azimuth is stable and fit your requirement
+    private val mHistoryMaxLength = 40
+    var mGravity: FloatArray? = null
+    var mMagnetic: FloatArray? = null
+    var mRotationMatrix = FloatArray(9)
+
+    // the direction of the back camera, only valid if the device is tilted up by
+    // at least 25 degrees.
+    private var mFacing: Float = java.lang.Float.NaN
+
+    val TWENTY_FIVE_DEGREE_IN_RADIAN = 0.436332313f
+    val ONE_FIFTY_FIVE_DEGREE_IN_RADIAN = 2.7052603f
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -75,11 +90,14 @@ class PreviewFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         binding.sceneView.onResume(this)
+        sensorManager.registerListener(this, sensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(this, sensorGravity, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
     override fun onPause() {
         super.onPause()
         binding.sceneView.onPause(this)
+        sensorManager.unregisterListener(this)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -160,9 +178,12 @@ class PreviewFragment : Fragment() {
                             treeAdapter.changeParentPos(uiEvent.initialEntry?.position)
                             pathAdapter.changeParentPos(uiEvent.initialEntry?.position)
                             uiEvent.initialEntry?.let {
-                                pathAnalyzer = PathAnalyzer(debug = { s, w -> launch { withContext(Dispatchers.Main) { debug(s,w) }}}) { t ->
+                                pathAnalyzer = PathAnalyzer(debug = { s, w -> launch { withContext(Dispatchers.Main) { }}}) { t ->
                                     mainModel.onEvent(MainEvent.PivotTransform(t))
                                 }
+//                                pathAnalyzer = PathAnalyzer(debug = { s, w -> launch { withContext(Dispatchers.Main) { debug(s,w) }}}) { t ->
+//                                    mainModel.onEvent(MainEvent.PivotTransform(t))
+//                                }
                             }
                             binding.sceneView.planeRenderer.isVisible = App.isAdmin
                         }
@@ -242,6 +263,10 @@ class PreviewFragment : Fragment() {
                 }
             }
         }
+
+        sensorManager = requireActivity().getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        sensorGravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
     }
 
 
@@ -363,5 +388,68 @@ class PreviewFragment : Fragment() {
         const val POSITION_DETECT_DELAY = 100L
         //image crop for recognition
         val DESIRED_CROP = Pair(8, 72)
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        if (event.sensor.type == Sensor.TYPE_GRAVITY) {
+            mGravity = event.values.clone()
+        } else {
+            mMagnetic = event.values.clone()
+        }
+        if (mGravity != null && mMagnetic != null) {
+            if (SensorManager.getRotationMatrix(mRotationMatrix, null, mGravity, mMagnetic)) {
+                // inclination is the degree of tilt by the device independent of orientation (portrait or landscape)
+                // if less than 25 or more than 155 degrees the device is considered lying flat
+                val inclination = Math.acos(mRotationMatrix[8].toDouble()).toFloat()
+                mFacing = if (inclination < TWENTY_FIVE_DEGREE_IN_RADIAN
+                    || inclination > ONE_FIFTY_FIVE_DEGREE_IN_RADIAN
+                ) {
+                    // mFacing is undefined, so we need to clear the history
+                    clearRotHist()
+                    Float.NaN
+                } else {
+                    setRotHist()
+                    // mFacing = azimuth is in radian
+                    findFacing()
+                }
+                debug(String.format("%.2f", mFacing), 1)
+            }
+        }
+    }
+
+    private fun clearRotHist() {
+        mRotHist.clear()
+        mRotHistIndex = 0
+    }
+
+    private fun setRotHist() {
+        val hist = mRotationMatrix.clone()
+        if (mRotHist.size == mHistoryMaxLength) {
+            mRotHist.removeAt(mRotHistIndex)
+        }
+        mRotHist.add(mRotHistIndex++, hist)
+        mRotHistIndex %= mHistoryMaxLength
+    }
+
+    private fun findFacing(): Float {
+        val averageRotHist = average(mRotHist)
+        return Math.atan2(-averageRotHist[2].toDouble(), -averageRotHist[5].toDouble()).toFloat()
+    }
+
+    fun average(values: List<FloatArray>): FloatArray {
+        val result = FloatArray(9)
+        for (value in values) {
+            for (i in 0..8) {
+                result[i] += value[i]
+            }
+        }
+        for (i in 0..8) {
+            result[i] = result[i] / values.size
+        }
+        return result
+    }
+
+    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+
     }
 }
