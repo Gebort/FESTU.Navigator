@@ -14,6 +14,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.example.festunavigator.R
 import com.example.festunavigator.data.App
+import com.example.festunavigator.data.utils.fromVector
 import com.example.festunavigator.databinding.FragmentRouterBinding
 import com.example.festunavigator.databinding.FragmentSearchBinding
 import com.example.festunavigator.domain.hit_test.HitTestResult
@@ -30,11 +31,13 @@ import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.node.ArNode
+import io.github.sceneview.math.toVector3
 import io.github.sceneview.node.Node
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.lang.IllegalStateException
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -174,16 +177,16 @@ class RouterFragment: Fragment() {
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             mainModel.frame.value?.let { frame ->
-                val result = useHitTest(frame).getOrNull()
-                if (result != null) {
-                    mainModel.onEvent(
-                        MainEvent.CreateNode(
-                        number,
-                        position,
-                        orientation,
-                        result
-                    ))
-                }
+                    val result = useHitTest(frame).getOrNull()
+                    if (result != null) {
+                        mainModel.onEvent(
+                            MainEvent.CreateNode(
+                                number,
+                                position,
+                                orientation,
+                                result
+                            ))
+                    }
             }
         }
     }

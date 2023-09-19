@@ -59,7 +59,8 @@ class Tree @Inject constructor(
                     forwardVector = nodeDto.forwardVector,
                     id = nodeDto.id,
                     position = Float3(nodeDto.x, nodeDto.y, nodeDto.z),
-                    neighbours = nodeDto.neighbours
+                    neighbours = nodeDto.neighbours,
+                    northDirection = nodeDto.northDirection
                 )
                 _entryPoints[node.number] = node
             }
@@ -67,7 +68,8 @@ class Tree @Inject constructor(
                 node = TreeNode.Path(
                     id = nodeDto.id,
                     position = Float3(nodeDto.x, nodeDto.y, nodeDto.z),
-                    neighbours = nodeDto.neighbours
+                    neighbours = nodeDto.neighbours,
+                    northDirection = nodeDto.northDirection
                 )
             }
             _allPoints[node.id] = node
@@ -230,6 +232,7 @@ class Tree @Inject constructor(
 
     suspend fun addNode(
         position: Float3,
+        northDirection: Quaternion?,
         number: String? = null,
         forwardVector: Quaternion? = null
     ): TreeNode {
@@ -242,8 +245,9 @@ class Tree @Inject constructor(
         val newNode: TreeNode
         if (number == null){
             newNode = TreeNode.Path(
-                availableId,
-                position
+                id = availableId,
+                position = position,
+                northDirection =  northDirection
             )
         }
         else {
@@ -254,10 +258,11 @@ class Tree @Inject constructor(
                 throw Exception("Null forward vector")
             }
             newNode = TreeNode.Entry(
-                number,
-                forwardVector,
-                availableId,
-                position
+                number = number,
+                forwardVector = forwardVector,
+                id = availableId,
+                position = position,
+                northDirection = northDirection
             )
             _entryPoints[newNode.number] = newNode
         }

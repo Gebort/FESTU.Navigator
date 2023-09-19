@@ -23,6 +23,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
+import io.github.sceneview.math.toVector3
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -48,6 +49,9 @@ class MainShareModel @Inject constructor(
 
     private var _searchUiEvents = MutableSharedFlow<SearchUiEvent>()
     val searchUiEvents = _searchUiEvents.asSharedFlow()
+
+    var northLocation: Float3? = null
+        private set
 
     @SuppressLint("StaticFieldLeak")
     private var _confirmationObject = MutableStateFlow<LabelObject?>(null)
@@ -81,6 +85,9 @@ class MainShareModel @Inject constructor(
                 viewModelScope.launch {
                     _frame.emit(event.frame)
                 }
+            }
+            is MainEvent.NewNorthLocation -> {
+                newNorthLocation(event.northLocation)
             }
             is MainEvent.NewConfirmationObject -> {
                 _confirmationObject.update { event.confObject }
@@ -251,25 +258,34 @@ class MainShareModel @Inject constructor(
         //we need to convert position, because if the admin placing new node when other nodes corrected,
         //after reloading new node will be in another place
         treePivot.value.let { tp ->
-            val position2 = tp?.orientation?.reverseConvertPosition(
-                position = position ?: hitTestResult!!.orientatedPosition.position,
-                pivotPosition = tp.position,
-            )
-                ?: position
-                ?: hitTestResult!!.orientatedPosition.position
-            val treeNode = tree.addNode(
-                position2,
-                number,
-                orientation
-            )
-            treeNode.let {
-                if (number != null){
-                    _mainUiEvents.emit(MainUiEvent.EntryCreated)
+            northLocation.let { north ->
+                val position2 = tp?.orientation?.reverseConvertPosition(
+                    position = position ?: hitTestResult!!.orientatedPosition.position,
+                    pivotPosition = tp.position,
+                )
+                    ?: position
+                    ?: hitTestResult!!.orientatedPosition.position
+                val northDirection = when (north) {
+                    null -> null
+                    else -> Quaternion.fromVector((north - position2).toVector3())
                 }
-                _mainUiEvents.emit(MainUiEvent.NodeCreated(
-                    treeNode,
-                    hitTestResult?.hitResult?.createAnchor()
-                ))
+                val treeNode = tree.addNode(
+                    position = position2,
+                    number = number,
+                    northDirection = northDirection,
+                    forwardVector = orientation
+                )
+                treeNode.let {
+                    if (number != null) {
+                        _mainUiEvents.emit(MainUiEvent.EntryCreated)
+                    }
+                    _mainUiEvents.emit(
+                        MainUiEvent.NodeCreated(
+                            treeNode,
+                            hitTestResult?.hitResult?.createAnchor()
+                        )
+                    )
+                }
             }
         }
     }
@@ -292,6 +308,10 @@ class MainShareModel @Inject constructor(
         if (node == selectedNode.value) {_selectedNode.update { null }}
         if (node == pathState.value.endEntry) {_pathState.update { it.copy(endEntry = null, path = null) }}
         else if (node == pathState.value.startEntry) {_pathState.update { it.copy(startEntry = null, path = null) }}
+    }
+
+    private fun newNorthLocation(northLocation: Float3) {
+        this.northLocation = northLocation
     }
 
     private suspend fun loadRecords() {

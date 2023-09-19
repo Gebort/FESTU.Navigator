@@ -15,7 +15,9 @@ class TreeNodeDto(
     val type: String = TYPE_PATH,
     val number: String? = null,
     val neighbours: MutableList<Int> = mutableListOf(),
-    val forwardVector: Quaternion? = null
+
+    val northDirection: Quaternion?,
+    val forwardVector: Quaternion? = null,
 ) {
 
 
@@ -36,7 +38,8 @@ class TreeNodeDto(
                 forwardVector = forwardVector ?: if (node is TreeNode.Entry) node.forwardVector else null,
                 type = if (node is TreeNode.Entry) TYPE_ENTRY else TYPE_PATH,
                 number = if (node is TreeNode.Entry) node.number else null,
-                neighbours = node.neighbours
+                neighbours = node.neighbours,
+                northDirection = node.northDirection
             )
         }
 

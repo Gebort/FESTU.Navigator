@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "2e778d3cd6f73336c0a8a7bd4560f9bc",
+    "identityHash": "a2f2b365596e8eecd91a7c129710fc92",
     "entities": [
       {
         "tableName": "TreeNodeDto",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `x` REAL NOT NULL, `y` REAL NOT NULL, `z` REAL NOT NULL, `type` TEXT NOT NULL, `number` TEXT, `neighbours` TEXT NOT NULL, `forwardVector` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `x` REAL NOT NULL, `y` REAL NOT NULL, `z` REAL NOT NULL, `type` TEXT NOT NULL, `number` TEXT, `neighbours` TEXT NOT NULL, `northDirection` TEXT NOT NULL, `forwardVector` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -47,6 +47,12 @@
           {
             "fieldPath": "neighbours",
             "columnName": "neighbours",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "northDirection",
+            "columnName": "northDirection",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -108,7 +114,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2e778d3cd6f73336c0a8a7bd4560f9bc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a2f2b365596e8eecd91a7c129710fc92')"
     ]
   }
 }
