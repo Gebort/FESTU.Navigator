@@ -19,10 +19,16 @@ import com.example.festunavigator.presentation.confirmer.ConfirmFragment
 import com.example.festunavigator.presentation.preview.state.PathState
 import com.example.festunavigator.presentation.search.SearchFragment
 import com.example.festunavigator.presentation.search.SearchUiEvent
+import com.google.ar.sceneform.math.Vector3
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
+import dev.romainguy.kotlin.math.RotationsOrder
 import io.github.sceneview.ar.arcore.ArFrame
+import io.github.sceneview.ar.arcore.quaternion
+import io.github.sceneview.ar.arcore.rotation
+import io.github.sceneview.math.toFloat3
+import io.github.sceneview.math.toQuaternion
 import io.github.sceneview.math.toVector3
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -86,8 +92,8 @@ class MainShareModel @Inject constructor(
                     _frame.emit(event.frame)
                 }
             }
-            is MainEvent.NewNorthLocation -> {
-                newNorthLocation(event.northLocation)
+            is MainEvent.NewAzimuth -> {
+                newNorthLocation(event.azimuth)
             }
             is MainEvent.NewConfirmationObject -> {
                 _confirmationObject.update { event.confObject }
@@ -267,7 +273,7 @@ class MainShareModel @Inject constructor(
                     ?: hitTestResult!!.orientatedPosition.position
                 val northDirection = when (north) {
                     null -> null
-                    else -> Quaternion.fromVector((north - position2).toVector3())
+                    else -> Quaternion.fromVector((north - position2).toVector3().normalized())
                 }
                 val treeNode = tree.addNode(
                     position = position2,
@@ -310,8 +316,13 @@ class MainShareModel @Inject constructor(
         else if (node == pathState.value.startEntry) {_pathState.update { it.copy(startEntry = null, path = null) }}
     }
 
-    private fun newNorthLocation(northLocation: Float3) {
-        this.northLocation = northLocation
+    private fun newNorthLocation(azimuth: Float) {
+        frame.value?.let { it ->
+            val rotation = Quaternion.fromEuler(yaw = azimuth, order = RotationsOrder.XYZ)
+            val cameraDirection = it.camera.pose.quaternion
+            val northDirection = cameraDirection.copy(z = 0f) * rotation
+            this.northLocation = Vector3(Float.MAX_VALUE, 0f, 0f).rotateBy(northDirection).toFloat3()
+        }
     }
 
     private suspend fun loadRecords() {

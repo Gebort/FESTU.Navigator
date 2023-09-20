@@ -39,6 +39,7 @@ import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.node.ArNode
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlin.math.log
 
 class PreviewFragment : Fragment(), SensorEventListener {
@@ -417,6 +418,8 @@ class PreviewFragment : Fragment(), SensorEventListener {
                 azimuth = Math.toDegrees(orientation[0].toDouble()).toFloat() // orientation
                 azimuth = (azimuth + 360) % 360
                 debug(String.format("%.0f", azimuth), 1)
+
+                mainModel.onEvent(MainEvent.NewAzimuth(azimuth))
             }
     }
 

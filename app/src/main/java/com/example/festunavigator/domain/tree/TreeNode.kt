@@ -7,7 +7,7 @@ sealed class TreeNode(
     val id: Int,
     var position: Float3,
     var neighbours: MutableList<Int> = mutableListOf(),
-    val northDirection: Quaternion?
+    var northDirection: Quaternion?
 ) {
 
     abstract fun copy(

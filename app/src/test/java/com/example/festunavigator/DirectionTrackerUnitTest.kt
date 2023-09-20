@@ -7,7 +7,9 @@ import com.example.festunavigator.domain.utils.meanPoint
 import dev.romainguy.kotlin.math.Float3
 import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Quaternion
+import dev.romainguy.kotlin.math.RotationsOrder
 import io.github.sceneview.math.Position
+import io.github.sceneview.math.toFloat3
 import io.github.sceneview.math.toRotation
 import io.github.sceneview.math.toVector3
 import junit.framework.TestCase.assertEquals
@@ -51,5 +53,18 @@ class DirectionTrackerUnitTest {
         val p3 = q.convertPosition(p1, pivot)
         val p4 = q.reverseConvertPosition(p3, pivot)
         assertEquals(p1, p4)
+    }
+
+    @Test
+    fun test5() {
+        val cameraPos = Float3(0f, 0f, 0f)
+        val cameraDirection = Quaternion.fromEuler(yaw = 90f, order = RotationsOrder.XYZ)
+        val azimuth = 45f
+        val rotation = Quaternion.fromEuler(yaw = azimuth, order = RotationsOrder.XYZ)
+        val newDirection = cameraDirection * rotation
+
+        val newNorth = Vector3(10f, 0f, 0f).rotateBy(newDirection).toFloat3()
+
+        assertEquals(newNorth, Float3(-10f, 0f, 0f))
     }
 }

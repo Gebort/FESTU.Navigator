@@ -41,7 +41,8 @@ class GraphImpl @Inject constructor(
                             position = undoPositionConvert(
                                 node.position, undoTranslocation, undoQuaternion, pivotPosition
                             ),
-                            forwardVector = node.forwardVector.multiply(undoQuaternion)
+                            forwardVector = node.forwardVector.multiply(undoQuaternion),
+                            northDirection = node.northDirection?.multiply(undoQuaternion)
                         )
                     }
                     is TreeNode.Path -> {
@@ -49,7 +50,9 @@ class GraphImpl @Inject constructor(
                             node = node,
                             position = undoPositionConvert(
                                 node.position, undoTranslocation, undoQuaternion, pivotPosition
-                            )
+                            ),
+                            northDirection = node.northDirection?.multiply(undoQuaternion)
+
                         )
 
                     }

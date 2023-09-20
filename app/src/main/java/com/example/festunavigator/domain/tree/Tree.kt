@@ -3,9 +3,11 @@ package com.example.festunavigator.domain.tree
 import android.util.Log
 import com.example.festunavigator.data.model.TreeNodeDto
 import com.example.festunavigator.data.utils.Reaction
+import com.example.festunavigator.data.utils.angleBetween
 import com.example.festunavigator.domain.repository.GraphRepository
 import com.example.festunavigator.data.utils.inverted
 import com.example.festunavigator.data.utils.multiply
+import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.*
@@ -224,6 +226,7 @@ class Tree @Inject constructor(
 
     private fun translocateNode(node: TreeNode) {
         node.position = convertPosition(node.position, translocation, rotation, pivotPosition)
+        node.northDirection = node.northDirection?.multiply(rotation)
         if (node is TreeNode.Entry){
             node.forwardVector = node.forwardVector.multiply(rotation)
         }

@@ -98,10 +98,10 @@ class DrawerHelper(
         parentNode: NodeParent,
     ): ArNode = when (treeNode) {
         is TreeNode.Entry -> {
-            drawArNode(selectionModel, selectionEntryScale, treeNode.position, treeNode.forwardVector, parentNode, null)
+            drawArNode(selectionModel, selectionEntryScale, treeNode.position, treeNode.forwardVector, parentNode, null, null)
         }
         is TreeNode.Path -> {
-            drawArNode(selectionModel, selectionPathScale, treeNode.position, null, parentNode, null)
+            drawArNode(selectionModel, selectionPathScale, treeNode.position, null, parentNode, null, null)
         }
     }
 
@@ -109,7 +109,7 @@ class DrawerHelper(
         treeNode: TreeNode.Path,
         parentNode: NodeParent,
         anchor: Anchor? = null
-    ): ArNode = drawArNode(pathModel, pathScale, treeNode.position, null, parentNode, anchor)
+    ): ArNode = drawArNode(pathModel, pathScale, treeNode.position, null, parentNode, anchor, treeNode.northDirection)
 
     private suspend fun drawArNode(
         model: String,
@@ -117,7 +117,8 @@ class DrawerHelper(
         position: Float3,
         orientation: dev.romainguy.kotlin.math.Quaternion?,
         parentNode: NodeParent,
-        anchor: Anchor?
+        anchor: Anchor?,
+        northDirection: dev.romainguy.kotlin.math.Quaternion?
     ): ArNode {
         val modelNode = ArModelNode().apply {
             loadModel(
@@ -166,7 +167,8 @@ class DrawerHelper(
                         position = Position(0f, -bias, 0f),
                         orientation = dev.romainguy.kotlin.math.Quaternion(),
                         parentNode = parentNode,
-                        anchor = anchor
+                        anchor = anchor,
+                        northDirection = treeNode.northDirection
                     )
                 )
             }
