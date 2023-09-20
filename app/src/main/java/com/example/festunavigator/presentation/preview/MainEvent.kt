@@ -14,7 +14,7 @@ sealed interface MainEvent{
     class TrySearch(val number: String, val changeType: Int): MainEvent
     class AcceptConfObject(val confirmType: Int): MainEvent
     class RejectConfObject(val confirmType: Int): MainEvent
-    class NewAzimuth(val azimuth: Float): MainEvent
+    class NewAzimuth(val azimuthRadians: Float): MainEvent
     class NewSelectedNode(val node: TreeNode?): MainEvent
     object ChangeLinkMode: MainEvent
     class CreateNode(

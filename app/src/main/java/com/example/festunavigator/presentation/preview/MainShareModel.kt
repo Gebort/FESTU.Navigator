@@ -93,7 +93,7 @@ class MainShareModel @Inject constructor(
                 }
             }
             is MainEvent.NewAzimuth -> {
-                newNorthLocation(event.azimuth)
+                newNorthLocation(event.azimuthRadians)
             }
             is MainEvent.NewConfirmationObject -> {
                 _confirmationObject.update { event.confObject }
@@ -317,10 +317,10 @@ class MainShareModel @Inject constructor(
     }
 
     private fun newNorthLocation(azimuth: Float) {
-        frame.value?.let { it ->
-            val rotation = Quaternion.fromEuler(yaw = azimuth, order = RotationsOrder.XYZ)
-            val cameraDirection = it.camera.pose.quaternion
-            val northDirection = cameraDirection.copy(z = 0f) * rotation
+        frame.value?.let {
+            val rotation = Quaternion.fromEuler(yaw = azimuth, order = RotationsOrder.ZYX)
+            val cameraDirection = it.camera.pose.rotation.copy(z = 0f).toQuaternion()
+            val northDirection = cameraDirection * rotation
             this.northLocation = Vector3(Float.MAX_VALUE, 0f, 0f).rotateBy(northDirection).toFloat3()
         }
     }

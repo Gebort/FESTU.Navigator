@@ -57,10 +57,14 @@ class DirectionTrackerUnitTest {
 
     @Test
     fun test5() {
-        val cameraPos = Float3(0f, 0f, 0f)
-        val cameraDirection = Quaternion.fromEuler(yaw = 90f, order = RotationsOrder.XYZ)
-        val azimuth = 45f
-        val rotation = Quaternion.fromEuler(yaw = azimuth, order = RotationsOrder.XYZ)
+        val cameraDirection = Quaternion.fromEuler(
+            yaw = Math.toRadians(90.0).toFloat(),
+            order = RotationsOrder.ZYX
+        )
+        val rotation = Quaternion.fromEuler(
+            yaw = Math.toRadians(90.0).toFloat(),
+            order = RotationsOrder.ZYX
+        )
         val newDirection = cameraDirection * rotation
 
         val newNorth = Vector3(10f, 0f, 0f).rotateBy(newDirection).toFloat3()

@@ -419,7 +419,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
                 azimuth = (azimuth + 360) % 360
                 debug(String.format("%.0f", azimuth), 1)
 
-                mainModel.onEvent(MainEvent.NewAzimuth(azimuth))
+                mainModel.onEvent(MainEvent.NewAzimuth(orientation[0]))
             }
     }
 
