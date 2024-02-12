@@ -80,13 +80,15 @@ class DirectionTracker(
 
     private fun checkForCallback() {
         direction?.let {
-            if (it.vector.length() >= lengthThreshold) {
-                onNewDirection(
-                    OrientatedPosition(
-                        position = lastPoints.last(),
-                        orientation = Quaternion.fromVector(it.vector)
+            lastPoints.lastOrNull()?.let { lastPoint ->
+                if (it.vector.length() >= lengthThreshold) {
+                    onNewDirection(
+                        OrientatedPosition(
+                            position = lastPoint,
+                            orientation = Quaternion.fromVector(it.vector)
+                        )
                     )
-                )
+                }
             }
         }
     }

@@ -17,27 +17,46 @@ class PathAnalyzer(
     private val onChangeNeeded: (Quaternion) -> Unit,
 ) {
 
-
     private val directionTracker = DirectionTracker(debug) { onNewDirection(it) }
     private var lastUserDirection: OrientatedPosition? = null
     //Degrees
     private val maxDirectionDiff = 50
     private val minDirectionDiff = 1
-    //Min path segment lenght
+    //Min path segment length
     private val minLength = 0.0f
     //Info about path segment - start and end
     private var pathSegment: Pair<TreeNode, TreeNode>? = null
     //Info about TreeAdapter parent node quaternion
     private var parentQuaternion: Quaternion? = null
+    //Info about current north position
+    private var northPosition: Float3? = null
 
     fun newPosition(
         userPos: Float3,
+        northPosition: Float3?,
         pathSegment: Pair<TreeNode,TreeNode>?,
-        parentQuaternion: Quaternion?
+        parentQuaternion: Quaternion?,
     ) {
         directionTracker.newPosition(userPos)
         this.pathSegment = pathSegment
         this.parentQuaternion = parentQuaternion
+        this.northPosition = northPosition
+    }
+
+    private fun compareDirection(
+        pathSegment: Pair<TreeNode, TreeNode>,
+        northPosition: Float3
+    ) {
+
+        val node = if (pathSegment.first.northDirection != null) pathSegment.first else pathSegment.second
+        node.northDirection?.let { oldDirection ->
+            val northVector = northPosition - node.position
+            val northQuaternion = northVector.toQuaternion()
+            val transition = oldDirection.transition(northQuaternion)
+            transition.to
+        }
+
+
     }
 
     private fun onNewDirection(pos: OrientatedPosition) {
