@@ -49,12 +49,12 @@ class PathAnalyzer(
     ) {
 
         val node = if (pathSegment.first.northDirection != null) pathSegment.first else pathSegment.second
-        node.northDirection?.let { oldDirection ->
-            val northVector = northPosition - node.position
-            val northQuaternion = northVector.toQuaternion()
-            val transition = oldDirection.transition(northQuaternion)
-            transition.to
-        }
+//        node.northDirection?.let { oldDirection ->
+//            val northVector = northPosition - node.position
+//            val northQuaternion = northVector.toQuaternion()
+//            val transition = oldDirection.transition(northQuaternion)
+//            transition.to
+//        }
 
 
     }

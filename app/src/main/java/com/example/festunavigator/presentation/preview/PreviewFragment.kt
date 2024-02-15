@@ -350,11 +350,11 @@ class PreviewFragment : Fragment(), SensorEventListener {
                 treeAdapter.commit(nodes)
                 pathAdapter.getPivot()?.orientation?.let { parentQ ->
                     val pathSegment = mainModel.treeDiffUtils.getClosestSegment(userPositionTrans)
-                    pathAnalyzer?.newPosition(
-                        userPositionReal,
-                        pathSegment,
-                        parentQ
-                    )
+//                    pathAnalyzer?.newPosition(
+//                        userPositionReal,
+//                        pathSegment,
+//                        parentQ
+//                    )
                 }
             }
         }
