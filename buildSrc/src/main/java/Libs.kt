@@ -32,11 +32,11 @@ object Libs {
         }
     }
     object Gradle {
-        const val version = "7.1.3"
+        const val version = "8.2.1"
         const val tools = "com.android.tools.build:gradle:$version"
     }
     object Kotlin {
-        const val version = "1.6.21"
+        const val version = "1.9.22"
         const val gradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:$version"
     }
 
@@ -47,7 +47,7 @@ object Libs {
         const val playServices = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:$version"
     }
     object Hilt {
-        const val version = "2.40.5"
+        const val version = "2.48"
         const val core = "com.google.dagger:hilt-android:$version"
         const val compiler = "com.google.dagger:hilt-compiler:$version"
         const val gradle = "com.google.dagger:hilt-android-gradle-plugin:$version"
@@ -68,7 +68,7 @@ object Libs {
     }
 
     object Navigation {
-        const val version = "2.4.2"
+        const val version = "2.5.0"
         const val fragments = "androidx.navigation:navigation-fragment-ktx:${version}"
         const val ui = "androidx.navigation:navigation-ui-ktx:${version}"
 

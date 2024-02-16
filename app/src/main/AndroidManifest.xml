@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.example.festunavigator">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:glEsVersion="0x00030000" android:required="true" />
@@ -12,9 +11,12 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-feature android:name="android.hardware.sensor.compass" />
     <uses-feature android:name="android.hardware.camera.ar" android:required="true"/>
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
-        android:name=".data.App"
+        android:name="com.example.festunavigator.data.App"
         android:allowBackup="false"
         android:icon="@drawable/ic_app_icon"
         android:label="@string/app_name_user"
@@ -24,7 +26,7 @@
         android:usesCleartextTraffic="false"
         tools:ignore="GoogleAppIndexingWarning">
         <activity
-            android:name=".presentation.MainActivity"
+            android:name="com.example.festunavigator.presentation.MainActivity"
             android:configChanges="orientation|screenSize|screenLayout"
             android:windowSoftInputMode="stateHidden|adjustPan"
             android:theme="@style/Theme.FESTUNavigator"

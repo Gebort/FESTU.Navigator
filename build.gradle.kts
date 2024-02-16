@@ -10,6 +10,7 @@ buildscript {
         classpath (Libs.Navigation.SafeArgs.gradle)
         classpath (Libs.Hilt.gradle)
         classpath (Libs.GoogleServices.gradle)
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22")
     }
 
 }

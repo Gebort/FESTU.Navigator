@@ -12,10 +12,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.example.festunavigator.databinding.FragmentConfirmBinding
 import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
 import com.example.festunavigator.presentation.preview.MainUiEvent
+import com.gerbort.app.databinding.FragmentConfirmBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 

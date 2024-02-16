@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.Packaging
+
 plugins {
     id("com.android.application")
     id ("org.jetbrains.kotlin.android")
@@ -9,7 +11,8 @@ plugins {
 }
 
 android {
-    compileSdk = 32
+    namespace = "com.gerbort.app"
+    compileSdk = ProjectConfig.compileSdk
 
     defaultConfig {
         applicationId = ProjectConfig.appId
@@ -29,6 +32,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 
     buildTypes {
@@ -63,7 +67,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-    packagingOptions {
+    packaging {
         resources {
             excludes.add("/META-INF/{AL2.0,LGPL2.1}")
         }

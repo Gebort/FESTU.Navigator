@@ -14,10 +14,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.example.festunavigator.R
-import com.example.festunavigator.databinding.FragmentOrientationBinding
 import com.example.festunavigator.presentation.preview.MainShareModel
 import com.example.festunavigator.presentation.scanner.ScannerFragment
+import com.gerbort.app.R
+import com.gerbort.app.databinding.FragmentOrientationBinding
 import com.google.ar.core.Plane
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch

@@ -1,7 +1,7 @@
 package com.example.festunavigator.domain.use_cases
 
 import android.content.Context
-import com.example.festunavigator.R
+import com.gerbort.app.R
 
 class GetDestinationDesc {
 

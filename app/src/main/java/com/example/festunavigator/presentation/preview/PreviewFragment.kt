@@ -18,10 +18,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.data.utils.reverseConvertPosition
-import com.example.festunavigator.databinding.FragmentPreviewBinding
 import com.example.festunavigator.domain.pathfinding.path_restoring.PathAnalyzer
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.domain.tree.WrongEntryException
@@ -30,6 +28,8 @@ import com.example.festunavigator.presentation.common.helpers.DrawerHelper
 import com.example.festunavigator.presentation.preview.nodes_adapters.PathAdapter
 import com.example.festunavigator.presentation.preview.nodes_adapters.TreeAdapter
 import com.example.festunavigator.presentation.preview.state.PathState
+import com.gerbort.app.R
+import com.gerbort.app.databinding.FragmentPreviewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.Config
 import com.google.ar.core.TrackingState

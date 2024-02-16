@@ -12,11 +12,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.example.festunavigator.R
 import com.example.festunavigator.data.App
 import com.example.festunavigator.data.utils.fromVector
-import com.example.festunavigator.databinding.FragmentRouterBinding
-import com.example.festunavigator.databinding.FragmentSearchBinding
 import com.example.festunavigator.domain.hit_test.HitTestResult
 import com.example.festunavigator.domain.use_cases.GetDestinationDesc
 import com.example.festunavigator.domain.use_cases.HitTest
@@ -25,6 +22,7 @@ import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
 import com.example.festunavigator.presentation.scanner.ScannerFragment
 import com.example.festunavigator.presentation.search.SearchFragment
+import com.gerbort.app.databinding.FragmentRouterBinding
 import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
 import dev.romainguy.kotlin.math.Float3

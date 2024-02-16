@@ -1,7 +1,6 @@
 package com.example.festunavigator.data
 
 import android.app.Application
-import com.example.festunavigator.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp

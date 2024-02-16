@@ -15,7 +15,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.festunavigator.data.App
-import com.example.festunavigator.databinding.FragmentScannerBinding
 import com.example.festunavigator.domain.hit_test.HitTestResult
 import com.example.festunavigator.domain.ml.DetectedText
 import com.example.festunavigator.domain.use_cases.AnalyzeImage
