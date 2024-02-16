@@ -76,34 +76,34 @@ android {
 
 dependencies {
 
-    implementation ("androidx.core:core-ktx:1.8.0")
-    implementation ("androidx.appcompat:appcompat:1.5.0")
-    implementation ("com.google.android.material:material:1.6.1")
-    implementation ("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation ("androidx.legacy:legacy-support-v4:1.0.0")
+    implementation (Libs.AndroidX.core)
+    implementation (Libs.AndroidX.appcompat)
+    implementation (Libs.Android.material)
+    implementation (Libs.AndroidX.ConstraintLayout.core)
+    implementation (Libs.AndroidX.legacy)
 
     implementation (Libs.Firebase.Analytics.core)
     implementation (Libs.Firebase.Crashlytics.core)
 
-    testImplementation ("junit:junit:4.13.2")
-    androidTestImplementation ("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation ("androidx.test.espresso:espresso-core:3.4.0")
+    testImplementation (Libs.AndroidX.Test.junit)
+    androidTestImplementation (Libs.AndroidX.Test.androidJunit)
+    androidTestImplementation (Libs.AndroidX.Test.espresso)
 
-    implementation ("io.github.sceneview:arsceneview:${Libs.Sceneview.version}")
+    implementation (Libs.Sceneview.arSceneView)
 
-    implementation ("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
-    implementation ("androidx.lifecycle:lifecycle-common-java8:2.5.1")
+    implementation (Libs.AndroidX.CoordinatorLayout.core)
+    implementation (Libs.AndroidX.Lifecycle.common)
 
     // ARCore
     implementation (Libs.ARCore.core)
 
     // Obj - a simple Wavefront OBJ file loader
     // https://github.com/javagl/Obj
-    implementation ("de.javagl:obj:0.2.1")
+    implementation (Libs.Obj.core)
 
     //bimap for graph links storing
-    implementation ("com.uchuhimo:kotlinx-bimap:1.2")
-    implementation ("com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava")
+    implementation (Libs.Bimap.core)
+    implementation (Libs.Bimap.guavaFix)
 
     // Room
     implementation (Libs.Room.runtime)
@@ -129,11 +129,10 @@ dependencies {
     implementation(Libs.Navigation.ui)
 
     // Coroutines
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
-    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.0-alpha01")
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.1")
+    implementation (Libs.Coroutines.core)
+    implementation (Libs.Coroutines.android)
+    implementation (Libs.AndroidX.Lifecycle.viewModel)
+    implementation (Libs.Coroutines.playServices)
 
     //Hilt
     implementation (Libs.Hilt.core)
