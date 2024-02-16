@@ -12,12 +12,11 @@ android {
     compileSdk = 32
 
     defaultConfig {
-        applicationId = "com.example.festunavigator"
-        minSdk = 24
-        //noinspection ExpiredTargetSdkVersion
-        targetSdk = 32
-        versionCode = 1
-        versionName = "1.0"
+        applicationId = ProjectConfig.appId
+        minSdk = ProjectConfig.minSdk
+        targetSdk = ProjectConfig.targetSdk
+        versionCode = ProjectConfig.versionCode
+        versionName = ProjectConfig.versionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
