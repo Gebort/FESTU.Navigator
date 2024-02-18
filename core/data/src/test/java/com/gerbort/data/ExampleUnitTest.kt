@@ -1,4 +1,4 @@
-package com.gerbort.common
+package com.gerbort.data
 
 import org.junit.Test
 

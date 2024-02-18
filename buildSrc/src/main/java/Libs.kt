@@ -64,6 +64,7 @@ object Libs {
 
     object Sceneview {
         const val version = "0.7.0"
+        const val sceneView = "io.github.sceneview:sceneview:${version}"
         const val arSceneView = "io.github.sceneview:arsceneview:${version}"
     }
 

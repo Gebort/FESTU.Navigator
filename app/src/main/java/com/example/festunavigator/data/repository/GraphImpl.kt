@@ -1,6 +1,6 @@
 package com.example.festunavigator.data.repository
 
-import com.example.festunavigator.data.data_source.Database
+import com.gerbort.database.Database
 import com.example.festunavigator.data.model.TreeNodeDto
 import com.example.festunavigator.data.utils.multiply
 import com.example.festunavigator.domain.repository.GraphRepository
@@ -14,7 +14,7 @@ import io.github.sceneview.math.toVector3
 import javax.inject.Inject
 
 class GraphImpl @Inject constructor(
-    private val database: Database
+    private val database: com.gerbort.database.Database
 ): GraphRepository {
 
     private val dao = database.graphDao

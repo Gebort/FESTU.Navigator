@@ -2,7 +2,7 @@ package com.example.festunavigator.domain.di
 
 import android.app.Application
 import androidx.room.Room
-import com.example.festunavigator.data.data_source.Database
+import com.gerbort.database.Database
 import com.example.festunavigator.data.ml.classification.TextAnalyzer
 import com.example.festunavigator.data.pathfinding.AStarImpl
 import com.example.festunavigator.data.repository.GraphImpl
@@ -28,8 +28,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(app: Application): Database {
-        return Room.databaseBuilder(app, Database::class.java, DATABASE_NAME)
+    fun provideDatabase(app: Application): com.gerbort.database.Database {
+        return Room.databaseBuilder(app, com.gerbort.database.Database::class.java, DATABASE_NAME)
             //.createFromAsset(DATABASE_DIR)
             .allowMainThreadQueries()
             .build()
@@ -37,13 +37,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideGraphRepository(database: Database): GraphRepository {
+    fun provideGraphRepository(database: com.gerbort.database.Database): GraphRepository {
         return GraphImpl(database)
     }
 
     @Provides
     @Singleton
-    fun provideRecordsRepository(database: Database): RecordsRepository {
+    fun provideRecordsRepository(database: com.gerbort.database.Database): RecordsRepository {
         return RecordsImpl(database)
     }
 

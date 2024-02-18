@@ -15,3 +15,5 @@ dependencyResolutionManagement {
 rootProject.name = "FESTU.Navigator"
 include ':app'
 include ':core:common'
+include ':core:database'
+include ':core:data'

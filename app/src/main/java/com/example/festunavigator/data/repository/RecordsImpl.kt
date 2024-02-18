@@ -1,13 +1,13 @@
 package com.example.festunavigator.data.repository
 
-import com.example.festunavigator.data.data_source.Database
+import com.gerbort.database.Database
 import com.example.festunavigator.data.model.Record
 import com.example.festunavigator.domain.repository.RecordsRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class RecordsImpl @Inject constructor(
-    private val database: Database
+    private val database: com.gerbort.database.Database
 ): RecordsRepository {
 
     private val dao = database.recordsDao

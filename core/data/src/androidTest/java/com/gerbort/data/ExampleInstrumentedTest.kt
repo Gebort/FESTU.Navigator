@@ -1,4 +1,4 @@
-package com.gerbort.common
+package com.gerbort.data
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.gerbort.common.test", appContext.packageName)
+        assertEquals("com.gerbort.data.test", appContext.packageName)
     }
 }
