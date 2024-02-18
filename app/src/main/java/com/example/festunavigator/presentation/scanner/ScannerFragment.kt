@@ -25,6 +25,7 @@ import com.example.festunavigator.presentation.confirmer.ConfirmFragment
 import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
 import com.example.festunavigator.presentation.preview.PreviewFragment
+import com.gerbort.app.databinding.FragmentScannerBinding
 import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException

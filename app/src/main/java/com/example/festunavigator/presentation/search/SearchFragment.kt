@@ -25,6 +25,7 @@ import com.example.festunavigator.presentation.common.helpers.viewHideInput
 import com.example.festunavigator.presentation.common.helpers.viewRequestInput
 import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
+import com.gerbort.app.R
 import com.gerbort.app.databinding.FragmentSearchBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
