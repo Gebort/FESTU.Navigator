@@ -30,11 +30,29 @@ sealed class TreeNode(
             id: Int,
             position: Float3,
             neighbours: MutableList<Int>,
-            northDirection: Quaternion?
+            northDirection: Quaternion?,
         ): Entry {
             return Entry(
                 number = this.number,
                 forwardVector = this.forwardVector,
+                id = id,
+                northDirection = northDirection,
+                neighbours = neighbours,
+                position = position
+            )
+        }
+
+        fun copy(
+            id: Int = super.id,
+            position: Float3 = super.position,
+            neighbours: MutableList<Int> = super.neighbours,
+            northDirection: Quaternion? = super.northDirection,
+            forwardVector: Quaternion = this.forwardVector,
+            number: String = this.number,
+        ): Entry {
+            return Entry(
+                number = number,
+                forwardVector = forwardVector,
                 id = id,
                 northDirection = northDirection,
                 neighbours = neighbours,
