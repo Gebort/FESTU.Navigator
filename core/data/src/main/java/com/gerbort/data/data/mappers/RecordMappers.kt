@@ -1,6 +1,6 @@
 package com.gerbort.data.data.mappers
 
-import com.gerbort.data.domain.model.Record
+import com.gerbort.common.model.Record
 import com.gerbort.database.model.RecordEntity
 
 internal fun Record.toEntity(): RecordEntity {

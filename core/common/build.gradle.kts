@@ -5,3 +5,9 @@ plugins {
 android {
     namespace = "com.gerbort.common"
 }
+
+dependencies {
+
+    implementation(Libs.Sceneview.sceneView)
+
+}

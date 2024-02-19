@@ -10,6 +10,7 @@ dependencies {
 
     implementation(Libs.Sceneview.sceneView)
 
+    implementation(project(Modules.Core.Common))
     implementation(project(Modules.Core.Database))
 
 }

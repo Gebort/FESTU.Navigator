@@ -1,6 +1,6 @@
 package com.gerbort.data.data.mappers
 
-import com.gerbort.data.domain.model.TreeNode
+import com.gerbort.common.model.TreeNode
 import com.gerbort.database.model.NodeType
 import com.gerbort.database.model.QuaternionWrapper
 import com.gerbort.database.model.TreeNodeEntity

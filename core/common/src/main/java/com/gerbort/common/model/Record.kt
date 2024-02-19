@@ -1,4 +1,4 @@
-package com.gerbort.data.domain.model
+package com.gerbort.common.model
 
 data class Record(
     val id: Int? = null,

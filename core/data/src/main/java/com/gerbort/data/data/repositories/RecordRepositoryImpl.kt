@@ -1,8 +1,8 @@
 package com.gerbort.data.data.repositories
 
+import com.gerbort.common.model.Record
 import com.gerbort.data.data.mappers.toEntity
 import com.gerbort.data.data.mappers.toCommon
-import com.gerbort.data.domain.model.Record
 import com.gerbort.data.domain.repositories.RecordsRepository
 import com.gerbort.database.dao.RecordsDao
 import kotlinx.coroutines.flow.Flow

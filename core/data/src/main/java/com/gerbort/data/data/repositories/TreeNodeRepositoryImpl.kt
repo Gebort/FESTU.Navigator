@@ -1,8 +1,8 @@
 package com.gerbort.data.data.repositories
 
+import com.gerbort.common.model.TreeNode
 import com.gerbort.data.data.mappers.toCommon
 import com.gerbort.data.data.mappers.toEntity
-import com.gerbort.data.domain.model.TreeNode
 import com.gerbort.data.domain.repositories.TreeNodeRepository
 import com.gerbort.database.dao.TreeNodeDao
 import javax.inject.Inject

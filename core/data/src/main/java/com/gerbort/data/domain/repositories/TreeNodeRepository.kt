@@ -1,6 +1,6 @@
 package com.gerbort.data.domain.repositories
 
-import com.gerbort.data.domain.model.TreeNode
+import com.gerbort.common.model.TreeNode
 
 interface TreeNodeRepository {
 

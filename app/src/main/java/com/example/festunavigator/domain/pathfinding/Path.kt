@@ -1,7 +1,6 @@
 package com.example.festunavigator.domain.pathfinding
 
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
-import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.domain.utils.getApproxDif
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.light.position

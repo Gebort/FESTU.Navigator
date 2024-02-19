@@ -1,6 +1,6 @@
 package com.gerbort.data.domain.repositories
 
-import com.gerbort.data.domain.model.Record
+import com.gerbort.common.model.Record
 import kotlinx.coroutines.flow.Flow
 
 interface RecordsRepository {
