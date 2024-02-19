@@ -5,14 +5,14 @@ import com.gerbort.common.di.Dispatcher
 import com.gerbort.node_graph.domain.graph.NodeGraph
 import com.gerbort.pathfinding.domain.Path
 import com.gerbort.pathfinding.domain.Pathfinder
+import com.gerbort.smoothing.SmoothWayUseCase
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal class AStarImpl @Inject constructor(
-    @Dispatcher(AppDispatchers.Default) private val dispatcher: CoroutineDispatcher
-    //private val smoothPath: SmoothPath
+    @Dispatcher(AppDispatchers.Default) private val dispatcher: CoroutineDispatcher,
+    private val smoothWayUseCase: SmoothWayUseCase
 ): Pathfinder {
 
 
@@ -40,12 +40,11 @@ internal class AStarImpl @Inject constructor(
                 return@withContext Path(
                     start = startEntry,
                     end = endEntry,
-                    nodes = getPath(currentNode).map { it.node }
-//                    smoothPath(
-//                        getPath(currentNode).map { aStarNode ->
-//                            aStarNode.node
-//                        }
-//                    )
+                    points = smoothWayUseCase(
+                        getPath(currentNode).map { aStarNode ->
+                            aStarNode.node
+                        }
+                    )
                 )
             } else {
                 addAdjacentNodes(currentNode, openList, closedSet, finalNode, graph)

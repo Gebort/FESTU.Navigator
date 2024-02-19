@@ -6,6 +6,7 @@ import com.gerbort.node_graph.domain.graph.NodeGraph
 import com.gerbort.pathfinding.data.AStarImpl
 import com.gerbort.pathfinding.domain.PathfindUseCase
 import com.gerbort.pathfinding.domain.Pathfinder
+import com.gerbort.smoothing.SmoothWayUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +22,8 @@ internal object PathfindModule {
     @Singleton
     internal fun providePathfinder(
         @Dispatcher(AppDispatchers.Default) dispatcher: CoroutineDispatcher,
-    ): Pathfinder = AStarImpl(dispatcher)
+        smoothWayUseCase: SmoothWayUseCase
+    ): Pathfinder = AStarImpl(dispatcher, smoothWayUseCase)
 
     @Provides
     @Singleton

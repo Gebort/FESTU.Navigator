@@ -2,8 +2,8 @@ package com.gerbort.node_graph.data.adapter
 
 import com.gerbort.data.domain.model.TreeNode
 import com.gerbort.data.domain.repositories.TreeNodeRepository
-import com.gerbort.node_graph.data.utils.multiply
-import com.gerbort.node_graph.data.utils.opposite
+import com.gerbort.common.utils.multiply
+import com.gerbort.common.utils.opposite
 import com.gerbort.node_graph.domain.adapter.NodeRepositoryAdapter
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion

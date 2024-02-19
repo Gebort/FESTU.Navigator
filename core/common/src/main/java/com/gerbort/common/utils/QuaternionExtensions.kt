@@ -1,4 +1,4 @@
-package com.gerbort.node_graph.data.utils
+package com.gerbort.common.utils
 
 import com.google.ar.sceneform.math.Vector3
 import dev.romainguy.kotlin.math.Float3

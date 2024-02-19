@@ -5,8 +5,8 @@ import com.gerbort.common.di.AppDispatchers
 import com.gerbort.common.di.Dispatcher
 import com.gerbort.data.domain.model.TreeNode
 import com.gerbort.node_graph.data.diff_utils.GraphDiffUtils
-import com.gerbort.node_graph.data.utils.inverted
-import com.gerbort.node_graph.data.utils.multiply
+import com.gerbort.common.utils.inverted
+import com.gerbort.common.utils.multiply
 import com.gerbort.node_graph.domain.adapter.NodeRepositoryAdapter
 import com.gerbort.node_graph.domain.graph.NodeGraph
 import dev.romainguy.kotlin.math.Float3
