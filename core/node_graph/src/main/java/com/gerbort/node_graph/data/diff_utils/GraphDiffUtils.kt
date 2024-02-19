@@ -2,7 +2,7 @@ package com.gerbort.node_graph.data.diff_utils
 
 import com.gerbort.common.di.AppDispatchers
 import com.gerbort.common.di.Dispatcher
-import com.gerbort.data.domain.model.TreeNode
+import com.gerbort.common.model.TreeNode
 import com.gerbort.common.utils.getApproxDif
 import com.gerbort.node_graph.domain.graph.NodeGraph
 import dev.romainguy.kotlin.math.Float3

@@ -3,7 +3,7 @@ package com.gerbort.node_graph.data.graph
 import android.util.Log
 import com.gerbort.common.di.AppDispatchers
 import com.gerbort.common.di.Dispatcher
-import com.gerbort.data.domain.model.TreeNode
+import com.gerbort.common.model.TreeNode
 import com.gerbort.node_graph.data.diff_utils.GraphDiffUtils
 import com.gerbort.common.utils.inverted
 import com.gerbort.common.utils.multiply

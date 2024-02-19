@@ -1,6 +1,6 @@
 package com.gerbort.node_graph.data.adapter
 
-import com.gerbort.data.domain.model.TreeNode
+import com.gerbort.common.model.TreeNode
 import com.gerbort.data.domain.repositories.TreeNodeRepository
 import com.gerbort.common.utils.multiply
 import com.gerbort.common.utils.opposite
