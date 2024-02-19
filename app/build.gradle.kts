@@ -141,6 +141,7 @@ dependencies {
     implementation (Libs.Hilt.core)
     kapt (Libs.Hilt.compiler)
 
-    project(Modules.Core.Data)
+    implementation(project(Modules.Core.Data))
+    implementation(project(Modules.Core.Database))
 
 }

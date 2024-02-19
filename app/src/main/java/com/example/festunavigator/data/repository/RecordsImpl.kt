@@ -1,16 +1,14 @@
 package com.example.festunavigator.data.repository
 
-import com.gerbort.database.Database
 import com.example.festunavigator.data.model.Record
 import com.example.festunavigator.domain.repository.RecordsRepository
+import com.gerbort.database.dao.RecordsDao
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class RecordsImpl @Inject constructor(
-    private val database: com.gerbort.database.Database
+    private val dao: RecordsDao
 ): RecordsRepository {
-
-    private val dao = database.recordsDao
 
     override suspend fun insertRecord(record: Record) {
         dao.insertRecord(record)
