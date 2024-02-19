@@ -1,5 +1,7 @@
 package com.gerbort.node_graph.domain.di
 
+import com.gerbort.common.di.AppDispatchers
+import com.gerbort.common.di.Dispatcher
 import com.gerbort.data.domain.repositories.TreeNodeRepository
 import com.gerbort.node_graph.data.adapter.NodeAdapterImpl
 import com.gerbort.node_graph.data.graph.NodeGraphImpl
@@ -9,6 +11,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Singleton
 
 @Module
@@ -24,7 +27,8 @@ internal object NodeGraphModule {
     @Provides
     @Singleton
     internal fun provideNodeGraph(
-        nodeRepositoryAdapter: NodeRepositoryAdapter
-    ): NodeGraph = NodeGraphImpl(nodeRepositoryAdapter)
+        nodeRepositoryAdapter: NodeRepositoryAdapter,
+        @Dispatcher(AppDispatchers.Default) dispatcher: CoroutineDispatcher
+    ): NodeGraph = NodeGraphImpl(nodeRepositoryAdapter, dispatcher)
 
 }
