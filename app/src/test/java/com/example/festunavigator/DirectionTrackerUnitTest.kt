@@ -2,7 +2,7 @@ package com.example.festunavigator
 
 import com.example.festunavigator.data.utils.*
 import com.example.festunavigator.domain.hit_test.OrientatedPosition
-import com.example.festunavigator.domain.pathfinding.path_restoring.DirectionTracker
+import com.example.festunavigator.data.path_restoring.DirectionTracker
 import com.example.festunavigator.domain.utils.meanPoint
 import dev.romainguy.kotlin.math.Float3
 import com.google.ar.sceneform.math.Vector3
