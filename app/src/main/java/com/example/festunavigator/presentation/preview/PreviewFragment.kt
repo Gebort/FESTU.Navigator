@@ -20,7 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.festunavigator.data.App
 import com.example.festunavigator.data.utils.reverseConvertPosition
-import com.example.festunavigator.domain.pathfinding.path_restoring.PathAnalyzer
+import com.example.festunavigator.data.path_restoring.PathAnalyzer
 import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.domain.tree.WrongEntryException
 import com.example.festunavigator.presentation.LabelObject
