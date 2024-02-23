@@ -4,14 +4,6 @@ import android.annotation.SuppressLint
 import android.icu.util.Calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.festunavigator.data.model.Record
-import com.example.festunavigator.data.utils.*
-import com.example.festunavigator.domain.hit_test.HitTestResult
-import com.example.festunavigator.domain.hit_test.OrientatedPosition
-import com.example.festunavigator.domain.repository.RecordsRepository
-import com.example.festunavigator.domain.tree.Tree
-import com.example.festunavigator.domain.tree.TreeNode
-import com.example.festunavigator.domain.use_cases.FindWay
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.confirmer.ConfirmFragment
 import com.example.festunavigator.presentation.preview.state.PathState
@@ -20,7 +12,11 @@ import com.example.festunavigator.presentation.search.SearchUiEvent
 import com.gerbort.common.model.OrientatedPosition
 import com.gerbort.common.model.Record
 import com.gerbort.common.model.TreeNode
+import com.gerbort.common.utils.fromVector
+import com.gerbort.common.utils.multiply
+import com.gerbort.common.utils.reverseConvertPosition
 import com.gerbort.data.domain.repositories.RecordsRepository
+import com.gerbort.hit_test.HitTestResult
 import com.gerbort.node_graph.domain.graph.NodeGraph
 import com.gerbort.pathfinding.domain.PathfindUseCase
 import com.google.ar.sceneform.math.Vector3
@@ -78,8 +74,8 @@ class MainShareModel @Inject constructor(
     private var _treePivot = MutableStateFlow<OrientatedPosition?>(null)
     val treePivot = _treePivot.asStateFlow()
 
-    val treeDiffUtils = nodeGraph
-    val entriesNumber = tree.getEntriesNumbers()
+    val treeDiffUtils = nodeGraph.getDiffUtils()
+    val entriesNumber = nodeGraph.getEntriesNumbers()
 
     private var pathfindJob: Job? = null
     private var recordsJob: Job? = null
@@ -187,7 +183,7 @@ class MainShareModel @Inject constructor(
     }
 
     private suspend fun processSearch(number: String, changeType: Int) {
-        val entry = tree.getEntry(number)
+        val entry = nodeGraph.getEntry(number)
         if (entry == null) {
             _searchUiEvents.emit(SearchUiEvent.SearchInvalid)
             return
@@ -203,13 +199,13 @@ class MainShareModel @Inject constructor(
                 }
             } else {
                 val startEntry = pathState.value.startEntry
-            _pathState.update {
-                PathState(
-                    startEntry = if (entry.number == startEntry?.number) null else startEntry,
-                    endEntry = entry
-                )
+                _pathState.update {
+                    PathState(
+                        startEntry = if (entry.number == startEntry?.number) null else startEntry,
+                        endEntry = entry
+                    )
+                }
             }
-        }
         //Search successful
         pathfindJob?.cancel()
         pathfindJob = viewModelScope.launch {
@@ -225,7 +221,7 @@ class MainShareModel @Inject constructor(
                     end = end.number,
                     time = getCurrentWeekTime()
                 )
-                records.insertRecord(record)
+                recordsRepository.insertRecord(record)
             }
         }
 
@@ -235,8 +231,8 @@ class MainShareModel @Inject constructor(
     private suspend fun pathfind(){
         val from = pathState.value.startEntry?.number ?: return
         val to = pathState.value.endEntry?.number ?: return
-        if (tree.getEntry(from) != null && tree.getEntry(to) != null) {
-            val path = findWay(from, to, tree)
+        if (nodeGraph.getEntry(from) != null && nodeGraph.getEntry(to) != null) {
+            val path = pathfindUseCase(from, to)
             if (path != null) {
                 _pathState.update { it.copy(
                     path = path
@@ -260,7 +256,7 @@ class MainShareModel @Inject constructor(
             throw Exception("No position was provided")
         }
 
-        if (number != null && tree.hasEntry(number)){
+        if (number != null && nodeGraph.hasEntry(number)){
             _mainUiEvents.emit(MainUiEvent.EntryAlreadyExists)
             return
         }
@@ -278,7 +274,7 @@ class MainShareModel @Inject constructor(
                     null -> null
                     else -> Quaternion.fromVector((north - position2).toVector3().normalized())
                 }
-                val treeNode = tree.addNode(
+                val treeNode = nodeGraph.addNode(
                     position = position2,
                     number = number,
                     northDirection = northDirection,
@@ -300,19 +296,19 @@ class MainShareModel @Inject constructor(
     }
 
     private suspend fun linkNodes(node1: TreeNode, node2: TreeNode){
-        when (tree.addLink(node1, node2)) {
-            is Reaction.Success -> {
+        when (nodeGraph.addLink(node1, node2)) {
+            true -> {
                 _linkPlacementMode.update { false }
                 _mainUiEvents.emit(MainUiEvent.LinkCreated(node1, node2))
             }
-            is Reaction.Error -> {
+            false -> {
                 _mainUiEvents.emit(MainUiEvent.LinkAlreadyExists)
             }
         }
     }
 
     private suspend fun removeNode(node: TreeNode){
-        tree.removeNode(node)
+        nodeGraph.removeNode(node)
         _mainUiEvents.emit(MainUiEvent.NodeDeleted(node))
         if (node == selectedNode.value) {_selectedNode.update { null }}
         if (node == pathState.value.endEntry) {_pathState.update { it.copy(endEntry = null, path = null) }}
@@ -332,7 +328,7 @@ class MainShareModel @Inject constructor(
         recordsJob?.cancel()
         recordsJob = viewModelScope.launch {
             val time = getCurrentWeekTime() + 30*60*1000L
-            records.getRecords(time, 5).collectLatest{ records ->
+            recordsRepository.getRecords(time, 5).collectLatest{ records ->
                 _timeRecords.emit(records)
             }
         }
@@ -341,7 +337,7 @@ class MainShareModel @Inject constructor(
     private suspend fun initialize(entryNumber: String, position: Float3, newOrientation: Quaternion): Boolean {
         var result: Result<Unit?>
         withContext(Dispatchers.IO) {
-            result = tree.initialize(entryNumber, position, newOrientation)
+            result = nodeGraph.initialize(entryNumber, position, newOrientation)
         }
         if (result.isFailure){
             _mainUiEvents.emit(MainUiEvent.InitFailed(
@@ -349,7 +345,7 @@ class MainShareModel @Inject constructor(
             ))
             return false
         }
-        val entry = tree.getEntry(entryNumber)
+        val entry = nodeGraph.getEntry(entryNumber)
         _mainUiEvents.emit(MainUiEvent.InitSuccess(entry))
         _treePivot.update { OrientatedPosition(
             position = entry?.position ?: Float3(0f),
@@ -368,7 +364,7 @@ class MainShareModel @Inject constructor(
 
     private fun preload(){
         viewModelScope.launch {
-            tree.preload()
+            nodeGraph.preload()
         }
     }
 

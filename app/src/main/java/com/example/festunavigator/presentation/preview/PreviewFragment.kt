@@ -16,10 +16,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.festunavigator.App
-import com.example.festunavigator.data.utils.reverseConvertPosition
-import com.example.festunavigator.data.path_restoring.PathAnalyzer
-import com.example.festunavigator.domain.tree.TreeNode
-import com.example.festunavigator.domain.tree.WrongEntryException
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
 import com.example.festunavigator.presentation.preview.nodes_adapters.PathAdapter
@@ -27,16 +23,23 @@ import com.example.festunavigator.presentation.preview.nodes_adapters.TreeAdapte
 import com.example.festunavigator.presentation.preview.state.PathState
 import com.gerbort.app.R
 import com.gerbort.app.databinding.FragmentPreviewBinding
+import com.gerbort.common.model.TreeNode
+import com.gerbort.common.utils.reverseConvertPosition
+import com.gerbort.node_graph.data.graph.GraphException
+import com.gerbort.path_correction.domain.PathCorrector
 import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.Config
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.*
+import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.node.ArNode
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class PreviewFragment : Fragment(), SensorEventListener {
 
     private val mainModel: MainShareModel by activityViewModels()
@@ -52,7 +55,8 @@ class PreviewFragment : Fragment(), SensorEventListener {
     private var lastPositionTime = 0L
     private lateinit var pathAdapter: PathAdapter
     private lateinit var treeAdapter: TreeAdapter
-    private var pathAnalyzer: PathAnalyzer? = null
+
+    @Inject lateinit var pathCorrector: PathCorrector
 
 
     private var lastConfObject: LabelObject? = null
@@ -168,9 +172,9 @@ class PreviewFragment : Fragment(), SensorEventListener {
                             treeAdapter.changeParentPos(uiEvent.initialEntry?.position)
                             pathAdapter.changeParentPos(uiEvent.initialEntry?.position)
                             uiEvent.initialEntry?.let {
-                                pathAnalyzer = PathAnalyzer(debug = { s, w -> launch { withContext(Dispatchers.Main) { }}}) { t ->
-                                    mainModel.onEvent(MainEvent.PivotTransform(t))
-                                }
+//                                pathAnalyzer = PathAnalyzer(debug = { s, w -> launch { withContext(Dispatchers.Main) { }}}) { t ->
+//                                    mainModel.onEvent(MainEvent.PivotTransform(t))
+//                                }
 //                                pathAnalyzer = PathAnalyzer(debug = { s, w -> launch { withContext(Dispatchers.Main) { debug(s,w) }}}) { t ->
 //                                    mainModel.onEvent(MainEvent.PivotTransform(t))
 //                                }
@@ -179,7 +183,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
                         }
                         is MainUiEvent.InitFailed -> {
                             when (uiEvent.error) {
-                                is WrongEntryException -> {
+                                is GraphException.WrongEntryException -> {
                                     showSnackbar(getString(R.string.incorrect_number))
                                 }
                                 else -> {
@@ -343,8 +347,8 @@ class PreviewFragment : Fragment(), SensorEventListener {
                 )
 
                 treeAdapter.commit(nodes)
-                pathAdapter.getPivot()?.orientation?.let { parentQ ->
-                    val pathSegment = mainModel.treeDiffUtils.getClosestSegment(userPositionTrans)
+//                pathAdapter.getPivot()?.orientation?.let { parentQ ->
+//                    val pathSegment = mainModel.treeDiffUtils.getClosestSegment(userPositionTrans)
 //                    pathAnalyzer?.newPosition(
 //                        userPositionReal,
 //                        pathSegment,
@@ -352,7 +356,6 @@ class PreviewFragment : Fragment(), SensorEventListener {
 //                    )
                 }
             }
-        }
 
     }
 
@@ -384,7 +387,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent) {
         val alpha = 0.97f
 
-            if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
+        if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
                 mGravity[0] = alpha * mGravity[0] + (1 - alpha) * event.values[0]
                 mGravity[1] = alpha * mGravity[1] + (1 - alpha) * event.values[1]
                 mGravity[2] = alpha * mGravity[2] + (1 - alpha) * event.values[2]

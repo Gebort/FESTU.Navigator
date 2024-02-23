@@ -13,15 +13,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.example.festunavigator.App
-import com.example.festunavigator.domain.hit_test.HitTestResult
-import com.example.festunavigator.domain.use_cases.GetDestinationDesc
-import com.example.festunavigator.domain.use_cases.HitTest
 import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
 import com.example.festunavigator.presentation.scanner.ScannerFragment
 import com.example.festunavigator.presentation.search.SearchFragment
 import com.gerbort.app.R
 import com.gerbort.app.databinding.FragmentRouterBinding
+import com.gerbort.common.node_ext.getEntryLocation
+import com.gerbort.hit_test.HitTestResult
+import com.gerbort.hit_test.HitTestUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
 import dev.romainguy.kotlin.math.Float3
@@ -36,9 +36,7 @@ class RouterFragment: Fragment() {
     private val mainModel: MainShareModel by activityViewModels()
 
     @Inject
-    lateinit var destinationDesc: GetDestinationDesc
-    @Inject
-    lateinit var hitTest: HitTest
+    lateinit var hitTest: HitTestUseCase
 
     private var _binding: FragmentRouterBinding? = null
     private val binding get() = _binding!!
@@ -109,7 +107,7 @@ class RouterFragment: Fragment() {
                         binding.destinationText.text =
                             resources.getString(
                                 R.string.going,
-                                destinationDesc(pathState.endEntry!!.number, requireContext())
+                                pathState.endEntry!!.number.getEntryLocation(requireContext())
                             )
                     }
                     else {

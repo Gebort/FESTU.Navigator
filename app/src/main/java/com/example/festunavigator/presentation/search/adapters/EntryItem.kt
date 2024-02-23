@@ -4,5 +4,4 @@ data class EntryItem(
     val number: String,
     val description: String,
     val history: Boolean = false
-    ) {
-}
+    )

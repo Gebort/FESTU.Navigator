@@ -1,6 +1,6 @@
 package com.example.festunavigator.presentation.preview
 
-import com.example.festunavigator.domain.tree.TreeNode
+import com.gerbort.common.model.TreeNode
 import com.google.ar.core.Anchor
 import java.lang.Exception
 

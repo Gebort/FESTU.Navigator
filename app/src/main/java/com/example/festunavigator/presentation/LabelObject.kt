@@ -1,8 +1,7 @@
 package com.example.festunavigator.presentation
 
-import com.example.festunavigator.domain.hit_test.OrientatedPosition
+import com.gerbort.common.model.OrientatedPosition
 import com.google.ar.core.Anchor
-import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.node.ArNode
 
 data class LabelObject(

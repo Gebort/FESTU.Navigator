@@ -4,11 +4,11 @@ import android.content.Context
 import com.gerbort.common.R
 import com.gerbort.common.model.TreeNode
 
-fun TreeNode.Entry.getLocation(context: Context): String {
+fun String.getEntryLocation(context: Context): String {
     var building = ""
     var floor = 0
     val floorStr = context.getString(R.string.floor)
-    val tnumber = if (number.last().isDigit()) number else number.dropLast(1)
+    val tnumber = if (this.last().isDigit()) this else this.dropLast(1)
 
     if (tnumber.length == 1){
         building = context.getString(R.string.main)

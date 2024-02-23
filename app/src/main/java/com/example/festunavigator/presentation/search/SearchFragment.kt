@@ -17,7 +17,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.festunavigator.domain.use_cases.GetDestinationDesc
 import com.example.festunavigator.presentation.search.adapters.EntriesAdapter
 import com.example.festunavigator.presentation.search.adapters.EntryItem
 import com.example.festunavigator.presentation.common.helpers.viewHideInput
@@ -26,6 +25,7 @@ import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
 import com.gerbort.app.R
 import com.gerbort.app.databinding.FragmentSearchBinding
+import com.gerbort.common.node_ext.getEntryLocation
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -37,9 +37,6 @@ import javax.inject.Inject
 class SearchFragment: Fragment() {
 
     private val mainModel: MainShareModel by activityViewModels()
-
-    @Inject
-    lateinit var destinationDesc: GetDestinationDesc
 
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
@@ -110,7 +107,7 @@ class SearchFragment: Fragment() {
                     .map { number ->
                         EntryItem(
                             number,
-                            destinationDesc(number, requireActivity().applicationContext)
+                            number.getEntryLocation(requireContext())
                         )
                     }
             }
@@ -122,7 +119,7 @@ class SearchFragment: Fragment() {
                         records.map {
                             EntryItem(
                                 it.end,
-                                destinationDesc(it.end, requireActivity().applicationContext),
+                                it.end.getEntryLocation(requireContext()),
                                 true
                             )
                         }

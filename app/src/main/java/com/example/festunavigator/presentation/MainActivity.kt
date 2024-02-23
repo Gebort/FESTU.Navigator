@@ -3,8 +3,8 @@ package com.example.festunavigator.presentation
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.example.festunavigator.data.ml.classification.ARCoreSessionLifecycleHelper
 import com.gerbort.app.R
+import com.gerbort.text_recognition.data.ARCoreSessionLifecycleHelper
 import com.google.ar.core.CameraConfig
 import com.google.ar.core.CameraConfigFilter
 import com.google.ar.core.Config

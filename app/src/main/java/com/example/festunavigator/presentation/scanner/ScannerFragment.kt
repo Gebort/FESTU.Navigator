@@ -12,10 +12,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.example.festunavigator.domain.hit_test.HitTestResult
-import com.example.festunavigator.domain.ml.DetectedText
-import com.example.festunavigator.domain.use_cases.AnalyzeImage
-import com.example.festunavigator.domain.use_cases.HitTest
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.common.helpers.DisplayRotationHelper
 import com.example.festunavigator.presentation.confirmer.ConfirmFragment
@@ -23,6 +19,10 @@ import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
 import com.example.festunavigator.presentation.preview.PreviewFragment
 import com.gerbort.app.databinding.FragmentScannerBinding
+import com.gerbort.hit_test.HitTestResult
+import com.gerbort.hit_test.HitTestUseCase
+import com.gerbort.text_recognition.domain.DetectTextUseCase
+import com.gerbort.text_recognition.domain.DetectedText
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException
 import dagger.hilt.android.AndroidEntryPoint
@@ -40,9 +40,9 @@ class ScannerFragment: Fragment() {
     private val mainModel: MainShareModel by activityViewModels()
 
     @Inject
-    lateinit var hitTest: HitTest
+    lateinit var hitTest: HitTestUseCase
     @Inject
-    lateinit var analyzeImage: AnalyzeImage
+    lateinit var analyzeImage: DetectTextUseCase
 
     private var _binding: FragmentScannerBinding? = null
     private val binding get() = _binding!!
