@@ -6,19 +6,16 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.RotateAnimation
 import android.widget.Toast
-import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.example.festunavigator.data.App
+import com.example.festunavigator.App
 import com.example.festunavigator.data.utils.reverseConvertPosition
 import com.example.festunavigator.data.path_restoring.PathAnalyzer
 import com.example.festunavigator.domain.tree.TreeNode
@@ -39,8 +36,6 @@ import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.node.ArNode
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
-import kotlin.math.log
 
 class PreviewFragment : Fragment(), SensorEventListener {
 

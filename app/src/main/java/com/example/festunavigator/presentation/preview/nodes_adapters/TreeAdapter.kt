@@ -1,9 +1,8 @@
 package com.example.festunavigator.presentation.preview.nodes_adapters
 
 import androidx.lifecycle.LifecycleCoroutineScope
-import com.example.festunavigator.data.utils.multiply
-import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
+import com.gerbort.common.model.TreeNode
 import com.google.android.material.snackbar.Snackbar
 import com.uchuhimo.collections.MutableBiMap
 import com.uchuhimo.collections.mutableBiMapOf

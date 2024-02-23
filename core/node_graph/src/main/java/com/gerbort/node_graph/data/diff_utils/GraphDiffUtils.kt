@@ -5,6 +5,7 @@ import com.gerbort.common.di.Dispatcher
 import com.gerbort.common.model.TreeNode
 import com.gerbort.common.utils.getApproxDif
 import com.gerbort.node_graph.domain.graph.NodeGraph
+import com.gerbort.node_graph.domain.graph.NodeGraphDiffUtils
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.sqr
 import kotlinx.coroutines.CoroutineDispatcher
@@ -16,11 +17,11 @@ import kotlin.math.sqrt
 class GraphDiffUtils @Inject constructor(
     private val graph: NodeGraph,
     @Dispatcher(AppDispatchers.Default) private val dispatcher: CoroutineDispatcher
-) {
+): NodeGraphDiffUtils {
 
     private var closestNodes = mutableMapOf<Int, TreeNode>()
 
-    suspend fun getNearNodes(position: Float3, radius: Float): List<TreeNode> = withContext(dispatcher) {
+    override suspend fun getNearNodes(position: Float3, radius: Float): List<TreeNode> = withContext(dispatcher) {
         if (!graph.isInitialized()) {
             return@withContext listOf()
         }

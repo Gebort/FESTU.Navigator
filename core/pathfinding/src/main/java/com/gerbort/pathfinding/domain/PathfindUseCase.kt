@@ -2,6 +2,7 @@ package com.gerbort.pathfinding.domain
 
 import com.gerbort.common.di.AppDispatchers
 import com.gerbort.common.di.Dispatcher
+import com.gerbort.common.model.Path
 import com.gerbort.node_graph.domain.graph.NodeGraph
 import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Inject

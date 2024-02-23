@@ -9,6 +9,7 @@ import com.gerbort.common.utils.inverted
 import com.gerbort.common.utils.multiply
 import com.gerbort.node_graph.domain.adapter.NodeRepositoryAdapter
 import com.gerbort.node_graph.domain.graph.NodeGraph
+import com.gerbort.node_graph.domain.graph.NodeGraphDiffUtils
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.toFloat3
@@ -101,6 +102,10 @@ internal class NodeGraphImpl @Inject constructor(
             initialized = true
             return Result.success(Unit)
         }
+    }
+
+    override fun getDiffUtils(): NodeGraphDiffUtils {
+        return diffUtils
     }
 
     override fun getNode(id: Int): TreeNode? {

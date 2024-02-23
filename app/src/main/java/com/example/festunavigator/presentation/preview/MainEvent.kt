@@ -1,12 +1,11 @@
 package com.example.festunavigator.presentation.preview
 
-import com.example.festunavigator.domain.hit_test.HitTestResult
-import com.example.festunavigator.domain.tree.TreeNode
 import com.example.festunavigator.presentation.LabelObject
+import com.gerbort.common.model.TreeNode
+import com.gerbort.hit_test.HitTestResult
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
-import io.github.sceneview.ar.arcore.ArSession
 
 sealed interface MainEvent{
     class NewFrame(val frame: ArFrame): MainEvent

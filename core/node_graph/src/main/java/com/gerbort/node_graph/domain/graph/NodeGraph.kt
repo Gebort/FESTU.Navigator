@@ -18,6 +18,8 @@ interface NodeGraph {
         newRotation: Quaternion
     ): Result<Unit>
 
+    fun getDiffUtils(): NodeGraphDiffUtils
+
     fun getNode(id: Int): TreeNode?
 
     fun getEntry(number: String): TreeNode.Entry?

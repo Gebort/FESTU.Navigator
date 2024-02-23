@@ -1,4 +1,4 @@
-package com.example.festunavigator.data
+package com.example.festunavigator
 
 import android.app.Application
 import com.gerbort.app.BuildConfig

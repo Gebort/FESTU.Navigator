@@ -1,9 +1,8 @@
 package com.example.festunavigator.presentation.preview.nodes_adapters
 
 import androidx.lifecycle.LifecycleCoroutineScope
-import com.example.festunavigator.data.utils.multiply
-import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
+import com.gerbort.common.model.OrientatedPosition
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.ArSceneView
@@ -65,7 +64,7 @@ abstract class NodesAdapter<T>(
 
     private suspend fun calculateChanges(newList: List<T>) = withContext(Dispatchers.Default) {
         nodes.keys.asSequence()
-            .minus(newList)
+            .minus(newList.toSet())
             .map { item -> DiffOperation.Deleted(item) }
             .forEach { change ->
                 changesFlow.tryEmit(change)

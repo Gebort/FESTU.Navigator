@@ -1,13 +1,10 @@
 package com.example.festunavigator.presentation.preview.nodes_adapters
 
 import androidx.lifecycle.LifecycleCoroutineScope
-import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.presentation.common.helpers.DrawerHelper
+import com.gerbort.common.model.OrientatedPosition
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
 
 
 class PathAdapter(

@@ -5,10 +5,10 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import com.example.festunavigator.data.App
-import com.example.festunavigator.domain.hit_test.OrientatedPosition
-import com.example.festunavigator.domain.tree.TreeNode
+import com.example.festunavigator.App
 import com.gerbort.app.R
+import com.gerbort.common.model.OrientatedPosition
+import com.gerbort.common.model.TreeNode
 import com.google.ar.core.Anchor
 import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3

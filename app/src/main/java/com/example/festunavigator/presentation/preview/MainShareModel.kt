@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.icu.util.Calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.festunavigator.data.App
 import com.example.festunavigator.data.model.Record
 import com.example.festunavigator.data.utils.*
 import com.example.festunavigator.domain.hit_test.HitTestResult
@@ -12,20 +11,24 @@ import com.example.festunavigator.domain.hit_test.OrientatedPosition
 import com.example.festunavigator.domain.repository.RecordsRepository
 import com.example.festunavigator.domain.tree.Tree
 import com.example.festunavigator.domain.tree.TreeNode
-import com.example.festunavigator.domain.tree.WrongEntryException
 import com.example.festunavigator.domain.use_cases.FindWay
 import com.example.festunavigator.presentation.LabelObject
 import com.example.festunavigator.presentation.confirmer.ConfirmFragment
 import com.example.festunavigator.presentation.preview.state.PathState
 import com.example.festunavigator.presentation.search.SearchFragment
 import com.example.festunavigator.presentation.search.SearchUiEvent
+import com.gerbort.common.model.OrientatedPosition
+import com.gerbort.common.model.Record
+import com.gerbort.common.model.TreeNode
+import com.gerbort.data.domain.repositories.RecordsRepository
+import com.gerbort.node_graph.domain.graph.NodeGraph
+import com.gerbort.pathfinding.domain.PathfindUseCase
 import com.google.ar.sceneform.math.Vector3
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import dev.romainguy.kotlin.math.RotationsOrder
 import io.github.sceneview.ar.arcore.ArFrame
-import io.github.sceneview.ar.arcore.quaternion
 import io.github.sceneview.ar.arcore.rotation
 import io.github.sceneview.math.toFloat3
 import io.github.sceneview.math.toQuaternion
@@ -39,9 +42,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainShareModel @Inject constructor(
-    private val tree: Tree,
-    private val findWay: FindWay,
-    private val records: RecordsRepository
+    private val nodeGraph: NodeGraph,
+    private val pathfindUseCase: PathfindUseCase,
+    private val recordsRepository: RecordsRepository
 ): ViewModel() {
 
     private var _pathState = MutableStateFlow(PathState())
@@ -75,7 +78,7 @@ class MainShareModel @Inject constructor(
     private var _treePivot = MutableStateFlow<OrientatedPosition?>(null)
     val treePivot = _treePivot.asStateFlow()
 
-    val treeDiffUtils = tree.diffUtils
+    val treeDiffUtils = nodeGraph
     val entriesNumber = tree.getEntriesNumbers()
 
     private var pathfindJob: Job? = null

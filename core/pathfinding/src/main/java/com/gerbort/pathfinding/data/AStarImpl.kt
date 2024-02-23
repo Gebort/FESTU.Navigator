@@ -2,8 +2,8 @@ package com.gerbort.pathfinding.data
 
 import com.gerbort.common.di.AppDispatchers
 import com.gerbort.common.di.Dispatcher
+import com.gerbort.common.model.Path
 import com.gerbort.node_graph.domain.graph.NodeGraph
-import com.gerbort.pathfinding.domain.Path
 import com.gerbort.pathfinding.domain.Pathfinder
 import com.gerbort.smoothing.SmoothWayUseCase
 import kotlinx.coroutines.CoroutineDispatcher

@@ -2,11 +2,9 @@ package com.example.festunavigator.presentation.scanner
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -14,7 +12,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import com.example.festunavigator.data.App
 import com.example.festunavigator.domain.hit_test.HitTestResult
 import com.example.festunavigator.domain.ml.DetectedText
 import com.example.festunavigator.domain.use_cases.AnalyzeImage
@@ -26,18 +23,13 @@ import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
 import com.example.festunavigator.presentation.preview.PreviewFragment
 import com.gerbort.app.databinding.FragmentScannerBinding
-import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException
 import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
 import io.github.sceneview.ar.arcore.ArFrame
-import io.github.sceneview.ar.scene.destroy
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 private const val SMOOTH_DELAY = 0.5

@@ -9,6 +9,7 @@ object Modules {
         const val Pathfinding = ":core:pathfinding"
         const val TextRecognition = ":core:text_recognition"
         const val HitTest = ":core:hit_test"
+        const val PathCorrection = ":core:path_correction"
 
     }
 
