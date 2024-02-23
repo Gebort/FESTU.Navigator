@@ -27,7 +27,6 @@ class LibraryGradlePlugin: Plugin<Project> {
             plugin("android-library")
             plugin("kotlin-android")
             plugin("kotlin-kapt")
-            plugin("com.google.gms.google-services")
             plugin("com.google.firebase.crashlytics")
             plugin("dagger.hilt.android.plugin")
         }

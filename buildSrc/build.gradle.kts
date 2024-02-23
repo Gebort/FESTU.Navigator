@@ -21,6 +21,11 @@ gradlePlugin {
             implementationClass = "plugins.LibraryGradlePlugin"
         }
 
+        register("googleLibrary") {
+            id = "project.android.library.gms"
+            implementationClass = "plugins.LibraryGMSPlugin"
+        }
+
         register("composeLibrary") {
             id = "project.android.library.ui"
             implementationClass = "plugins.LibraryUiPlugin"

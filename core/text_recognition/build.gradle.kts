@@ -4,6 +4,10 @@ plugins {
 
 android {
     namespace = "com.gerbort.text_recognition"
+
+    androidResources {
+        noCompress.add("tflite")
+    }
 }
 
 dependencies {
