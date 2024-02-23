@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="main">Main building</string>
+    <string name="lab">Laboratory</string>
+    <string name="first_tower">Tower №1</string>
+    <string name="second_tower">Tower №2</string>
+    <string name="second_building">Second building</string>
+    <string name="floor">floor №</string>
+
+</resources>

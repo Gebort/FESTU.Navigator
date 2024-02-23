@@ -1,8 +1,5 @@
 package com.example.festunavigator.data.path_restoring
 
-import com.example.festunavigator.data.utils.angleBetween
-import com.example.festunavigator.domain.hit_test.OrientatedPosition
-import com.example.festunavigator.data.utils.fromVector
 import com.example.festunavigator.domain.utils.getApproxDif
 import com.example.festunavigator.domain.utils.meanPoint
 import com.google.ar.sceneform.math.Vector3
