@@ -25,13 +25,12 @@ import com.example.festunavigator.presentation.preview.MainEvent
 import com.example.festunavigator.presentation.preview.MainShareModel
 import com.gerbort.app.R
 import com.gerbort.app.databinding.FragmentSearchBinding
-import com.gerbort.common.node_ext.getEntryLocation
+import com.gerbort.common.model_ext.getEntryLocation
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class SearchFragment: Fragment() {

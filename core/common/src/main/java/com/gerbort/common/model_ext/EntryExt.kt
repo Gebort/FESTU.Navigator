@@ -1,8 +1,7 @@
-package com.gerbort.common.node_ext
+package com.gerbort.common.model_ext
 
 import android.content.Context
 import com.gerbort.common.R
-import com.gerbort.common.model.TreeNode
 
 fun String.getEntryLocation(context: Context): String {
     var building = ""

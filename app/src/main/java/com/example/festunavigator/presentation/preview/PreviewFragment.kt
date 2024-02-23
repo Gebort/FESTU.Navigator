@@ -329,7 +329,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
     private fun changeViewablePath(userPositionTrans: Float3){
         wayBuildingJob?.cancel()
         wayBuildingJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            val nodes = currentPathState?.path?.getNearNodes(
+            val nodes = currentPathState?.pathDiffUtils?.getNearNodes(
                 number = VIEWABLE_PATH_NODES,
                 position = userPositionTrans
             ) ?: listOf()

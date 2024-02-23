@@ -19,7 +19,7 @@ import com.example.festunavigator.presentation.scanner.ScannerFragment
 import com.example.festunavigator.presentation.search.SearchFragment
 import com.gerbort.app.R
 import com.gerbort.app.databinding.FragmentRouterBinding
-import com.gerbort.common.node_ext.getEntryLocation
+import com.gerbort.common.model_ext.getEntryLocation
 import com.gerbort.hit_test.HitTestResult
 import com.gerbort.hit_test.HitTestUseCase
 import dagger.hilt.android.AndroidEntryPoint
