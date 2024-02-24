@@ -25,6 +25,7 @@ import com.gerbort.app.R
 import com.gerbort.app.databinding.FragmentPreviewBinding
 import com.gerbort.common.model.TreeNode
 import com.gerbort.common.utils.reverseConvertPosition
+import com.gerbort.core_ui.frame_holder.FrameConsumer
 import com.gerbort.node_graph.data.graph.GraphException
 import com.gerbort.path_correction.domain.PathCorrector
 import com.google.android.material.snackbar.Snackbar
@@ -57,6 +58,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
     private lateinit var treeAdapter: TreeAdapter
 
     @Inject lateinit var pathCorrector: PathCorrector
+    @Inject lateinit var frameConsumer: FrameConsumer
 
 
     private var lastConfObject: LabelObject? = null
@@ -275,6 +277,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
         }
 
 
+        frameConsumer.newFrame(frame)
         mainModel.onEvent(
             MainEvent.NewFrame(frame)
         )

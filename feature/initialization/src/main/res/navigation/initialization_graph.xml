@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/initialization_graph"
+    app:startDestination="@id/orientationFragment">
+
+    <fragment
+        android:id="@+id/orientationFragment"
+        android:name="com.gerbort.initialization.OrientationFragment"
+        android:label="fragment_orientation"
+        tools:layout="@layout/fragment_orientation" >
+    </fragment>
+</navigation>

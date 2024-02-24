@@ -1,7 +1,8 @@
-package com.example.festunavigator.presentation.orientating
+package com.gerbort.initialization
 
 import android.animation.ObjectAnimator
 import android.graphics.Path
+import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -9,18 +10,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
 import androidx.core.view.doOnLayout
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.example.festunavigator.presentation.preview.MainShareModel
-import com.example.festunavigator.presentation.scanner.ScannerFragment
-import com.gerbort.app.R
-import com.gerbort.app.databinding.FragmentOrientationBinding
+import com.gerbort.core_ui.frame_holder.FrameProducer
+import com.gerbort.initialization.databinding.FragmentOrientationBinding
 import com.google.ar.core.Plane
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class OrientationFragment : Fragment() {
@@ -28,7 +27,7 @@ class OrientationFragment : Fragment() {
     private var _binding: FragmentOrientationBinding? = null
     private val binding get() = _binding!!
 
-    private val mainModel: MainShareModel by activityViewModels()
+    @Inject lateinit var frameProducer: FrameProducer
 
     private var navigating = false
     private var scanningWall = false
@@ -44,7 +43,7 @@ class OrientationFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainModel.frame.collect { frame ->
+                frameProducer.getFrames().collect { frame ->
                     frame?.let {
                         if (frame.session.allPlanes.any { it.type == Plane.Type.HORIZONTAL_UPWARD_FACING }) {
                             if (!scanningWall) {
@@ -55,12 +54,8 @@ class OrientationFragment : Fragment() {
                         if (frame.session.allPlanes.any { it.type == Plane.Type.VERTICAL }) {
                             if (!navigating){
                                 navigating = true
-                                val bundle = Bundle()
-                                bundle.putInt(
-                                    ScannerFragment.SCAN_TYPE,
-                                    ScannerFragment.TYPE_INITIALIZE
-                                )
-                                findNavController().navigate(R.id.action_orientationFragment_to_scannerFragment, args = bundle)
+                                val uri = Uri.parse("android-app://com.gerbort.app/scanner_fragment/0")
+                                findNavController().navigate(uri)
                             }
                         }
                     }

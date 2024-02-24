@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="orientate_wall">Slowly point the phone at the audience number</string>
+    <string name="orientate_floor">Slowly move the phone while pointing it at the floor</string>
+</resources>

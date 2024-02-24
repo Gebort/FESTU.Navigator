@@ -5,6 +5,9 @@
     android:id="@+id/preview_nav_graph"
     app:startDestination="@id/orientationFragment">
 
+    <include app:graph="@navigation/initialization_graph" />
+
+
     <fragment
         android:id="@+id/scannerFragment"
         android:name="com.example.festunavigator.presentation.scanner.ScannerFragment"
@@ -22,6 +25,8 @@
             android:name="scanType"
             app:argType="integer"
             android:defaultValue="0" />
+        <deepLink
+            app:uri="android-app://com.gerbort.app/scanner_fragment/{scanType}" />
     </fragment>
     <fragment
         android:id="@+id/confirmFragment"
@@ -73,7 +78,7 @@
         app:popUpTo="@id/routerFragment" />
     <fragment
         android:id="@+id/orientationFragment"
-        android:name="com.example.festunavigator.presentation.orientating.OrientationFragment"
+        android:name="com.gerbort.initialization.OrientationFragment"
         android:label="fragment_orientation"
         tools:layout="@layout/fragment_orientation" >
         <action

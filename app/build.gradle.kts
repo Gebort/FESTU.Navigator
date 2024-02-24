@@ -136,11 +136,15 @@ dependencies {
     kapt (Libs.Hilt.compiler)
 
     implementation(project(Modules.Core.Common))
+    implementation(project(Modules.Core.CoreUi))
     implementation(project(Modules.Core.HitTest))
     implementation(project(Modules.Core.Pathfinding))
     implementation(project(Modules.Core.TextRecognition))
     implementation(project(Modules.Core.NodeGraph))
     implementation(project(Modules.Core.Data))
     implementation(project(Modules.Core.PathCorrection))
+
+    implementation(project(Modules.Feature.Initialization))
+
 
 }

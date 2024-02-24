@@ -2,6 +2,7 @@ object Modules {
 
     object Core {
         const val Common = ":core:common"
+        const val CoreUi = ":core:core_ui"
         const val Database = ":core:database"
         const val Data = ":core:data"
         const val NodeGraph = ":core:node_graph"
@@ -10,7 +11,9 @@ object Modules {
         const val TextRecognition = ":core:text_recognition"
         const val HitTest = ":core:hit_test"
         const val PathCorrection = ":core:path_correction"
-
+    }
+    object Feature {
+        const val Initialization = ":feature:initialization"
     }
 
 }
