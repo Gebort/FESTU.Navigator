@@ -14,6 +14,11 @@ object Modules {
     }
     object Feature {
         const val Initialization = ":feature:initialization"
+        const val Confirmer = ":feature:confirmer"
+        const val Search = ":feature:search"
+        const val Router = ":feature:router"
+        const val Scanner = ":feature:scanner"
+
     }
 
 }

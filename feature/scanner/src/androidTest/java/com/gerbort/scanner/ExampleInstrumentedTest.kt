@@ -1,4 +1,4 @@
-package com.gerbort.initialization
+package com.gerbort.scanner
 
 //import androidx.test.platform.app.InstrumentationRegistry
 //import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ package com.gerbort.initialization
 //    fun useAppContext() {
 //        // Context of the app under test.
 //        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-//        assertEquals("com.gerbort.initialization.test", appContext.packageName)
+//        assertEquals("com.gerbort.scanner.test", appContext.packageName)
 //    }
 //}

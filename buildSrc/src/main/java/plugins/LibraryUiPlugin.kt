@@ -23,8 +23,6 @@ class LibraryUiPlugin: Plugin<Project> {
                 add("implementation", Libs.AndroidX.Lifecycle.viewModel)
                 add("implementation", Libs.Navigation.ui)
                 add("implementation", Libs.Navigation.fragments)
-
-
             }
         }
     }

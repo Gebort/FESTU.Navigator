@@ -1,4 +1,4 @@
-package com.gerbort.initialization
+package com.gerbort.scanner
 
 //import org.junit.Test
 //

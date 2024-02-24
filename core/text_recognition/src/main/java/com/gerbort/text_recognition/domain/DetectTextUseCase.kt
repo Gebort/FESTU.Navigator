@@ -10,8 +10,8 @@ class DetectTextUseCase @Inject constructor (
     suspend operator fun invoke(
         image: Image,
         imageRotation: Int,
-        imageCropPercentage: Pair<Int, Int>,
-        displaySize: Pair<Int, Int>
+        displaySize: Pair<Int, Int>,
+        imageCropPercentage: Pair<Int, Int> = Pair(8, 72)
     ): Result<DetectedObjectResult>{
         return objectDetector.analyze(
             image,

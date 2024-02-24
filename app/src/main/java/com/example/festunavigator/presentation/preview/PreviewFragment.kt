@@ -383,8 +383,6 @@ class PreviewFragment : Fragment(), SensorEventListener {
         const val VIEWABLE_ADMIN_NODES_DISTANCE = 8f
         //how often the check for path and tree redraw will be
         const val POSITION_DETECT_DELAY = 100L
-        //image crop for recognition
-        val DESIRED_CROP = Pair(8, 72)
     }
 
     override fun onSensorChanged(event: SensorEvent) {

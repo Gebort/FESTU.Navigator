@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scanner_navigation"
+    app:startDestination="@id/scannerFragment">
+
+    <fragment
+        android:id="@+id/scannerFragment"
+        android:name="com.gerbort.scanner.ScannerFragment"
+        android:label="fragment_scanner"
+        tools:layout="@layout/fragment_scanner" >
+        <argument
+            android:name="scanType"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <deepLink
+            app:uri="android-app://com.gerbort.app/scanner_fragment/{scanType}" />
+    </fragment>
+
+
+</navigation>

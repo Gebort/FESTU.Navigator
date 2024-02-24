@@ -6,6 +6,10 @@
     app:startDestination="@id/orientationFragment">
 
     <include app:graph="@navigation/initialization_graph" />
+    <include app:graph="@navigation/confirmer_graph" />
+    <include app:graph="@navigation/router_graph" />
+    <include app:graph="@navigation/search_graph" />
+    <include app:graph="@navigation/search_graph" />
 
 
     <fragment
