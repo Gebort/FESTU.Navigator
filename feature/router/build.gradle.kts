@@ -5,6 +5,10 @@ plugins {
 
 android {
     namespace = "com.gerbort.router"
+
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {
@@ -12,6 +16,8 @@ dependencies {
     implementation(Libs.Sceneview.arSceneView)
 
     implementation(project(Modules.Core.Common))
+    implementation(project(Modules.Core.NodeGraph))
+    implementation(project(Modules.Core.HitTest))
     implementation(project(Modules.Core.CoreUi))
 
 }
