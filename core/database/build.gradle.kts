@@ -19,4 +19,6 @@ dependencies {
 
     implementation(Libs.Room.runtime)
     kapt(Libs.Room.compiler)
+    implementation(Libs.Room.androidx)
+
 }

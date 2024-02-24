@@ -8,6 +8,8 @@ android {
 
 dependencies {
 
+    //излишняя библиотека для простого доступа к Float3
+    implementation(Libs.Sceneview.sceneView)
     implementation(project(Modules.Core.Common))
     implementation(project(Modules.Core.Smoothing))
     implementation(project(Modules.Core.NodeGraph))
