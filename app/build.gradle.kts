@@ -145,7 +145,6 @@ dependencies {
     implementation(project(Modules.Core.PathCorrection))
 
     implementation(project(Modules.Feature.Initialization))
-    implementation(project(Modules.Feature.Confirmer))
     implementation(project(Modules.Feature.Router))
     implementation(project(Modules.Feature.Search))
     implementation(project(Modules.Feature.Scanner))

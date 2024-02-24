@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/scannerFragment"
-        android:name="com.gerbort.scanner.ScannerFragment"
+        android:name="com.gerbort.scanner.scanner.ScannerFragment"
         android:label="fragment_scanner"
         tools:layout="@layout/fragment_scanner" >
         <argument
@@ -16,6 +16,21 @@
             android:defaultValue="0" />
         <deepLink
             app:uri="android-app://com.gerbort.app/scanner_fragment/{scanType}" />
+        <action
+            android:id="@+id/action_scannerFragment_to_confirmFragment"
+            app:destination="@id/confirmFragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:exitAnim="@android:anim/fade_out"
+            app:popEnterAnim="@android:anim/fade_in"
+            app:popExitAnim="@android:anim/fade_out" />
+    </fragment>
+    <fragment
+        android:id="@+id/confirmFragment"
+        android:name="com.gerbort.scanner.confirmer.ConfirmFragment"
+        android:label="fragment_confirm"
+        tools:layout="@layout/fragment_confirm" >
+        <deepLink
+            app:uri="android-app://com.gerbort.app/scanner_fragment/{confirmType}" />
     </fragment>
 
 

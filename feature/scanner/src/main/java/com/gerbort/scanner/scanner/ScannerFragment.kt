@@ -1,4 +1,4 @@
-package com.gerbort.scanner
+package com.gerbort.scanner.scanner
 
 import android.content.Context
 import android.os.Bundle
@@ -14,6 +14,11 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.gerbort.core_ui.frame_holder.FrameProducer
 import com.gerbort.hit_test.HitTestUseCase
+import com.gerbort.scanner.ConfirmType
+import com.gerbort.scanner.LabelObject
+import com.gerbort.scanner.ScannerEvent
+import com.gerbort.scanner.ScannerViewModel
+import com.gerbort.scanner.helpers.DisplayRotationHelper
 import com.gerbort.scanner.databinding.FragmentScannerBinding
 import com.gerbort.text_recognition.domain.DetectTextUseCase
 import com.google.ar.core.TrackingState
@@ -37,6 +42,8 @@ class ScannerFragment: Fragment() {
 
     private var _binding: FragmentScannerBinding? = null
     private val binding get() = _binding!!
+
+    private val vm: ScannerViewModel by activityViewModels()
 
     private val args: ScannerFragmentArgs by navArgs()
     private val scanType by lazy { args.scanType }
@@ -69,6 +76,13 @@ class ScannerFragment: Fragment() {
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
+            vm.onEvent(ScannerEvent.NewScanType(
+                when (scanType) {
+                    TYPE_INITIALIZE -> ConfirmType.INITIALIZE
+                    TYPE_ENTRY -> ConfirmType.ENTRY
+                    else -> throw IllegalArgumentException("Unknown confirm type $scanType")
+                }
+            ))
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     frameProducer.getFrames().collect { frame ->
@@ -113,33 +127,18 @@ class ScannerFragment: Fragment() {
                                     val res = hitTestDetectedObject(lastDetectedObject!!, frame)
                                     if (res != null && !navigating) {
                                         val confirmationObject =
-                                            com.example.festunavigator.presentation.LabelObject(
+                                            LabelObject(
                                                 label = lastDetectedObject!!.detectedObjectResult.label,
                                                 pos = res.orientatedPosition,
                                                 anchor = res.hitResult.createAnchor()
                                             )
 
-                                        mainModel.onEvent(
-                                            com.example.festunavigator.presentation.preview.MainEvent.NewConfirmationObject(
-                                                confirmationObject
-                                            )
+                                        vm.onEvent(
+                                            ScannerEvent.NewConfirmationObject(confirmationObject)
                                         )
-                                        toConfirm(
-                                            when (scanType) {
-                                                TYPE_INITIALIZE -> {
-                                                    com.example.festunavigator.presentation.confirmer.ConfirmFragment.Companion.CONFIRM_INITIALIZE
-                                                }
-                                                TYPE_ENTRY -> {
-                                                    com.example.festunavigator.presentation.confirmer.ConfirmFragment.Companion.CONFIRM_ENTRY
-                                                }
-                                                else -> {
-                                                    throw IllegalArgumentException("Unrealised type")
-                                                }
-                                            }
-                                        )
+                                        toConfirm()
                                     } else {
-                                        currentScanSmoothDelay =
-                                            com.example.festunavigator.presentation.scanner.SMOOTH_DELAY
+                                        currentScanSmoothDelay = SMOOTH_DELAY
                                     }
 
                                 } else {
@@ -147,17 +146,14 @@ class ScannerFragment: Fragment() {
                                     val detectedObject = tryGetDetectedObject(frame)
                                     if (lastDetectedObject == null) {
                                         lastDetectedObject = detectedObject
-                                        currentScanSmoothDelay =
-                                            com.example.festunavigator.presentation.scanner.SMOOTH_DELAY
+                                        currentScanSmoothDelay = SMOOTH_DELAY
                                     } else if (detectedObject == null) {
-                                        currentScanSmoothDelay =
-                                            com.example.festunavigator.presentation.scanner.SMOOTH_DELAY
+                                        currentScanSmoothDelay = SMOOTH_DELAY
                                     } else {
                                         if (lastDetectedObject!!.detectedObjectResult.label !=
                                             detectedObject.detectedObjectResult.label
                                         ) {
-                                            currentScanSmoothDelay =
-                                                com.example.festunavigator.presentation.scanner.SMOOTH_DELAY
+                                            currentScanSmoothDelay = SMOOTH_DELAY
                                         }
                                         lastDetectedObject = detectedObject
                                     }
@@ -168,16 +164,12 @@ class ScannerFragment: Fragment() {
             }
         }
 
-        private fun toConfirm(type: Int){
+        private fun toConfirm(){
             if (!navigating){
                 navigating = true
-                val action =
-                    com.example.festunavigator.presentation.scanner.ScannerFragmentDirections.actionScannerFragmentToConfirmFragment(
-                        type
-                    )
+                val action = ScannerFragmentDirections.actionScannerFragmentToConfirmFragment()
                 findNavController().navigate(action)
             }
-
         }
 
         private suspend fun tryGetDetectedObject(frame: ArFrame): com.gerbort.text_recognition.domain.DetectedText? {
@@ -252,5 +244,6 @@ class ScannerFragment: Fragment() {
             const val SCAN_TYPE = "scanType"
             const val TYPE_INITIALIZE = 0
             const val TYPE_ENTRY = 1
+            const val SMOOTH_DELAY = 0.5
     }
     }

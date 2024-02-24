@@ -1,8 +1,10 @@
 package com.gerbort.node_graph.domain.graph
 
+import com.gerbort.common.model.OrientatedPosition
 import com.gerbort.common.model.TreeNode
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
+import kotlinx.coroutines.flow.Flow
 
 interface NodeGraph {
 
@@ -19,6 +21,8 @@ interface NodeGraph {
     ): Result<Unit>
 
     fun getDiffUtils(): NodeGraphDiffUtils
+
+    fun getTreePivot(): Flow<OrientatedPosition?>
 
     fun getNode(id: Int): TreeNode?
 

@@ -7,6 +7,7 @@ import com.gerbort.node_graph.data.adapter.NodeAdapterImpl
 import com.gerbort.node_graph.data.graph.NodeGraphImpl
 import com.gerbort.node_graph.domain.adapter.NodeRepositoryAdapter
 import com.gerbort.node_graph.domain.graph.NodeGraph
+import com.gerbort.node_graph.domain.use_cases.InitializeUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,5 +31,11 @@ internal object NodeGraphModule {
         nodeRepositoryAdapter: NodeRepositoryAdapter,
         @Dispatcher(AppDispatchers.Default) dispatcher: CoroutineDispatcher
     ): NodeGraph = NodeGraphImpl(nodeRepositoryAdapter, dispatcher)
+
+    @Provides
+    @Singleton
+    internal fun provideInitializeUseCase(
+        nodeGraph: NodeGraph
+    ): InitializeUseCase = InitializeUseCase(nodeGraph)
 
 }

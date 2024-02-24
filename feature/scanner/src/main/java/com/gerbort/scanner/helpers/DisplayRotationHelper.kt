@@ -1,4 +1,4 @@
-package com.gerbort.scanner
+package com.gerbort.scanner.helpers
 
 import android.content.Context
 import android.hardware.camera2.CameraAccessException

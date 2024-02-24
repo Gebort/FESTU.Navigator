@@ -9,10 +9,9 @@ import io.github.sceneview.ar.arcore.ArFrame
 
 sealed interface MainEvent{
     class NewFrame(val frame: ArFrame): MainEvent
-    class NewConfirmationObject(val confObject: LabelObject): MainEvent
+
     class TrySearch(val number: String, val changeType: Int): MainEvent
-    class AcceptConfObject(val confirmType: Int): MainEvent
-    class RejectConfObject(val confirmType: Int): MainEvent
+
     class NewAzimuth(val azimuthRadians: Float): MainEvent
     class NewSelectedNode(val node: TreeNode?): MainEvent
     object ChangeLinkMode: MainEvent

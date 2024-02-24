@@ -3,6 +3,7 @@ package com.gerbort.node_graph.data.graph
 import android.util.Log
 import com.gerbort.common.di.AppDispatchers
 import com.gerbort.common.di.Dispatcher
+import com.gerbort.common.model.OrientatedPosition
 import com.gerbort.common.model.TreeNode
 import com.gerbort.node_graph.data.diff_utils.GraphDiffUtils
 import com.gerbort.common.utils.inverted
@@ -18,6 +19,10 @@ import io.github.sceneview.math.toQuaternion
 import io.github.sceneview.math.toVector3
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -51,6 +56,7 @@ internal class NodeGraphImpl @Inject constructor(
 
     val diffUtils: GraphDiffUtils by lazy { GraphDiffUtils(this, dispatcher) }
 
+    private var _treePivot = MutableStateFlow<OrientatedPosition?>(null)
 
     override fun isPreloaded(): Boolean = preloaded
 
@@ -99,6 +105,11 @@ internal class NodeGraphImpl @Inject constructor(
             rotation = entry.forwardVector.multiply(newRotation.inverted()) * -1f
             rotation.w *= -1f
 
+            _treePivot.update { OrientatedPosition(
+                position = entry.position,
+                orientation = Quaternion()
+            ) }
+
             initialized = true
             return Result.success(Unit)
         }
@@ -107,6 +118,8 @@ internal class NodeGraphImpl @Inject constructor(
     override fun getDiffUtils(): NodeGraphDiffUtils {
         return diffUtils
     }
+
+    override fun getTreePivot(): Flow<OrientatedPosition?> = _treePivot.asStateFlow()
 
     override fun getNode(id: Int): TreeNode? {
         if (!initialized){

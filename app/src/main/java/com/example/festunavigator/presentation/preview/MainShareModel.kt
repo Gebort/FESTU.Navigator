@@ -59,10 +59,6 @@ class MainShareModel @Inject constructor(
     var northLocation: Float3? = null
         private set
 
-    @SuppressLint("StaticFieldLeak")
-    private var _confirmationObject = MutableStateFlow<LabelObject?>(null)
-    val confirmationObject = _confirmationObject.asStateFlow()
-
     private var _selectedNode = MutableStateFlow<TreeNode?>(null)
     val selectedNode = _selectedNode.asStateFlow()
 
@@ -72,8 +68,8 @@ class MainShareModel @Inject constructor(
     private var _timeRecords = MutableStateFlow<List<Record>>(listOf())
     val timeRecords = _timeRecords.asStateFlow()
 
-    private var _treePivot = MutableStateFlow<OrientatedPosition?>(null)
-    val treePivot = _treePivot.asStateFlow()
+//    private var _treePivot = MutableStateFlow<OrientatedPosition?>(null)
+//    val treePivot = _treePivot.asStateFlow()
 
     val treeDiffUtils = nodeGraph.getDiffUtils()
     val entriesNumber = nodeGraph.getEntriesNumbers()
@@ -94,9 +90,6 @@ class MainShareModel @Inject constructor(
             }
             is MainEvent.NewAzimuth -> {
                 newNorthLocation(event.azimuthRadians)
-            }
-            is MainEvent.NewConfirmationObject -> {
-                _confirmationObject.update { event.confObject }
             }
             is MainEvent.TrySearch -> {
                 viewModelScope.launch {
@@ -131,11 +124,6 @@ class MainShareModel @Inject constructor(
                             }
                         }
                     }
-                }
-            }
-            is MainEvent.RejectConfObject -> {
-                viewModelScope.launch {
-                    _confirmationObject.update { null }
                 }
             }
             is MainEvent.NewSelectedNode -> {
