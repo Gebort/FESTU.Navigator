@@ -15,10 +15,9 @@ import com.gerbort.database.model.TreeNodeEntity
         TreeNodeEntity::class,
         RecordEntity::class
                ],
-    version = 2,
+    version = 1,
     exportSchema = true,
     autoMigrations = [
-   //     AutoMigration (from = 1, to = 2)
     ]
 )
 @TypeConverters(NeighboursConverter::class)

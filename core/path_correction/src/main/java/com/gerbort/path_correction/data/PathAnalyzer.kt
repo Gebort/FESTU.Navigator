@@ -4,7 +4,7 @@ import com.gerbort.path_correction.domain.PathCorrector
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 
-class PathAnalyzer : PathCorrector {
+internal class PathAnalyzer : PathCorrector {
 
     override var onChangeNeeded: (Quaternion) -> Unit = {}
     override fun newUserPosition(userPos: Float3, northPosition: Float3?) {
