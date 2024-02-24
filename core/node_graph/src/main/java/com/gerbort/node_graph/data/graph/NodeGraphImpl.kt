@@ -8,6 +8,7 @@ import com.gerbort.common.model.TreeNode
 import com.gerbort.node_graph.data.diff_utils.GraphDiffUtils
 import com.gerbort.common.utils.inverted
 import com.gerbort.common.utils.multiply
+import com.gerbort.common.utils.reverseConvertPosition
 import com.gerbort.node_graph.domain.adapter.NodeRepositoryAdapter
 import com.gerbort.node_graph.domain.graph.NodeGraph
 import com.gerbort.node_graph.domain.graph.NodeGraphDiffUtils
@@ -167,34 +168,45 @@ internal class NodeGraphImpl @Inject constructor(
         position: Float3,
         northDirection: Quaternion?,
         number: String?,
-        forwardVector: Quaternion?
-    ): TreeNode {
+        forwardDirection: Quaternion?
+    ): Result<TreeNode> {
         if (!initialized){
-            throw GraphException.GraphIsntInitialized
+            return Result.failure(GraphException.GraphIsntInitialized)
         }
         if (_allPoints.values.find { it.position == position } != null) {
-            throw Exception("Position already taken")
+            return Result.failure(AddNodeException.PositionTaken)
         }
+
+        if (number != null && _entryPoints[number] != null){
+            return Result.failure(AddNodeException.EntryAlreadyExists)
+        }
+        //we need to convert position, because if the admin placing new node when other nodes corrected,
+        //after reloading new node will be in another place
+        val treePivot = _treePivot.value
+        val position2 = treePivot?.orientation?.reverseConvertPosition(
+            position = position,
+            pivotPosition = treePivot.position,
+            ) ?: position
+
+
+        //TODO ПОВОРАЧИВАТЬ СЕВЕР И FORWARD DIRECTION??
         val newNode: TreeNode
         if (number == null){
             newNode = TreeNode.Path(
                 id = availableId,
-                position = position,
+                position = position2,
                 northDirection =  northDirection
             )
         }
         else {
-            if (_entryPoints[number] != null) {
-                throw Exception("Entry point already exists")
-            }
-            if (forwardVector == null){
-                throw Exception("Null forward vector")
+            if (forwardDirection == null){
+                return Result.failure(AddNodeException.NoForwardDirection)
             }
             newNode = TreeNode.Entry(
                 number = number,
-                forwardVector = forwardVector,
+                forwardVector = forwardDirection,
                 id = availableId,
-                position = position,
+                position = position2,
                 northDirection = northDirection
             )
             _entryPoints[newNode.number] = newNode
@@ -205,7 +217,7 @@ internal class NodeGraphImpl @Inject constructor(
         setRegion(newNode.id)
         availableId++
         nodeAdapter.insertNodes(listOf(newNode), translocation, rotation, pivotPosition)
-        return newNode
+        return Result.success(newNode)
     }
 
     override suspend fun removeNode(node: TreeNode) {
@@ -346,6 +358,12 @@ internal class NodeGraphImpl @Inject constructor(
         const val TAG = "NodeGraph"
     }
 
+}
+
+sealed class AddNodeException(msg: String): Exception(msg) {
+    data object PositionTaken: GraphException("Position already taken")
+    data object EntryAlreadyExists: GraphException("Entry already exists")
+    data object NoForwardDirection: GraphException("No forward direction")
 }
 
 sealed class GraphException(msg: String): Exception(msg) {

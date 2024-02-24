@@ -73,7 +73,7 @@ class ConfirmFragment : Fragment() {
                             is ScannerUiEvents.InitFailed -> {
                                 findNavController().popBackStack()
                             }
-                            is ScannerUiEvents.InitSuccess -> onSuccess()
+                            is ScannerUiEvents.InitSuccess -> onSuccess(uiEvent.label)
                             is ScannerUiEvents.EntryCreated -> onSuccess()
                             is ScannerUiEvents.EntryAlreadyExists -> onSuccess()
 
@@ -82,9 +82,9 @@ class ConfirmFragment : Fragment() {
             }
         }
 
-    }
+    }x
 
-    private fun onSuccess() {
+    private fun onSuccess(initialEntryLabel: String? = null) {
         val action = ConfirmFragmentDirections.actionConfirmFragmentToRouterFragment()
         findNavController().navigate(action)
     }

@@ -96,36 +96,6 @@ class MainShareModel @Inject constructor(
                     processSearch(event.number, event.changeType)
                 }
             }
-            is MainEvent.AcceptConfObject -> {
-                when (event.confirmType) {
-                    ConfirmFragment.CONFIRM_INITIALIZE -> {
-                        viewModelScope.launch {
-                            _confirmationObject.value?.let {
-                                initialize(
-                                    it.label,
-                                    it.pos.position,
-                                    it.pos.orientation
-                                )
-                                _confirmationObject.update { null }
-
-                            }
-                        }
-                    }
-                    ConfirmFragment.CONFIRM_ENTRY -> {
-                        viewModelScope.launch {
-                            _confirmationObject.value?.let {
-                                createNode(
-                                    number = it.label,
-                                    position = it.pos.position,
-                                    orientation = it.pos.orientation
-                                )
-                                _confirmationObject.update { null }
-
-                            }
-                        }
-                    }
-                }
-            }
             is MainEvent.NewSelectedNode -> {
                 viewModelScope.launch {
                     _selectedNode.update { event.node }
@@ -323,33 +293,33 @@ class MainShareModel @Inject constructor(
         }
     }
 
-    private suspend fun initialize(entryNumber: String, position: Float3, newOrientation: Quaternion): Boolean {
-        var result: Result<Unit?>
-        withContext(Dispatchers.IO) {
-            result = nodeGraph.initialize(entryNumber, position, newOrientation)
-        }
-        if (result.isFailure){
-            _mainUiEvents.emit(MainUiEvent.InitFailed(
-                result.exceptionOrNull() as java.lang.Exception?
-            ))
-            return false
-        }
-        val entry = nodeGraph.getEntry(entryNumber)
-        _mainUiEvents.emit(MainUiEvent.InitSuccess(entry))
-        _treePivot.update { OrientatedPosition(
-            position = entry?.position ?: Float3(0f),
-            orientation = Quaternion()
-        ) }
-        if (entry != null){
-            _pathState.update { PathState(
-                startEntry = entry
-            ) }
-        }
-        else {
-            _pathState.update { PathState() }
-        }
-        return true
-    }
+//    private suspend fun initialize(entryNumber: String, position: Float3, newOrientation: Quaternion): Boolean {
+//        var result: Result<Unit?>
+//        withContext(Dispatchers.IO) {
+//            result = nodeGraph.initialize(entryNumber, position, newOrientation)
+//        }
+//        if (result.isFailure){
+//            _mainUiEvents.emit(MainUiEvent.InitFailed(
+//                result.exceptionOrNull() as java.lang.Exception?
+//            ))
+//            return false
+//        }
+//        val entry = nodeGraph.getEntry(entryNumber)
+//        _mainUiEvents.emit(MainUiEvent.InitSuccess(entry))
+//        _treePivot.update { OrientatedPosition(
+//            position = entry?.position ?: Float3(0f),
+//            orientation = Quaternion()
+//        ) }
+//        if (entry != null){
+//            _pathState.update { PathState(
+//                startEntry = entry
+//            ) }
+//        }
+//        else {
+//            _pathState.update { PathState() }
+//        }
+//        return true
+//    }
 
     private fun preload(){
         viewModelScope.launch {

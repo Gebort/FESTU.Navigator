@@ -2,6 +2,7 @@ package com.gerbort.scanner
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gerbort.node_graph.domain.use_cases.CreateNodeUseCase
 import com.gerbort.node_graph.domain.use_cases.InitializeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 internal class ScannerViewModel @Inject constructor(
-    private val initializeUseCase: InitializeUseCase
+    private val initializeUseCase: InitializeUseCase,
+    private val createNodeUseCase: CreateNodeUseCase,
 ): ViewModel() {
 
     private val _state = MutableStateFlow(ScannerState())
@@ -63,10 +65,17 @@ internal class ScannerViewModel @Inject constructor(
 
                 ConfirmType.ENTRY -> {
 
-                    createNode(
+                    createNodeUseCase(
                         number = it.label,
                         position = it.pos.position,
                         orientation = it.pos.orientation
+                    ).fold(
+                        onSuccess = {
+                            _confirmUiEvents.send(ScannerUiEvents.EntryCreated)
+                        },
+                        onFailure = {
+                            _confirmUiEvents.send(ScannerUiEvents.EntryAlreadyExists)
+                        }
                     )
 
                 }

@@ -40,8 +40,8 @@ interface NodeGraph {
         position: Float3,
         northDirection: Quaternion?,
         number: String? = null,
-        forwardVector: Quaternion? = null
-    ): TreeNode
+        forwardDirection: Quaternion? = null
+    ): Result<TreeNode>
 
     suspend fun removeNode(node: TreeNode)
 
