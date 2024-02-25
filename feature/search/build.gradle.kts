@@ -12,5 +12,9 @@ dependencies {
     implementation(Libs.Sceneview.arSceneView)
 
     implementation(project(Modules.Core.Common))
+    implementation(project(Modules.Core.Data))
+    implementation(project(Modules.Core.Pathfinding))
+    implementation(project(Modules.Core.NodeGraph))
     implementation(project(Modules.Core.CoreUi))
+
 }

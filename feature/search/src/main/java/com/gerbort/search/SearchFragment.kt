@@ -10,6 +10,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -18,6 +19,8 @@ import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.festunavigator.presentation.search.adapters.EntryItem
 import com.gerbort.common.model_ext.getEntryLocation
+import com.gerbort.core_ui.utils.viewHideInput
+import com.gerbort.core_ui.utils.viewRequestInput
 import com.gerbort.search.adapters.EntriesAdapter
 import com.gerbort.search.databinding.FragmentSearchBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,6 +35,8 @@ class SearchFragment: Fragment() {
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!
 
+    private val vm: SearchViewModel by activityViewModels()
+
     private val adapter = EntriesAdapter(
         onItemClick = { number -> processSearchResult(number) },
         onEmptyList = { binding.textEmpty.isVisible = true },
@@ -39,7 +44,7 @@ class SearchFragment: Fragment() {
     )
 
     private val args: SearchFragmentArgs by navArgs()
-    private val changeType by lazy { args.changeType }
+    private val searchType by lazy { SearchType.fromInt(args.changeType) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,7 +81,7 @@ class SearchFragment: Fragment() {
                 handled
             }
             binding.searchLayout.hint =
-                if (changeType == TYPE_END) getString(R.string.to)
+                if (searchType == SearchType.END) getString(R.string.to)
                 else getString(R.string.from)
         }
 
@@ -90,10 +95,19 @@ class SearchFragment: Fragment() {
 
 
         var entriesList = listOf<EntryItem>()
-        mainModel.onEvent(MainEvent.LoadRecords)
+        vm.onEvent(SearchEvents.LoadRecords)
 
         viewLifecycleOwner.lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.state.collectLatest { state ->
+
+
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            withContext(Dispatchers.Default) {
                 entriesList = mainModel.entriesNumber
                     .map { number ->
                         EntryItem(
@@ -124,7 +138,7 @@ class SearchFragment: Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainModel.searchUiEvents.collectLatest { uiEvent ->
+                vm.uiEvents.collectLatest { uiEvent ->
                     when (uiEvent) {
                         is SearchUiEvent.SearchSuccess -> {
                             binding.searchLayout.error = null
@@ -137,17 +151,12 @@ class SearchFragment: Fragment() {
                         }
                     }
                 }
-                }
             }
+        }
     }
 
     private fun processSearchResult(number: String) {
-        mainModel.onEvent(MainEvent.TrySearch(number, changeType))
-    }
-
-    companion object {
-        const val TYPE_START = 0
-        const val TYPE_END = 1
+        vm.onEvent(SearchEvents.TrySearch(number, searchType))
     }
 
 }

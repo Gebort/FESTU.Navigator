@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="start_typing" >Начните вводить номер…</string>
+    <string name="incorrect_number">Не можем найти номер</string>
+    <string name="from">Начало</string>
+    <string name="to">Конец</string>
 </resources>

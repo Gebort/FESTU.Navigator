@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="start_typing" >Start typing…</string>
+    <string name="incorrect_number">Can`t find that number</string>
+    <string name="from">Start</string>
+    <string name="to">End</string>
 </resources>

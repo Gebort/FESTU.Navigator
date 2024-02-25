@@ -3,9 +3,10 @@ package com.gerbort.node_graph.domain.use_cases
 import com.gerbort.common.model.TreeNode
 import com.gerbort.node_graph.domain.graph.NodeGraph
 
-class DeleteNodeUseCase(
+class GetEntryUseCase(
     private val nodeGraph: NodeGraph
 ) {
-    suspend operator fun invoke(treeNode: TreeNode) = nodeGraph.removeNode(treeNode)
+
+    suspend operator fun invoke(label: String): TreeNode.Entry? = nodeGraph.getEntry(label)
 
 }

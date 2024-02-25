@@ -3,6 +3,7 @@ package com.gerbort.node_graph.domain.di
 import com.gerbort.node_graph.domain.graph.NodeGraph
 import com.gerbort.node_graph.domain.use_cases.CreateNodeUseCase
 import com.gerbort.node_graph.domain.use_cases.DeleteNodeUseCase
+import com.gerbort.node_graph.domain.use_cases.GetEntryUseCase
 import com.gerbort.node_graph.domain.use_cases.InitializeUseCase
 import com.gerbort.node_graph.domain.use_cases.LinkNodesUseCase
 import dagger.Module
@@ -38,5 +39,11 @@ internal object UseCasesModule {
     internal fun linkNodesUseCase(
         nodeGraph: NodeGraph
     ): LinkNodesUseCase = LinkNodesUseCase(nodeGraph)
+
+    @Provides
+    @Singleton
+    internal fun getEntryUseCase(
+        nodeGraph: NodeGraph
+    ): GetEntryUseCase = GetEntryUseCase(nodeGraph)
 
 }
