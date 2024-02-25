@@ -54,7 +54,7 @@ class RouterFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        if (BuildCon.mode == App.ADMIN_MODE) {
+        if (BuildConfig.FLAVOR == "admin") {
             binding.adminPanel.isVisible = true
         } else {
             binding.adminPanel.isGone = true
@@ -84,7 +84,7 @@ class RouterFragment: Fragment() {
             if (b) {
                 binding.fromInput.isActivated = false
                 binding.fromInput.clearFocus()
-                search(SearchFragment.TYPE_START)
+                search(0)
             }
         }
 
@@ -92,7 +92,7 @@ class RouterFragment: Fragment() {
             if (b) {
                 binding.toInput.isActivated = false
                 binding.toInput.clearFocus()
-                search(SearchFragment.TYPE_END)
+                search(1)
             }
         }
 
@@ -159,9 +159,12 @@ class RouterFragment: Fragment() {
         }
     }
 
+    /**
+     * Start = 0, end = 1
+     */
     private fun search(type: Int){
-        val action = RouterFragmentDirections.actionRouterFragmentToSearchFragment(type)
-        findNavController().navigate(action)
+        val uri = Uri.parse("android-app://com.gerbort.app/search_fragment/$type")
+        findNavController().navigate(uri)
     }
 
     private fun changeLinkPlacementMode(){
