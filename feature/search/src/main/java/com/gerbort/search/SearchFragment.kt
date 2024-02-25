@@ -10,22 +10,16 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.festunavigator.presentation.search.adapters.EntriesAdapter
 import com.example.festunavigator.presentation.search.adapters.EntryItem
-import com.example.festunavigator.presentation.common.helpers.viewHideInput
-import com.example.festunavigator.presentation.common.helpers.viewRequestInput
-import com.example.festunavigator.presentation.preview.MainEvent
-import com.example.festunavigator.presentation.preview.MainShareModel
-import com.gerbort.app.R
-import com.gerbort.app.databinding.FragmentSearchBinding
 import com.gerbort.common.model_ext.getEntryLocation
+import com.gerbort.search.adapters.EntriesAdapter
+import com.gerbort.search.databinding.FragmentSearchBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -34,8 +28,6 @@ import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class SearchFragment: Fragment() {
-
-    private val mainModel: MainShareModel by activityViewModels()
 
     private var _binding: FragmentSearchBinding? = null
     private val binding get() = _binding!!

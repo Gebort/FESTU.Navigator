@@ -1,4 +1,4 @@
-package com.example.festunavigator.presentation.search.adapters
+package com.gerbort.search.adapters
 
 import android.view.LayoutInflater
 import android.view.View
@@ -9,9 +9,8 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.gerbort.app.R
-import com.gerbort.search.adapters.DiffCallback
-import com.gerbort.search.adapters.EntriesAdapter
+import com.example.festunavigator.presentation.search.adapters.EntryItem
+import com.gerbort.search.R
 
 class EntriesAdapter(
     private val onItemClick: (String) -> Unit,
@@ -31,7 +30,7 @@ class EntriesAdapter(
         )
     }
 
-    override fun onBindViewHolder(holder: EntriesAdapter.ItemViewholder, position: Int) {
+    override fun onBindViewHolder(holder: ItemViewholder, position: Int) {
         holder.bind(getItem(position))
     }
 

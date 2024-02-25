@@ -1,0 +1,156 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "77637f52ff8fde0a463419b943e09db9",
+    "entities": [
+      {
+        "tableName": "TreeNodeEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `x` REAL NOT NULL, `y` REAL NOT NULL, `z` REAL NOT NULL, `type` TEXT NOT NULL, `number` TEXT, `neighbours` TEXT NOT NULL, `north_quaternion_x` REAL, `north_quaternion_y` REAL, `north_quaternion_z` REAL, `north_quaternion_w` REAL, `forward_quaternion_x` REAL, `forward_quaternion_y` REAL, `forward_quaternion_z` REAL, `forward_quaternion_w` REAL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "x",
+            "columnName": "x",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "y",
+            "columnName": "y",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "z",
+            "columnName": "z",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "number",
+            "columnName": "number",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "neighbours",
+            "columnName": "neighbours",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "northDirection.x",
+            "columnName": "north_quaternion_x",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "northDirection.y",
+            "columnName": "north_quaternion_y",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "northDirection.z",
+            "columnName": "north_quaternion_z",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "northDirection.w",
+            "columnName": "north_quaternion_w",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "forwardVector.x",
+            "columnName": "forward_quaternion_x",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "forwardVector.y",
+            "columnName": "forward_quaternion_y",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "forwardVector.z",
+            "columnName": "forward_quaternion_z",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "forwardVector.w",
+            "columnName": "forward_quaternion_w",
+            "affinity": "REAL",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": false
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "RecordEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `start` TEXT NOT NULL, `end` TEXT NOT NULL, `time` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "start",
+            "columnName": "start",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "end",
+            "columnName": "end",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '77637f52ff8fde0a463419b943e09db9')"
+    ]
+  }
+}

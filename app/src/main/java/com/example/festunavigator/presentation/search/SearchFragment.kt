@@ -17,7 +17,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.festunavigator.presentation.search.adapters.EntriesAdapter
+import com.gerbort.search.adapters.EntriesAdapter
 import com.example.festunavigator.presentation.search.adapters.EntryItem
 import com.example.festunavigator.presentation.common.helpers.viewHideInput
 import com.example.festunavigator.presentation.common.helpers.viewRequestInput
