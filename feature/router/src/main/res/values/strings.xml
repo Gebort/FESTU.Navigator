@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link" translatable="false">Link</string>
+    <string name="delete" translatable="false">Delete</string>
+    <string name="entry" translatable="false">Entry</string>
+    <string name="path" translatable="false">Path</string>
+    <string name="cancel" translatable="false">Cancel</string>
+    <string name="going">Going to %s</string>
+    <string name="from">Start</string>
+    <string name="to">End</string>
+</resources>

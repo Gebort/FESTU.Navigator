@@ -1,4 +1,4 @@
-package com.example.festunavigator.presentation.preview.state
+package com.gerbort.pathfinding.domain.manager
 
 import com.gerbort.common.model.Path
 import com.gerbort.common.model.TreeNode

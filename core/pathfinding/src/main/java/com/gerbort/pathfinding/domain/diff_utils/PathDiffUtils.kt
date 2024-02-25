@@ -1,4 +1,4 @@
-package com.gerbort.path_correction.data
+package com.gerbort.pathfinding.domain.diff_utils
 
 import com.gerbort.common.model.OrientatedPosition
 import com.gerbort.common.model.Path

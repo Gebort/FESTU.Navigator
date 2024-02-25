@@ -1,5 +1,6 @@
 package com.gerbort.router
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -12,22 +13,20 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import com.example.festunavigator.App
-import com.example.festunavigator.presentation.preview.MainEvent
-import com.example.festunavigator.presentation.preview.MainShareModel
-import com.example.festunavigator.presentation.scanner.ScannerFragment
-import com.example.festunavigator.presentation.search.SearchFragment
-import com.gerbort.app.R
-import com.gerbort.app.databinding.FragmentRouterBinding
+import androidx.navigation.fragment.navArgs
 import com.gerbort.common.model_ext.getEntryLocation
+import com.gerbort.core_ui.frame_holder.FrameProducer
 import com.gerbort.hit_test.HitTestResult
 import com.gerbort.hit_test.HitTestUseCase
+import com.gerbort.pathfinding.domain.manager.PathManager
 import com.gerbort.router.databinding.FragmentRouterBinding
 import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,9 +35,15 @@ class RouterFragment: Fragment() {
 
     @Inject
     lateinit var hitTest: HitTestUseCase
+    @Inject
+    lateinit var frameProducer: FrameProducer
+    @Inject
+    lateinit var pathManager: PathManager
 
     private var _binding: FragmentRouterBinding? = null
     private val binding get() = _binding!!
+
+    private val vm: RouterViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -50,7 +55,7 @@ class RouterFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        if (App.mode == App.ADMIN_MODE) {
+        if (BuildConfig. .mode == App.ADMIN_MODE) {
             binding.adminPanel.isVisible = true
         }
         else {
@@ -72,12 +77,9 @@ class RouterFragment: Fragment() {
         }
 
         binding.entryButton.setOnClickListener {
-            val bundle = Bundle()
-            bundle.putInt(
-                ScannerFragment.SCAN_TYPE,
-                ScannerFragment.TYPE_ENTRY
-            )
-            findNavController().navigate(R.id.action_global_scannerFragment, args = bundle)
+            //entry = 1 init = 0
+            val uri = Uri.parse("android-app://com.gerbort.app/scanner_fragment/1")
+            findNavController().navigate(uri)
         }
 
         binding.fromInput.setOnFocusChangeListener { _, b ->
@@ -98,7 +100,7 @@ class RouterFragment: Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainModel.pathState.collect { pathState ->
+                pathManager.getPathState().collect { pathState ->
                     binding.fromInput.setText(pathState.startEntry?.number ?: "")
                     binding.toInput.setText(pathState.endEntry?.number ?: "")
                     if (pathState.path != null){
@@ -119,24 +121,12 @@ class RouterFragment: Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainModel.selectedNode.collect { treeNode ->
-                    if (treeNode == null) {
+                vm.state.collect { state ->
 
-                    }
-                    else {
+                    binding.linkButton.isEnabled = state.selectedNode != null
+                    binding.deleteButton.isEnabled = state.selectedNode != null
 
-                    }
-                    binding.linkButton.isEnabled = treeNode != null
-                    binding.deleteButton.isEnabled = treeNode != null
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainModel.linkPlacementMode.collect { link ->
-                    binding.linkButton.text = if (link) getString(R.string.cancel) else getString(R.string.link)
-
+                    binding.linkButton.text = if (state.linkPlacement) getString(R.string.cancel) else getString(R.string.link)
                 }
             }
         }
@@ -148,12 +138,12 @@ class RouterFragment: Fragment() {
     }
 
     private fun changeLinkPlacementMode(){
-        mainModel.onEvent(MainEvent.ChangeLinkMode)
+        vm.onEvent(RouterEvent.ChangeLinkMode)
     }
 
     private fun removeSelectedNode(){
-        mainModel.selectedNode.value?.let {
-            mainModel.onEvent(MainEvent.DeleteNode(it))
+        vm.state.value.selectedNode?.let {
+            vm.onEvent(RouterEvent.DeleteNode(it))
         }
     }
 
@@ -163,11 +153,11 @@ class RouterFragment: Fragment() {
         orientation: Quaternion? = null,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
-            mainModel.frame.value?.let { frame ->
+            frameProducer.getFrames().first()?.let { frame ->
                     val result = useHitTest(frame).getOrNull()
                     if (result != null) {
-                        mainModel.onEvent(
-                            MainEvent.CreateNode(
+                        vm.onEvent(
+                            RouterEvent.CreateNode(
                                 number,
                                 position,
                                 orientation,

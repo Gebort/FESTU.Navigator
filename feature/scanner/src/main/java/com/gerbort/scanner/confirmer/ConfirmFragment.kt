@@ -1,5 +1,6 @@
 package com.gerbort.scanner.confirmer
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,16 +12,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
-import com.example.festunavigator.presentation.preview.MainEvent
-import com.example.festunavigator.presentation.preview.MainShareModel
-import com.example.festunavigator.presentation.preview.MainUiEvent
-import com.gerbort.app.databinding.FragmentConfirmBinding
 import com.gerbort.scanner.ScannerEvent
 import com.gerbort.scanner.ScannerUiEvents
 import com.gerbort.scanner.ScannerViewModel
 import com.gerbort.scanner.databinding.FragmentConfirmBinding
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 
@@ -73,7 +68,7 @@ class ConfirmFragment : Fragment() {
                             is ScannerUiEvents.InitFailed -> {
                                 findNavController().popBackStack()
                             }
-                            is ScannerUiEvents.InitSuccess -> onSuccess(uiEvent.label)
+                            is ScannerUiEvents.InitSuccess -> onSuccess()
                             is ScannerUiEvents.EntryCreated -> onSuccess()
                             is ScannerUiEvents.EntryAlreadyExists -> onSuccess()
 
@@ -82,10 +77,10 @@ class ConfirmFragment : Fragment() {
             }
         }
 
-    }x
+    }
 
-    private fun onSuccess(initialEntryLabel: String? = null) {
-        val action = ConfirmFragmentDirections.actionConfirmFragmentToRouterFragment()
+    private fun onSuccess() {
+        val action = Uri.parse("android-app://com.gerbort.app/router_fragment")
         findNavController().navigate(action)
     }
 

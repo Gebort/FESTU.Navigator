@@ -21,7 +21,6 @@
     <string name="floor">floor №</string>
     <string name="incorrect_number">Can`t find that number</string>
     <string name="no_path">No route</string>
-    <string name="going">Going to %s</string>
     <string name="init_failed">Initialization failed</string>
     <string name="install_arcode">Please, install ARCore</string>
     <string name="update_arcode">Please, update ARCore</string>

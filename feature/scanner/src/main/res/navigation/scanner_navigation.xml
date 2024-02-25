@@ -30,7 +30,7 @@
         android:label="fragment_confirm"
         tools:layout="@layout/fragment_confirm" >
         <deepLink
-            app:uri="android-app://com.gerbort.app/scanner_fragment/{confirmType}" />
+            app:uri="android-app://com.gerbort.app/confirm_fragment/{confirmType}" />
     </fragment>
 
 

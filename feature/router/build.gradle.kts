@@ -17,6 +17,7 @@ dependencies {
 
     implementation(project(Modules.Core.Common))
     implementation(project(Modules.Core.NodeGraph))
+    implementation(project(Modules.Core.Pathfinding))
     implementation(project(Modules.Core.HitTest))
     implementation(project(Modules.Core.CoreUi))
 

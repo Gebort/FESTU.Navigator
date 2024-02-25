@@ -14,7 +14,6 @@ sealed interface MainEvent{
 
     class NewAzimuth(val azimuthRadians: Float): MainEvent
     class NewSelectedNode(val node: TreeNode?): MainEvent
-    object ChangeLinkMode: MainEvent
     class CreateNode(
         val number: String? = null,
         val position: Float3? = null,

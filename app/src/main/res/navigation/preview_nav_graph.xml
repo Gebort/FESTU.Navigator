@@ -6,7 +6,6 @@
     app:startDestination="@id/orientationFragment">
 
     <include app:graph="@navigation/initialization_graph" />
-    <include app:graph="@navigation/confirmer_graph" />
     <include app:graph="@navigation/router_graph" />
     <include app:graph="@navigation/search_graph" />
     <include app:graph="@navigation/search_graph" />
@@ -62,6 +61,11 @@
             app:popEnterAnim="@anim/slide_up"
             app:popExitAnim="@anim/slide_down"
             app:popUpToInclusive="false" />
+        <argument
+            android:name="startLabel"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="NULL" />
     </fragment>
     <fragment
         android:id="@+id/searchFragment"

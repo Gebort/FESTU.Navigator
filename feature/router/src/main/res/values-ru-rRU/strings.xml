@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="from">Начало</string>
+    <string name="to">Конец</string>
+    <string name="main">Главный корпус</string>
+    <string name="lab">Лабораторный корпус</string>
+    <string name="first_tower">Башня №1</string>
+    <string name="second_tower">Башня №2</string>
+    <string name="second_building">Второй корпус</string>
+    <string name="floor">этаж №</string>
+    <string name="going">Идем в %s</string>
+</resources>

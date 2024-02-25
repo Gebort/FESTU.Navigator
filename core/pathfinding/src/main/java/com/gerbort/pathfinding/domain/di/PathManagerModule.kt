@@ -2,9 +2,10 @@ package com.gerbort.pathfinding.domain.di
 
 import com.gerbort.common.di.AppDispatchers
 import com.gerbort.common.di.Dispatcher
-import com.gerbort.pathfinding.data.AStarImpl
+import com.gerbort.node_graph.domain.graph.NodeGraph
+import com.gerbort.pathfinding.data.manager.PathManagerImpl
 import com.gerbort.pathfinding.domain.Pathfinder
-import com.gerbort.smoothing.SmoothWayUseCase
+import com.gerbort.pathfinding.domain.manager.PathManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,13 +15,14 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object PathfindModule {
+internal object PathManagerModule {
 
     @Provides
     @Singleton
-    internal fun providePathfinder(
+    internal fun providePathManager(
         @Dispatcher(AppDispatchers.Default) dispatcher: CoroutineDispatcher,
-        smoothWayUseCase: SmoothWayUseCase
-    ): Pathfinder = AStarImpl(dispatcher, smoothWayUseCase)
+        nodeGraph: NodeGraph,
+        pathfinder: Pathfinder
+    ): PathManager = PathManagerImpl(nodeGraph, pathfinder, dispatcher)
 
 }

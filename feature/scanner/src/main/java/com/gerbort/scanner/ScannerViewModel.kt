@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gerbort.node_graph.domain.use_cases.CreateNodeUseCase
 import com.gerbort.node_graph.domain.use_cases.InitializeUseCase
+import com.gerbort.pathfinding.domain.manager.PathManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ import javax.inject.Inject
 internal class ScannerViewModel @Inject constructor(
     private val initializeUseCase: InitializeUseCase,
     private val createNodeUseCase: CreateNodeUseCase,
+    private val pathManager: PathManager
 ): ViewModel() {
 
     private val _state = MutableStateFlow(ScannerState())
@@ -56,6 +58,7 @@ internal class ScannerViewModel @Inject constructor(
                             newOrientation = it.pos.orientation
                     ) ) {
                         _confirmUiEvents.send(ScannerUiEvents.InitSuccess(it.label))
+                        pathManager.setStart(it.label)
                     }
                     else {
                         _confirmUiEvents.send(ScannerUiEvents.InitFailed)
