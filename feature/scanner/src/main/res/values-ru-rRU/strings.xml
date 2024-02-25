@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scan">Направьте камеру на номер аудитории</string>
+    <string name="init_failed">Инициализация не удалась</string>
+    <string name="entry_already_exists">Аудитория уже существует</string>
+</resources>

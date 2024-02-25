@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -12,6 +13,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.gerbort.scanner.R
 import com.gerbort.scanner.ScannerEvent
 import com.gerbort.scanner.ScannerUiEvents
 import com.gerbort.scanner.ScannerViewModel
@@ -66,11 +68,23 @@ class ConfirmFragment : Fragment() {
                 vm.confirmUiEvents.collect { uiEvent ->
                         when (uiEvent) {
                             is ScannerUiEvents.InitFailed -> {
+                                Toast.makeText(
+                                    requireContext(),
+                                    getString(R.string.init_failed),
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 findNavController().popBackStack()
                             }
                             is ScannerUiEvents.InitSuccess -> onSuccess()
                             is ScannerUiEvents.EntryCreated -> onSuccess()
-                            is ScannerUiEvents.EntryAlreadyExists -> onSuccess()
+                            is ScannerUiEvents.EntryAlreadyExists -> {
+                                Toast.makeText(
+                                    requireContext(),
+                                    getString(R.string.entry_already_exists),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                onSuccess()
+                            }
 
                         }
                 }

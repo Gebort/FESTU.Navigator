@@ -33,16 +33,4 @@ internal object NodeGraphModule {
         @Dispatcher(AppDispatchers.Default) dispatcher: CoroutineDispatcher
     ): NodeGraph = NodeGraphImpl(nodeRepositoryAdapter, dispatcher)
 
-    @Provides
-    @Singleton
-    internal fun provideInitializeUseCase(
-        nodeGraph: NodeGraph
-    ): InitializeUseCase = InitializeUseCase(nodeGraph)
-
-    @Provides
-    @Singleton
-    internal fun provideCreateNodeUseCase(
-        nodeGraph: NodeGraph
-    ): CreateNodeUseCase = CreateNodeUseCase(nodeGraph)
-
 }

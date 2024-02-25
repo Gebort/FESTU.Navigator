@@ -13,19 +13,18 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import com.gerbort.common.model_ext.getEntryLocation
 import com.gerbort.core_ui.frame_holder.FrameProducer
 import com.gerbort.hit_test.HitTestResult
 import com.gerbort.hit_test.HitTestUseCase
 import com.gerbort.pathfinding.domain.manager.PathManager
 import com.gerbort.router.databinding.FragmentRouterBinding
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -55,10 +54,9 @@ class RouterFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        if (BuildConfig. .mode == App.ADMIN_MODE) {
+        if (BuildCon.mode == App.ADMIN_MODE) {
             binding.adminPanel.isVisible = true
-        }
-        else {
+        } else {
             binding.adminPanel.isGone = true
         }
 
@@ -103,15 +101,14 @@ class RouterFragment: Fragment() {
                 pathManager.getPathState().collect { pathState ->
                     binding.fromInput.setText(pathState.startEntry?.number ?: "")
                     binding.toInput.setText(pathState.endEntry?.number ?: "")
-                    if (pathState.path != null){
+                    if (pathState.path != null) {
                         binding.destinationText.isVisible = true
                         binding.destinationText.text =
                             resources.getString(
                                 R.string.going,
                                 pathState.endEntry!!.number.getEntryLocation(requireContext())
                             )
-                    }
-                    else {
+                    } else {
                         binding.destinationText.isGone = true
                     }
 
@@ -126,7 +123,37 @@ class RouterFragment: Fragment() {
                     binding.linkButton.isEnabled = state.selectedNode != null
                     binding.deleteButton.isEnabled = state.selectedNode != null
 
-                    binding.linkButton.text = if (state.linkPlacement) getString(R.string.cancel) else getString(R.string.link)
+                    binding.linkButton.text =
+                        if (state.linkPlacement) getString(R.string.cancel) else getString(R.string.link)
+
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                vm.uiEvents.collect { uiEvent ->
+                    when (uiEvent) {
+                        is RouterUiEvent.NodeCreated -> {
+                            showSnackbar(getString(R.string.node_created))
+                        }
+                        is RouterUiEvent.LinkCreated -> {
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                //treeAdapter.createLink(uiEvent.node1, uiEvent.node2)
+                                showSnackbar(getString(R.string.link_created))
+                            }
+                        }
+                        is RouterUiEvent.NodeDeleted -> {
+                            showSnackbar(getString(R.string.node_deleted))
+                        }
+                        is RouterUiEvent.LinkAlreadyExists -> {
+                            showSnackbar(getString(R.string.link_already_exists))
+                        }
+                        is RouterUiEvent.NodeAlreadyExists -> {
+                            showSnackbar(getString(R.string.node_already_exists))
+                        }
+                    }
+
                 }
             }
         }
@@ -148,24 +175,24 @@ class RouterFragment: Fragment() {
     }
 
     private fun createNode(
-        number: String? = null,
         position: Float3? = null,
-        orientation: Quaternion? = null,
     ) {
         viewLifecycleOwner.lifecycleScope.launch {
             frameProducer.getFrames().first()?.let { frame ->
                     val result = useHitTest(frame).getOrNull()
                     if (result != null) {
                         vm.onEvent(
-                            RouterEvent.CreateNode(
-                                number,
-                                position,
-                                orientation,
-                                result
+                            RouterEvent.CreatePathNode(
+                                position ?: result.orientatedPosition.position,
                             ))
                     }
             }
         }
+    }
+
+    private fun showSnackbar(message: String) {
+        Snackbar.make(binding.fromInput, message, Snackbar.LENGTH_SHORT)
+            .show()
     }
 
     private fun useHitTest(

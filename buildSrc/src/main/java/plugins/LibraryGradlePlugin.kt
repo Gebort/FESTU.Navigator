@@ -45,6 +45,20 @@ class LibraryGradlePlugin: Plugin<Project> {
                 sourceCompatibility = JavaVersion.VERSION_17
                 targetCompatibility = JavaVersion.VERSION_17
             }
+
+            setBuildFlavors()
+        }
+    }
+
+    private fun LibraryExtension.setBuildFlavors() {
+        flavorDimensions.add("mode")
+        productFlavors {
+            create("user") {
+                dimension = "mode"
+            }
+            create("admin") {
+                dimension = "mode"
+            }
         }
     }
 
