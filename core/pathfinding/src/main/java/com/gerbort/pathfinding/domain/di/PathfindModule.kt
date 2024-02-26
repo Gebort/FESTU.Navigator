@@ -2,8 +2,10 @@ package com.gerbort.pathfinding.domain.di
 
 import com.gerbort.common.di.AppDispatchers
 import com.gerbort.common.di.Dispatcher
+import com.gerbort.node_graph.domain.graph.NodeGraph
 import com.gerbort.pathfinding.data.AStarImpl
 import com.gerbort.pathfinding.domain.Pathfinder
+import com.gerbort.pathfinding.domain.use_cases.PathfindUseCase
 import com.gerbort.smoothing.SmoothWayUseCase
 import dagger.Module
 import dagger.Provides
@@ -22,5 +24,12 @@ internal object PathfindModule {
         @Dispatcher(AppDispatchers.Default) dispatcher: CoroutineDispatcher,
         smoothWayUseCase: SmoothWayUseCase
     ): Pathfinder = AStarImpl(dispatcher, smoothWayUseCase)
+
+    @Provides
+    @Singleton
+    internal fun providePathfindUseCase(
+        nodeGraph: NodeGraph,
+        pathfinder: Pathfinder
+    ): PathfindUseCase = PathfindUseCase(pathfinder, nodeGraph)
 
 }

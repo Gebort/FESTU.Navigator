@@ -4,6 +4,7 @@ import android.icu.util.Calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gerbort.data.domain.repositories.RecordsRepository
+import com.gerbort.data.domain.repositories.getCurrentWeekTime
 import com.gerbort.node_graph.domain.use_cases.GetEntryUseCase
 import com.gerbort.pathfinding.domain.manager.PathManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -57,21 +58,10 @@ class SearchViewModel(
     private suspend fun loadRecords() {
         recordsJob?.cancel()
         recordsJob = viewModelScope.launch {
-            val time = getCurrentWeekTime() + 30*60*1000L
+            val time = recordsRepository.getCurrentWeekTime() + 30*60*1000L
             recordsRepository.getRecords(time, 5).collectLatest{ records ->
                 _state.update { it.copy(timeRecords = records) }
             }
         }
     }
-
-    private fun getCurrentWeekTime(): Long {
-        val calendar = Calendar.getInstance()
-        val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
-        val hour = calendar.get(Calendar.HOUR)
-        val minutes = calendar.get(Calendar.MINUTE)
-        return (dayOfWeek-1)*24*60*60*1000L +
-                hour*60*60*1000L +
-                minutes*60*1000L
-    }
-
 }

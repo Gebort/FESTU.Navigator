@@ -12,6 +12,7 @@ dependencies {
     implementation(Libs.Sceneview.sceneView)
     implementation(project(Modules.Core.Common))
     implementation(project(Modules.Core.Smoothing))
+    implementation(project(Modules.Core.Data))
     implementation(project(Modules.Core.NodeGraph))
 
 }
