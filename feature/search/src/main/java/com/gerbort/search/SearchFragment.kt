@@ -3,6 +3,7 @@ package com.gerbort.search
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
+import android.view.SearchEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -39,8 +40,6 @@ class SearchFragment: Fragment() {
 
     private val adapter = EntriesAdapter(
         onItemClick = { number -> processSearchResult(number) },
-        onEmptyList = { binding.textEmpty.isVisible = true },
-        onNotEmptyList = { binding.textEmpty.isGone = true }
     )
 
     private val args: SearchFragmentArgs by navArgs()
@@ -68,14 +67,16 @@ class SearchFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
+        vm.onEvent(SearchEvents.LoadRecordsAndEntries)
+
         with(binding.searchInput){
             doOnTextChanged { text, _, _, _ ->
-                    adapter.applyFilter(text.toString())
+                    vm.onEvent(SearchEvents.Filter(text.toString()))
             }
             setOnEditorActionListener { v, actionId, event ->
                 var handled = false
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    processSearchResult(text.toString())
+                    vm.onEvent(SearchEvents.Filter(text.toString()))
                     handled = true
                 }
                 handled
@@ -93,44 +94,11 @@ class SearchFragment: Fragment() {
             )
         }
 
-
-        var entriesList = listOf<EntryItem>()
-        vm.onEvent(SearchEvents.LoadRecords)
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.state.collectLatest { state ->
 
-
                 }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            withContext(Dispatchers.Default) {
-                entriesList = mainModel.entriesNumber
-                    .map { number ->
-                        EntryItem(
-                            number,
-                            number.getEntryLocation(requireContext())
-                        )
-                    }
-            }
-            adapter.changeList(entriesList)
-
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
-                mainModel.timeRecords.collectLatest { records ->
-                    adapter.changeHistory(
-                        records.map {
-                            EntryItem(
-                                it.end,
-                                it.end.getEntryLocation(requireContext()),
-                                true
-                            )
-                        }
-                    )
-                }
-
             }
         }
 
@@ -149,9 +117,47 @@ class SearchFragment: Fragment() {
                             binding.searchLayout.error = resources.getString(R.string.incorrect_number)
                             binding.searchInput.viewRequestInput()
                         }
+                        is SearchUiEvent.FilterChanged -> {
+                            vm.state.value.let { state ->
+                                if (!state.filter.isNullOrBlank()) {
+                                    adapter.submitList(
+                                        state.entries.map {
+                                            EntryItem(
+                                                it,
+                                                it.getEntryLocation(requireContext())
+                                            )
+                                        }
+                                    ) { onListChangeComplete() }
+                                }
+                            }
+
+                        }
+                        is SearchUiEvent.TimeRecordsChanged -> {
+                            vm.state.value.let { state ->
+                                if (state.filter.isNullOrBlank()) {
+                                    adapter.submitList(
+                                        state.timeRecords.map {
+                                            EntryItem(
+                                                it.end,
+                                                it.end.getEntryLocation(requireContext())
+                                            )
+                                        }
+                                    ) { onListChangeComplete() }
+                                }
+                            }
+                        }
                     }
                 }
             }
+        }
+    }
+
+    private fun onListChangeComplete() {
+        if (adapter.currentList.isNotEmpty()) {
+            binding.textEmpty.isGone = true
+        }
+        else {
+            binding.textEmpty.isVisible = true
         }
     }
 

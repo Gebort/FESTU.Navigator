@@ -3,8 +3,8 @@ package com.gerbort.search
 sealed interface SearchEvents {
 
     class TrySearch(val number: String, val searchType: SearchType): SearchEvents
-
-    data object LoadRecords: SearchEvents
+    class Filter(val filter: String): SearchEvents
+    data object LoadRecordsAndEntries: SearchEvents
 
 }
 

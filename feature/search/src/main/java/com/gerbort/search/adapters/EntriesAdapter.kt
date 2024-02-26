@@ -1,5 +1,6 @@
 package com.gerbort.search.adapters
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,13 +15,7 @@ import com.gerbort.search.R
 
 class EntriesAdapter(
     private val onItemClick: (String) -> Unit,
-    private val onEmptyList: () -> Unit,
-    private val onNotEmptyList: () -> Unit,
 ) : ListAdapter<EntryItem, EntriesAdapter.ItemViewholder>(DiffCallback())  {
-
-    private var recordsList = listOf<EntryItem>()
-    private var rawList = listOf<EntryItem>()
-    private var filter: String = ""
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewholder {
         return ItemViewholder(
@@ -46,30 +41,6 @@ class EntriesAdapter(
             setOnClickListener {
                 onItemClick(item.number)
             }
-        }
-    }
-
-    fun changeList(entries: List<EntryItem>){
-        rawList = entries
-        applyFilter(filter)
-    }
-
-    fun changeHistory(records: List<EntryItem>){
-        recordsList = records
-        applyFilter(filter)
-    }
-
-    fun applyFilter(filter: String){
-        this.filter = filter
-        if (filter == "") {
-            submitList(recordsList)
-            if (recordsList.isEmpty()) onEmptyList() else onNotEmptyList()
-        }
-        else {
-            submitList((rawList)
-                .filter { it.number.startsWith(filter) }
-            )
-            if (rawList.isEmpty()) onEmptyList() else onNotEmptyList()
         }
     }
 }

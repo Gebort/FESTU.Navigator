@@ -1,10 +1,11 @@
 package com.gerbort.search
 
-import android.icu.util.Calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gerbort.common.model.Record
 import com.gerbort.data.domain.repositories.RecordsRepository
 import com.gerbort.data.domain.repositories.getCurrentWeekTime
+import com.gerbort.node_graph.domain.use_cases.GetEntriesUseCase
 import com.gerbort.node_graph.domain.use_cases.GetEntryUseCase
 import com.gerbort.pathfinding.domain.manager.PathManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +22,8 @@ import kotlinx.coroutines.launch
 class SearchViewModel(
     private val recordsRepository: RecordsRepository,
     private val pathManager: PathManager,
-    private val getEntryUseCase: GetEntryUseCase
+    private val getEntryUseCase: GetEntryUseCase,
+    private val getEntriesUseCase: GetEntriesUseCase
 ): ViewModel() {
 
     private val _state = MutableStateFlow(SearchState())
@@ -30,13 +32,17 @@ class SearchViewModel(
     private val _uiEvents = Channel<SearchUiEvent>()
     val uiEvents = _uiEvents.receiveAsFlow()
 
+    private var entries = setOf<String>()
+
     private var recordsJob: Job? = null
+    private var entriesJob: Job? = null
 
     fun onEvent(event: SearchEvents) {
         viewModelScope.launch {
             when (event) {
-                is SearchEvents.LoadRecords -> loadRecords()
+                is SearchEvents.LoadRecordsAndEntries -> loadRecordsAndEntries()
                 is SearchEvents.TrySearch -> processSearch(event.number, event.searchType)
+                is SearchEvents.Filter -> filter(event.filter)
             }
         }
     }
@@ -55,13 +61,30 @@ class SearchViewModel(
         _uiEvents.send(SearchUiEvent.SearchSuccess)
     }
 
-    private suspend fun loadRecords() {
+    private suspend fun filter(filter: String?) {
+        _state.update { it.copy(
+            filter = filter,
+            entries = entries.filter { it.startsWith(filter.orEmpty()) }
+        ) }
+        _uiEvents.send(SearchUiEvent.FilterChanged)
+    }
+
+
+    private suspend fun loadRecordsAndEntries() {
         recordsJob?.cancel()
+        entriesJob?.cancel()
+        filter(null)
         recordsJob = viewModelScope.launch {
             val time = recordsRepository.getCurrentWeekTime() + 30*60*1000L
             recordsRepository.getRecords(time, 5).collectLatest{ records ->
                 _state.update { it.copy(timeRecords = records) }
+                _uiEvents.send(SearchUiEvent.TimeRecordsChanged)
             }
+        }
+        entriesJob = viewModelScope.launch {
+            //TODO заменить на flow
+            entries = getEntriesUseCase()
+            filter(state.value.filter)
         }
     }
 }
