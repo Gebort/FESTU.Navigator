@@ -45,7 +45,6 @@ internal class ScannerViewModel @Inject constructor(
         }
     }
 
-    //TODO передать результат в конфермер
     private suspend fun acceptObject() {
         state.value.confirmObject?.let {
             when (_state.value.confirmType) {
@@ -68,6 +67,7 @@ internal class ScannerViewModel @Inject constructor(
 
                 ConfirmType.ENTRY -> {
 
+                    //TODO North direction
                     createNodeUseCase(
                         number = it.label,
                         position = it.pos.position,
