@@ -13,7 +13,7 @@ import io.github.sceneview.node.NodeParent
 interface DrawerHelper {
 
     fun setParentNode(
-        parentNode: NodeParent
+        parentNode: ArNode
     )
 
     fun setFragment(
@@ -25,9 +25,9 @@ interface DrawerHelper {
         anchor: Anchor? = null
     ): ArNode
 
-    suspend fun drawSelection(
-        treeNode: TreeNode,
-    ): ArNode
+//    suspend fun drawSelection(
+//        treeNode: TreeNode,
+//    ): ArNode
 
     suspend fun placeLabel(
         label: String,
@@ -56,5 +56,7 @@ interface DrawerHelper {
     ): ArNode
 
     suspend fun joinAnimation(node: ArNode)
+
+    suspend fun updateSelectionMarker(node: TreeNode?)
 
 }

@@ -5,10 +5,10 @@ import com.gerbort.common.di.AppDispatchers
 import com.gerbort.common.di.Dispatcher
 import com.gerbort.common.model.OrientatedPosition
 import com.gerbort.common.model.TreeNode
-import com.gerbort.node_graph.data.diff_utils.GraphDiffUtils
 import com.gerbort.common.utils.inverted
 import com.gerbort.common.utils.multiply
 import com.gerbort.common.utils.reverseConvertPosition
+import com.gerbort.node_graph.data.diff_utils.GraphDiffUtils
 import com.gerbort.node_graph.domain.adapter.NodeRepositoryAdapter
 import com.gerbort.node_graph.domain.graph.NodeGraph
 import com.gerbort.node_graph.domain.graph.NodeGraphDiffUtils
@@ -43,7 +43,7 @@ internal class NodeGraphImpl @Inject constructor(
     private var availableRegion = 0
         get() { return field.also { field++ } }
 
-    private var initialized = false
+    private var initialized = MutableStateFlow(false)
     private var preloaded = false
 
     var translocation = Float3(0f, 0f, 0f)
@@ -61,10 +61,10 @@ internal class NodeGraphImpl @Inject constructor(
 
     override fun isPreloaded(): Boolean = preloaded
 
-    override fun isInitialized(): Boolean = initialized
+    override fun isInitialized() = initialized.asStateFlow()
 
     override suspend fun preload() = withContext(Dispatchers.IO) {
-        if (initialized){
+        if (initialized.value){
             throw Exception("Already initialized, cant preload")
         }
         preloaded = false
@@ -89,10 +89,10 @@ internal class NodeGraphImpl @Inject constructor(
         position: Float3,
         newRotation: Quaternion
     ): Result<Unit> {
-        initialized = false
+        initialized.update { false }
         if (_entryPoints.isEmpty()) {
             clearTree()
-            initialized = true
+            initialized.update { true }
             return Result.success(Unit)
         }
         else {
@@ -111,7 +111,7 @@ internal class NodeGraphImpl @Inject constructor(
                 orientation = Quaternion()
             ) }
 
-            initialized = true
+            initialized.update { true }
             return Result.success(Unit)
         }
     }
@@ -123,7 +123,7 @@ internal class NodeGraphImpl @Inject constructor(
     override fun getTreePivot(): Flow<OrientatedPosition?> = _treePivot.asStateFlow()
 
     override fun getNode(id: Int): TreeNode? {
-        if (!initialized){
+        if (!initialized.value){
             throw GraphException.GraphIsntInitialized
         }
         val node = _allPoints[id]
@@ -140,7 +140,7 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     override fun getEntry(number: String): TreeNode.Entry? {
-        if (!initialized){
+        if (!initialized.value){
             throw GraphException.GraphIsntInitialized
         }
         val entry = _entryPoints[number]
@@ -170,7 +170,7 @@ internal class NodeGraphImpl @Inject constructor(
         number: String?,
         forwardDirection: Quaternion?
     ): Result<TreeNode> {
-        if (!initialized){
+        if (!initialized.value){
             return Result.failure(GraphException.GraphIsntInitialized)
         }
         if (_allPoints.values.find { it.position == position } != null) {
@@ -221,7 +221,7 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     override suspend fun removeNode(node: TreeNode) {
-        if (!initialized){
+        if (!initialized.value){
             throw GraphException.GraphIsntInitialized
         }
         if (!_allPoints.containsKey(node.id)) {
@@ -238,7 +238,7 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     override suspend fun addLink(node1: TreeNode, node2: TreeNode): Boolean {
-        if (!initialized){
+        if (!initialized.value){
             throw GraphException.GraphIsntInitialized
         }
         if (_links[node1.id] == null) {
@@ -267,7 +267,7 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     private fun getNodes(nodes: List<Int>): List<TreeNode> {
-        if (!initialized){
+        if (!initialized.value){
             throw GraphException.GraphIsntInitialized
         }
         return nodes.mapNotNull {
@@ -276,7 +276,7 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     private suspend fun removeAllLinks(node: TreeNode){
-        if (!initialized){
+        if (!initialized.value){
             throw GraphException.GraphIsntInitialized
         }
         if (_links[node.id] == null) {

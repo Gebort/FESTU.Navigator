@@ -48,11 +48,12 @@ internal class DrawerHelperImpl: DrawerHelper {
     private val bias = 0.15f
 
     private var fragment: Fragment? = null
-    private var parentNode: NodeParent? = null
+    private var parentNode: ArNode? = null
+    private var selectionNode: ArNode? = null
     private val animationJobs = mutableMapOf<ArNode, Job>()
 
 
-    override fun setParentNode(parentNode: NodeParent) {
+    override fun setParentNode(parentNode: ArNode) {
         this.parentNode = parentNode
     }
 
@@ -103,7 +104,7 @@ internal class DrawerHelperImpl: DrawerHelper {
 //        }
 //    }
 
-    override suspend fun drawSelection(
+    private suspend fun drawSelection(
         treeNode: TreeNode,
     ): ArNode = when (treeNode) {
         is TreeNode.Entry -> {
@@ -384,6 +385,20 @@ internal class DrawerHelperImpl: DrawerHelper {
 
     override suspend fun joinAnimation(node: ArNode) {
         animationJobs[node]?.join()
+    }
+
+    override suspend fun updateSelectionMarker(node: TreeNode?) {
+        selectionNode?.let {
+            parentNode?.removeChild(it)
+            removeNode(it)
+        }
+        node?.let {
+            val trans = parentNode?.position ?: Float3(0f)
+            val n = it.copy(position = it.position - trans)
+            selectionNode = drawSelection(n).also { arNode ->
+                parentNode?.addChild(arNode)
+            }
+        }
     }
 
     private fun Vector3.addConst(xValue: Float, yValue: Float, zValue: Float, modifier: Int = 1): Vector3 {

@@ -1,9 +1,8 @@
 package com.example.festunavigator.presentation.preview.nodes_adapters
 
 import androidx.lifecycle.LifecycleCoroutineScope
-import com.example.festunavigator.presentation.common.helpers.DrawerHelper
 import com.gerbort.common.model.TreeNode
-import com.google.android.material.snackbar.Snackbar
+import com.gerbort.core_ui.drawer_helper.DrawerHelper
 import com.uchuhimo.collections.MutableBiMap
 import com.uchuhimo.collections.mutableBiMapOf
 import dev.romainguy.kotlin.math.Float3
@@ -11,8 +10,6 @@ import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
 import io.github.sceneview.math.Position
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 
 class TreeAdapter(
     drawerHelper: DrawerHelper,
@@ -23,7 +20,6 @@ class TreeAdapter(
 ): NodesAdapter<TreeNode>(drawerHelper, previewView, bufferSize, scope) {
 
     private val modelsToLinkModels: MutableBiMap<Pair<ArNode, ArNode>, ArNode> = mutableBiMapOf()
-    private var selectionNode: ArNode? = null
 
     override suspend fun onInserted(item: TreeNode): ArNode {
         if (onlyEntries && item is TreeNode.Entry) {
@@ -101,19 +97,5 @@ class TreeAdapter(
             return nodes.entries.find { it.value == node }?.key
         }
         return null
-    }
-
-    suspend fun updateSelection(node: TreeNode?) {
-            selectionNode?.let {
-                parentNode?.removeChild(it)
-                drawerHelper.removeNode(it)
-            }
-            node?.let {
-                val trans = parentNode?.position ?: Float3(0f)
-                val n = it.copy(position = it.position - trans)
-                selectionNode = drawerHelper.drawSelection(n, previewView).also { arNode ->
-                    parentNode?.addChild(arNode)
-                }
-        }
     }
 }

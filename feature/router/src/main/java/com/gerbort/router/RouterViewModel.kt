@@ -35,6 +35,11 @@ class RouterViewModel @Inject constructor(
     fun onEvent(event: RouterEvent) {
         viewModelScope.launch {
             when (event) {
+                is RouterEvent.NewSelectedNode -> _state.update { it.copy(
+                    selectedNode = event.treeNode,
+                    linkPlacement = false
+                ) }
+
                 is RouterEvent.ChangeLinkMode -> _state.update { it.copy(linkPlacement = !state.value.linkPlacement) }
 
                 //TODO North direction
@@ -44,11 +49,17 @@ class RouterViewModel @Inject constructor(
 //                }
 
                 is RouterEvent.CreatePathNode -> createNodeUseCase(position = event.position).fold(
-                    onSuccess = { _uiEvents.send(RouterUiEvent.NodeCreated) },
+                    onSuccess = { node ->
+                        _uiEvents.send(RouterUiEvent.NodeCreated)
+                        _state.update { it.copy(selectedNode = node) }
+                                },
                     onFailure = { _uiEvents.send(RouterUiEvent.NodeAlreadyExists) }
                 )
 
                 is RouterEvent.DeleteNode -> deleteNodeUseCase(event.node).let {
+                    if (event.node == state.value.selectedNode) {
+                        _state.update { it.copy(selectedNode = null) }
+                    }
                     _uiEvents.send(RouterUiEvent.NodeDeleted(event.node))
                 }
 

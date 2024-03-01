@@ -1,31 +1,19 @@
 package com.example.festunavigator.presentation.preview
 
-import android.icu.util.Calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.festunavigator.presentation.preview.state.PathState
-import com.example.festunavigator.presentation.search.SearchFragment
-import com.example.festunavigator.presentation.search.SearchUiEvent
-import com.gerbort.common.model.Record
-import com.gerbort.common.model.TreeNode
-import com.gerbort.common.utils.fromVector
 import com.gerbort.common.utils.multiply
-import com.gerbort.common.utils.reverseConvertPosition
 import com.gerbort.common.utils.rotateBy
-import com.gerbort.data.domain.repositories.RecordsRepository
-import com.gerbort.hit_test.HitTestResult
 import com.gerbort.node_graph.domain.graph.NodeGraph
 import com.google.ar.sceneform.math.Vector3
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import dev.romainguy.kotlin.math.RotationsOrder
-import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.arcore.rotation
 import io.github.sceneview.math.toFloat3
 import io.github.sceneview.math.toQuaternion
-import io.github.sceneview.math.toVector3
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -35,6 +23,8 @@ class MainShareModel @Inject constructor(
     private val nodeGraph: NodeGraph,
 ): ViewModel() {
 
+    private val _uiEvent = Channel<MainUiEvent>()
+    val uiEvent = _uiEvent.receiveAsFlow()
     var northLocation: Float3? = null
         private set
 
@@ -43,6 +33,12 @@ class MainShareModel @Inject constructor(
 
     init {
         preload()
+        viewModelScope.launch {
+            nodeGraph.isInitialized().collect { initialized ->
+                if (initialized) _uiEvent.send(MainUiEvent.Initialized)
+            }
+        }
+
     }
 
     fun onEvent(event: MainEvent) {

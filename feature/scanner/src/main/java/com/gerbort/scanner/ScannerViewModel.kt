@@ -56,6 +56,9 @@ internal class ScannerViewModel @Inject constructor(
                             position = it.pos.position,
                             newOrientation = it.pos.orientation
                     ) ) {
+                        _state.update { it.copy(
+                            confirmObject = null
+                        ) }
                         _confirmUiEvents.send(ScannerUiEvents.InitSuccess)
                         pathManager.setStart(it.label)
                     }

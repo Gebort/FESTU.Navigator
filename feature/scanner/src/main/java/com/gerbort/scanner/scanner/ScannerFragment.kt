@@ -130,7 +130,6 @@ class ScannerFragment: Fragment() {
                                             LabelObject(
                                                 label = lastDetectedObject!!.detectedObjectResult.label,
                                                 pos = res.orientatedPosition,
-                                                anchor = res.hitResult.createAnchor()
                                             )
 
                                         vm.onEvent(

@@ -13,8 +13,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.gerbort.common.model.TreeNode
 import com.gerbort.common.model_ext.getEntryLocation
+import com.gerbort.core_ui.drawer_helper.DrawerHelper
 import com.gerbort.core_ui.frame_holder.FrameProducer
+import com.gerbort.core_ui.tap_flow.UserTapProducer
 import com.gerbort.hit_test.HitTestResult
 import com.gerbort.hit_test.HitTestUseCase
 import com.gerbort.pathfinding.domain.manager.PathManager
@@ -25,6 +28,8 @@ import dev.romainguy.kotlin.math.Float2
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
+import io.github.sceneview.ar.node.ArNode
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,17 +37,18 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class RouterFragment: Fragment() {
 
-    @Inject
-    lateinit var hitTest: HitTestUseCase
-    @Inject
-    lateinit var frameProducer: FrameProducer
-    @Inject
-    lateinit var pathManager: PathManager
+    @Inject lateinit var hitTest: HitTestUseCase
+    @Inject lateinit var frameProducer: FrameProducer
+    @Inject lateinit var tapProducer: UserTapProducer
+    @Inject lateinit var pathManager: PathManager
+    @Inject lateinit var drawerHelper: DrawerHelper
 
     private var _binding: FragmentRouterBinding? = null
     private val binding get() = _binding!!
 
     private val vm: RouterViewModel by activityViewModels()
+
+    private var currentSelectedNode: TreeNode? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -120,6 +126,11 @@ class RouterFragment: Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 vm.state.collect { state ->
 
+                    if (state.selectedNode != currentSelectedNode) {
+                        drawerHelper.updateSelectionMarker(state.selectedNode)
+                        currentSelectedNode = state.selectedNode
+                    }
+
                     binding.linkButton.isEnabled = state.selectedNode != null
                     binding.deleteButton.isEnabled = state.selectedNode != null
 
@@ -154,6 +165,24 @@ class RouterFragment: Fragment() {
                         }
                     }
 
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                tapProducer.getUserTaps().collect { tap ->
+                    if (BuildConfig.FLAVOR == "admin") {
+                        tap.treeNode?.let { treeNode ->
+                            if (!vm.state.value.linkPlacement) {
+                                vm.onEvent(RouterEvent.NewSelectedNode(treeNode))
+                            } else {
+                                vm.state.value.selectedNode?.let { selectedNode ->
+                                    vm.onEvent(RouterEvent.LinkNodes(treeNode, selectedNode))
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

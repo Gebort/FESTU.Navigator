@@ -27,6 +27,8 @@ import com.gerbort.common.model.TreeNode
 import com.gerbort.common.utils.reverseConvertPosition
 import com.gerbort.core_ui.drawer_helper.DrawerHelper
 import com.gerbort.core_ui.frame_holder.FrameConsumer
+import com.gerbort.core_ui.tap_flow.UserTap
+import com.gerbort.core_ui.tap_flow.UserTapConsumer
 import com.gerbort.node_graph.data.graph.GraphException
 import com.gerbort.path_correction.domain.PathCorrector
 import com.google.android.material.snackbar.Snackbar
@@ -52,11 +54,13 @@ class PreviewFragment : Fragment(), SensorEventListener {
     private var wayBuildingJob: Job? = null
     private var treeBuildingJob: Job? = null
     private var lastPositionTime = 0L
+
     private lateinit var pathAdapter: PathAdapter
     private lateinit var treeAdapter: TreeAdapter
 
     @Inject lateinit var pathCorrector: PathCorrector
     @Inject lateinit var frameConsumer: FrameConsumer
+    @Inject lateinit var userTapConsumer: UserTapConsumer
     @Inject lateinit var drawerHelper: DrawerHelper
 
     private lateinit var sensorManager: SensorManager
@@ -97,17 +101,17 @@ class PreviewFragment : Fragment(), SensorEventListener {
         drawerHelper.setParentNode(binding.sceneView)
 
         pathAdapter = PathAdapter(
-            drawerHelper,
-            binding.sceneView,
-            VIEWABLE_PATH_NODES,
-            viewLifecycleOwner.lifecycleScope,
+            drawerHelper = drawerHelper,
+            previewView = binding.sceneView,
+            bufferSize = VIEWABLE_PATH_NODES,
+            scope = viewLifecycleOwner.lifecycleScope,
         )
 
         treeAdapter = TreeAdapter(
-            drawerHelper,
-            binding.sceneView,
-            DEFAULT_BUFFER_SIZE,
-            viewLifecycleOwner.lifecycleScope,
+            drawerHelper = drawerHelper,
+            previewView = binding.sceneView,
+            bufferSize = DEFAULT_BUFFER_SIZE,
+            scope = viewLifecycleOwner.lifecycleScope,
             onlyEntries = App.isUser
         )
 
@@ -124,18 +128,15 @@ class PreviewFragment : Fragment(), SensorEventListener {
                 config.instantPlacementMode = Config.InstantPlacementMode.DISABLED
             }
 
-            onTap = { node, _, _ ->
-                if (App.mode == App.ADMIN_MODE) {
-                    node?.let { it ->
-                        if (!mainModel.linkPlacementMode.value) {
-                            selectNode(it as ArNode)
-                        } else {
-                            val treeNode = mainModel.selectedNode.value
-                            (treeAdapter.getArNode(treeNode))?.let { node1 ->
-                                linkNodes(node1, it as ArNode)
-                            }
-                        }
-                    }
+            onTap = { node, renderable, event ->
+                node?.let {
+                    val treeNode = checkTreeNode(it as ArNode) ?: checkTreeNode(node.parentNode as ArNode?)
+                    userTapConsumer.newTap(UserTap(
+                        node = node,
+                        treeNode = treeNode,
+                        renderable = renderable,
+                        motionEvent = event,
+                    ))
                 }
             }
 
@@ -154,13 +155,11 @@ class PreviewFragment : Fragment(), SensorEventListener {
             }
         }
 
-        selectNode(null)
-
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
-                mainModel.mainUiEvents.collectLatest { uiEvent ->
+                mainModel.uiEvent.collect { uiEvent ->
                     when (uiEvent) {
-                        is MainUiEvent.InitSuccess -> {
+                        is MainUiEvent.Initialized -> {
                             treeAdapter.changeParentPos(uiEvent.initialEntry?.position)
                             pathAdapter.changeParentPos(uiEvent.initialEntry?.position)
                             uiEvent.initialEntry?.let {
@@ -175,14 +174,6 @@ class PreviewFragment : Fragment(), SensorEventListener {
                         }
                         else -> {}
                     }
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainModel.selectedNode.collectLatest { selectedNode ->
-                    treeAdapter.updateSelection(selectedNode)
                 }
             }
         }
@@ -237,28 +228,6 @@ class PreviewFragment : Fragment(), SensorEventListener {
                 mainModel.selectedNode.value?.let { node ->
                     checkSelectedNode(node)
                 }
-            }
-        }
-    }
-    
-    private fun selectNode(node: ArNode?){
-        val treeNode = checkTreeNode(node) ?: checkTreeNode(node?.parentNode as ArNode?)
-        mainModel.onEvent(MainEvent.NewSelectedNode(treeNode))
-    }
-
-    private fun checkSelectedNode(treeNode: TreeNode){
-        if (treeAdapter.getArNode(treeNode) == null) {
-            selectNode(null)
-        }
-    }
-
-    private fun linkNodes(node1: ArNode, node2: ArNode){
-        viewLifecycleOwner.lifecycleScope.launch {
-            val path1: TreeNode? = checkTreeNode(node1) ?: checkTreeNode(node1.parentNode as ArNode)
-            val path2: TreeNode? = checkTreeNode(node2) ?: checkTreeNode(node2.parentNode as ArNode)
-
-            if (path1 != null && path2 != null){
-                mainModel.onEvent(MainEvent.LinkNodes(path1, path2))
             }
         }
     }

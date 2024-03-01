@@ -10,7 +10,7 @@ interface NodeGraph {
 
     fun isPreloaded(): Boolean
 
-    fun isInitialized(): Boolean
+    fun isInitialized(): Flow<Boolean>
 
     suspend fun preload()
 

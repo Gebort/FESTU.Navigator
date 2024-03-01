@@ -1,8 +1,8 @@
 package com.example.festunavigator.presentation.preview.nodes_adapters
 
 import androidx.lifecycle.LifecycleCoroutineScope
-import com.example.festunavigator.presentation.common.helpers.DrawerHelper
 import com.gerbort.common.model.OrientatedPosition
+import com.gerbort.core_ui.drawer_helper.DrawerHelper
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.ArSceneView
