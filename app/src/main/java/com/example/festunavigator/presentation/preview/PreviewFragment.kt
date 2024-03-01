@@ -25,6 +25,7 @@ import com.gerbort.app.R
 import com.gerbort.app.databinding.FragmentPreviewBinding
 import com.gerbort.common.model.TreeNode
 import com.gerbort.common.utils.reverseConvertPosition
+import com.gerbort.core_ui.drawer_helper.DrawerHelper
 import com.gerbort.core_ui.frame_holder.FrameConsumer
 import com.gerbort.node_graph.data.graph.GraphException
 import com.gerbort.path_correction.domain.PathCorrector
@@ -48,11 +49,11 @@ class PreviewFragment : Fragment(), SensorEventListener {
     private var _binding: FragmentPreviewBinding? = null
     private val binding get() = _binding!!
 
-    private val drawerHelper = DrawerHelper(this)
+    @Inject
+    lateinit var drawerHelper: DrawerHelper
 
     private var wayBuildingJob: Job? = null
     private var treeBuildingJob: Job? = null
-    private var currentPathState: PathState? = null
     private var lastPositionTime = 0L
     private lateinit var pathAdapter: PathAdapter
     private lateinit var treeAdapter: TreeAdapter
@@ -61,7 +62,6 @@ class PreviewFragment : Fragment(), SensorEventListener {
     @Inject lateinit var frameConsumer: FrameConsumer
 
 
-    private var lastConfObject: LabelObject? = null
     private var confObjectJob: Job? = null
 
     private lateinit var sensorManager: SensorManager
@@ -97,6 +97,9 @@ class PreviewFragment : Fragment(), SensorEventListener {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
+        drawerHelper.setFragment(this)
+        drawerHelper.setParentNode(binding.sceneView)
 
         pathAdapter = PathAdapter(
             drawerHelper,
@@ -160,14 +163,6 @@ class PreviewFragment : Fragment(), SensorEventListener {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
-                mainModel.pathState.collectLatest { pathState ->
-                    currentPathState = pathState
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                 mainModel.mainUiEvents.collectLatest { uiEvent ->
                     when (uiEvent) {
                         is MainUiEvent.InitSuccess -> {
@@ -182,37 +177,6 @@ class PreviewFragment : Fragment(), SensorEventListener {
 //                                }
                             }
                             binding.sceneView.planeRenderer.isVisible = App.isAdmin
-                        }
-                        is MainUiEvent.InitFailed -> {
-                            when (uiEvent.error) {
-                                is GraphException.WrongEntryException -> {
-                                    showSnackbar(getString(R.string.incorrect_number))
-                                }
-                                else -> {
-                                    showSnackbar(getString(R.string.init_failed))
-                                }
-                            }
-                        }
-                        is MainUiEvent.NodeCreated -> {
-                            showSnackbar(getString(R.string.node_created))
-                        }
-                        is MainUiEvent.LinkCreated -> {
-                            viewLifecycleOwner.lifecycleScope.launch {
-                                treeAdapter.createLink(uiEvent.node1, uiEvent.node2)
-                                showSnackbar(getString(R.string.link_created))
-                            }
-                        }
-                        is MainUiEvent.NodeDeleted -> {
-                            showSnackbar(getString(R.string.node_deleted))
-                        }
-                        is MainUiEvent.PathNotFound -> {
-                            showSnackbar(getString(R.string.no_path))
-                        }
-                        is MainUiEvent.EntryAlreadyExists -> {
-                            showSnackbar(getString(R.string.entry_already_exists))
-                        }
-                        is MainUiEvent.LinkAlreadyExists -> {
-                            showSnackbar(getString(R.string.link_already_exists))
                         }
                         else -> {}
                     }

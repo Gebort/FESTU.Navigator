@@ -35,9 +35,6 @@ class MainShareModel @Inject constructor(
     private val nodeGraph: NodeGraph,
 ): ViewModel() {
 
-    private var _frame = MutableStateFlow<ArFrame?>(null)
-    val frame = _frame.asStateFlow()
-
     var northLocation: Float3? = null
         private set
 

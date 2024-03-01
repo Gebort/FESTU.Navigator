@@ -94,13 +94,7 @@ class SearchFragment: Fragment() {
             )
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                vm.state.collectLatest { state ->
 
-                }
-            }
-        }
 
         binding.searchInput.viewRequestInput()
 
