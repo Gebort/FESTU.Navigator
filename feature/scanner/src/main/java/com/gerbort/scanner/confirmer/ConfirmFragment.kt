@@ -13,12 +13,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import com.gerbort.core_ui.drawer_helper.DrawerHelper
+import com.gerbort.scanner.LabelObject
 import com.gerbort.scanner.R
 import com.gerbort.scanner.ScannerEvent
 import com.gerbort.scanner.ScannerUiEvents
 import com.gerbort.scanner.ScannerViewModel
 import com.gerbort.scanner.databinding.FragmentConfirmBinding
+import io.github.sceneview.ar.node.ArNode
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
 class ConfirmFragment : Fragment() {
@@ -27,6 +32,13 @@ class ConfirmFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val vm: ScannerViewModel by activityViewModels()
+
+    private var lastConfObject: LabelObject? = null
+    private var confObjectNode: ArNode? = null
+    private var confObjectJob: Job? = null
+
+    @Inject lateinit var drawerHelper: DrawerHelper
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -61,6 +73,28 @@ class ConfirmFragment : Fragment() {
             setEnabled(false)
             vm.onEvent(ScannerEvent.RejectObject)
             findNavController().popBackStack()
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
+                vm.state.collect { state ->
+                    if (state.confirmObject != lastConfObject) {
+                        lastConfObject = state.confirmObject
+                        confObjectJob?.cancel()
+                        confObjectJob = viewLifecycleOwner.lifecycleScope.launch {
+                            confObjectNode?.let {
+                                drawerHelper.removeNode(it)
+                            }
+                            lastConfObject?.let {
+                                confObjectNode = drawerHelper.placeLabel(
+                                    it.label,
+                                    it.pos,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
