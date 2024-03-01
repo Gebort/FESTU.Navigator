@@ -49,9 +49,6 @@ class PreviewFragment : Fragment(), SensorEventListener {
     private var _binding: FragmentPreviewBinding? = null
     private val binding get() = _binding!!
 
-    @Inject
-    lateinit var drawerHelper: DrawerHelper
-
     private var wayBuildingJob: Job? = null
     private var treeBuildingJob: Job? = null
     private var lastPositionTime = 0L
@@ -60,9 +57,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
 
     @Inject lateinit var pathCorrector: PathCorrector
     @Inject lateinit var frameConsumer: FrameConsumer
-
-
-    private var confObjectJob: Job? = null
+    @Inject lateinit var drawerHelper: DrawerHelper
 
     private lateinit var sensorManager: SensorManager
     private lateinit var gsensor: Sensor
@@ -185,27 +180,6 @@ class PreviewFragment : Fragment(), SensorEventListener {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
-                mainModel.confirmationObject.collectLatest { confObject ->
-                    confObjectJob?.cancel()
-                    confObjectJob = viewLifecycleOwner.lifecycleScope.launch {
-                        lastConfObject?.node?.let {
-                            drawerHelper.removeNode(it)
-                        }
-                        confObject?.let {
-                            it.node = drawerHelper.placeLabel(
-                                confObject.label,
-                                confObject.pos,
-                                binding.sceneView
-                            )
-                            lastConfObject = it
-                        }
-                    }
-                }
-                }
-            }
-
-        viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 mainModel.selectedNode.collectLatest { selectedNode ->
                     treeAdapter.updateSelection(selectedNode)
@@ -240,11 +214,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
             return
         }
 
-
         frameConsumer.newFrame(frame)
-        mainModel.onEvent(
-            MainEvent.NewFrame(frame)
-        )
 
         val userPosReal = Float3(
             frame.camera.displayOrientedPose.tx(),
