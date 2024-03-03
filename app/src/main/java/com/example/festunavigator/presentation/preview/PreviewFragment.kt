@@ -159,9 +159,9 @@ class PreviewFragment : Fragment(), SensorEventListener {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
                 mainModel.uiEvent.collect { uiEvent ->
                     when (uiEvent) {
-                        is MainUiEvent.Initialized -> {
-                            treeAdapter.changeParentPos(uiEvent.initialEntry?.position)
-                            pathAdapter.changeParentPos(uiEvent.initialEntry?.position)
+                        is MainUiEvent.GraphPositionChanged -> {
+                            treeAdapter.changeParentPos(uiEvent.nodeGraphPosition.pivotPosition)
+                            pathAdapter.changeParentPos(uiEvent.nodeGraphPosition.pivotPosition)
                             uiEvent.initialEntry?.let {
 //                                pathAnalyzer = PathAnalyzer(debug = { s, w -> launch { withContext(Dispatchers.Main) { }}}) { t ->
 //                                    mainModel.onEvent(MainEvent.PivotTransform(t))

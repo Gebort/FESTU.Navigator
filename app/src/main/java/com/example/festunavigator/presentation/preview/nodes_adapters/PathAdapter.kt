@@ -16,7 +16,7 @@ class PathAdapter(
 {
 
     override suspend fun onInserted(item: OrientatedPosition): ArNode =
-        drawerHelper.placeArrow(item, previewView)
+        drawerHelper.placeArrow(item)
 
     override suspend fun onRemoved(item: OrientatedPosition, node: ArNode) =
         drawerHelper.removeArrowWithAnim(node)

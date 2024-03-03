@@ -12,11 +12,11 @@ import com.gerbort.node_graph.data.diff_utils.GraphDiffUtils
 import com.gerbort.node_graph.domain.adapter.NodeRepositoryAdapter
 import com.gerbort.node_graph.domain.graph.NodeGraph
 import com.gerbort.node_graph.domain.graph.NodeGraphDiffUtils
+import com.gerbort.node_graph.domain.graph.NodeGraphPosition
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.toFloat3
 import io.github.sceneview.math.toOldQuaternion
-import io.github.sceneview.math.toQuaternion
 import io.github.sceneview.math.toVector3
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -43,28 +43,22 @@ internal class NodeGraphImpl @Inject constructor(
     private var availableRegion = 0
         get() { return field.also { field++ } }
 
-    private var initialized = MutableStateFlow(false)
+    private var initialized = false
     private var preloaded = false
 
-    var translocation = Float3(0f, 0f, 0f)
-        private set
-
-    var pivotPosition = Float3(0f, 0f, 0f)
-        private set
-
-    var rotation = Float3(0f, 0f, 0f).toQuaternion()
-        private set
+    private val _positionData = MutableStateFlow(NodeGraphPosition())
 
     val diffUtils: GraphDiffUtils by lazy { GraphDiffUtils(this, dispatcher) }
 
     private var _treePivot = MutableStateFlow<OrientatedPosition?>(null)
 
-    override fun isPreloaded(): Boolean = preloaded
+    override fun isPreloaded() = preloaded
 
-    override fun isInitialized() = initialized.asStateFlow()
+    override fun isInitialized() = initialized
+    override fun getPositionData(): Flow<NodeGraphPosition> = _positionData.asStateFlow()
 
     override suspend fun preload() = withContext(Dispatchers.IO) {
-        if (initialized.value){
+        if (initialized){
             throw Exception("Already initialized, cant preload")
         }
         preloaded = false
@@ -89,10 +83,10 @@ internal class NodeGraphImpl @Inject constructor(
         position: Float3,
         newRotation: Quaternion
     ): Result<Unit> {
-        initialized.update { false }
+        initialized = false
         if (_entryPoints.isEmpty()) {
             clearTree()
-            initialized.update { true }
+            initialized = false
             return Result.success(Unit)
         }
         else {
@@ -101,17 +95,22 @@ internal class NodeGraphImpl @Inject constructor(
                     exception = GraphException.WrongEntryException(_entryPoints.keys)
                 )
 
-            pivotPosition = entry.position
-            translocation = entry.position - position
-            rotation = entry.forwardVector.multiply(newRotation.inverted()) * -1f
-            rotation.w *= -1f
+            _positionData.update {
+                NodeGraphPosition(
+                    translocation = entry.position - position,
+                    pivotPosition = entry.position,
+                    rotation = (entry.forwardVector.multiply(newRotation.inverted()) * -1f).apply {
+                        w *= -1
+                    }
+                )
+            }
 
             _treePivot.update { OrientatedPosition(
                 position = entry.position,
                 orientation = Quaternion()
             ) }
 
-            initialized.update { true }
+            initialized = true
             return Result.success(Unit)
         }
     }
@@ -123,7 +122,7 @@ internal class NodeGraphImpl @Inject constructor(
     override fun getTreePivot(): Flow<OrientatedPosition?> = _treePivot.asStateFlow()
 
     override fun getNode(id: Int): TreeNode? {
-        if (!initialized.value){
+        if (!initialized){
             throw GraphException.GraphIsntInitialized
         }
         val node = _allPoints[id]
@@ -140,7 +139,7 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     override fun getEntry(number: String): TreeNode.Entry? {
-        if (!initialized.value){
+        if (!initialized){
             throw GraphException.GraphIsntInitialized
         }
         val entry = _entryPoints[number]
@@ -170,7 +169,7 @@ internal class NodeGraphImpl @Inject constructor(
         number: String?,
         forwardDirection: Quaternion?
     ): Result<TreeNode> {
-        if (!initialized.value){
+        if (!initialized){
             return Result.failure(GraphException.GraphIsntInitialized)
         }
         if (_allPoints.values.find { it.position == position } != null) {
@@ -216,12 +215,17 @@ internal class NodeGraphImpl @Inject constructor(
         _translocatedPoints[newNode] = true
         setRegion(newNode.id)
         availableId++
-        nodeAdapter.insertNodes(listOf(newNode), translocation, rotation, pivotPosition)
+        nodeAdapter.insertNodes(
+            nodes = listOf(newNode),
+            translocation = _positionData.value.translocation,
+            rotation = _positionData.value.rotation,
+            pivotPosition = _positionData.value.pivotPosition
+        )
         return Result.success(newNode)
     }
 
     override suspend fun removeNode(node: TreeNode) {
-        if (!initialized.value){
+        if (!initialized){
             throw GraphException.GraphIsntInitialized
         }
         if (!_allPoints.containsKey(node.id)) {
@@ -238,7 +242,7 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     override suspend fun addLink(node1: TreeNode, node2: TreeNode): Boolean {
-        if (!initialized.value){
+        if (!initialized){
             throw GraphException.GraphIsntInitialized
         }
         if (_links[node1.id] == null) {
@@ -262,12 +266,17 @@ internal class NodeGraphImpl @Inject constructor(
         _links[node2.id] = node2.neighbours
         val reg = _regions[node2.id]!!
         setRegion(node1.id, reg, overlap = true, blacklist = listOf(reg))
-        nodeAdapter.updateNodes(listOf(node1, node2), translocation, rotation, pivotPosition)
+        nodeAdapter.updateNodes(
+            nodes = listOf(node1, node2),
+            translocation = _positionData.value.translocation,
+            rotation = _positionData.value.rotation,
+            pivotPosition = _positionData.value.pivotPosition
+        )
         return true
     }
 
     private fun getNodes(nodes: List<Int>): List<TreeNode> {
-        if (!initialized.value){
+        if (!initialized){
             throw GraphException.GraphIsntInitialized
         }
         return nodes.mapNotNull {
@@ -276,7 +285,7 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     private suspend fun removeAllLinks(node: TreeNode){
-        if (!initialized.value){
+        if (!initialized){
             throw GraphException.GraphIsntInitialized
         }
         if (_links[node.id] == null) {
@@ -303,7 +312,12 @@ internal class NodeGraphImpl @Inject constructor(
             _regions[id]?.let { blacklist.add(it) }
         }
 
-        nodeAdapter.updateNodes(nodesForUpdate, translocation, rotation, pivotPosition)
+        nodeAdapter.updateNodes(
+            nodes = nodesForUpdate,
+            translocation = _positionData.value.translocation,
+            rotation = _positionData.value.rotation,
+            pivotPosition = _positionData.value.pivotPosition
+        )
     }
 
     private fun setRegion(nodeId: Int, region: Int? = null, overlap: Boolean = false, blacklist: List<Int> = listOf()) {
@@ -319,10 +333,15 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     private fun translocateNode(node: TreeNode) {
-        node.position = convertPosition(node.position, translocation, rotation, pivotPosition)
-        node.northDirection = node.northDirection?.multiply(rotation)
+        node.position = convertPosition(
+            position = node.position,
+            translocation = _positionData.value.translocation,
+            quaternion = _positionData.value.rotation,
+            pivotPosition = _positionData.value.pivotPosition
+        )
+        node.northDirection = node.northDirection?.multiply(_positionData.value.rotation)
         if (node is TreeNode.Entry){
-            node.forwardVector = node.forwardVector.multiply(rotation)
+            node.forwardVector = node.forwardVector.multiply(_positionData.value.rotation)
         }
         _translocatedPoints[node] = true
     }
@@ -348,9 +367,7 @@ internal class NodeGraphImpl @Inject constructor(
         _translocatedPoints.clear()
         availableId = 0
         availableRegion = 0
-        translocation = Float3(0f, 0f, 0f)
-        rotation = Float3(0f, 0f, 0f).toQuaternion()
-        pivotPosition = Float3(0f, 0f, 0f)
+        _positionData.update { NodeGraphPosition() }
         nodeAdapter.clearNodes()
     }
 

@@ -1,6 +1,8 @@
 package com.example.festunavigator.presentation.preview
 
+import com.gerbort.node_graph.domain.graph.NodeGraphPosition
+
 sealed interface MainUiEvent {
-    data object Initialized: MainUiEvent
+    class GraphPositionChanged(val nodeGraphPosition: NodeGraphPosition): MainUiEvent
 
 }

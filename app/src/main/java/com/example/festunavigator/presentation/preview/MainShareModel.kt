@@ -34,8 +34,8 @@ class MainShareModel @Inject constructor(
     init {
         preload()
         viewModelScope.launch {
-            nodeGraph.isInitialized().collect { initialized ->
-                if (initialized) _uiEvent.send(MainUiEvent.Initialized)
+            nodeGraph.getPositionData().collect { positionData ->
+                if (nodeGraph.isInitialized()) _uiEvent.send(MainUiEvent.GraphPositionChanged(positionData))
             }
         }
 

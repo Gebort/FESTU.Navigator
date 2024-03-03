@@ -23,9 +23,9 @@ class TreeAdapter(
 
     override suspend fun onInserted(item: TreeNode): ArNode {
         if (onlyEntries && item is TreeNode.Entry) {
-            return drawerHelper.drawNode(item, previewView)
+            return drawerHelper.drawNode(item)
         }
-        val node1 = drawerHelper.drawNode(item, previewView)
+        val node1 = drawerHelper.drawNode(item)
         for (id in item.neighbours) {
             nodes.keys.firstOrNull { it.id == id }?.let { treeNode ->
                 nodes[treeNode]?.let { node2 ->
@@ -33,7 +33,6 @@ class TreeAdapter(
                         drawerHelper.drawLine(
                             node1.position - (parentNode?.position ?: Position(0f)),
                             node2.position,
-                            parentNode ?: previewView
                         ).let { node ->
                             modelsToLinkModels[Pair(node1, node2)] = node
                         }
@@ -64,7 +63,6 @@ class TreeAdapter(
             drawerHelper.drawLine(
                 node1.position,
                 node2.position,
-                parentNode ?: previewView
             ).let { node ->
                 modelsToLinkModels[Pair(node1, node2)] = node
             }
