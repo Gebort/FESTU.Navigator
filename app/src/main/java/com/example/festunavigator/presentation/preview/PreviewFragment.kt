@@ -16,11 +16,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.festunavigator.App
-import com.example.festunavigator.presentation.LabelObject
-import com.example.festunavigator.presentation.common.helpers.DrawerHelper
 import com.example.festunavigator.presentation.preview.nodes_adapters.PathAdapter
 import com.example.festunavigator.presentation.preview.nodes_adapters.TreeAdapter
-import com.example.festunavigator.presentation.preview.state.PathState
 import com.gerbort.app.R
 import com.gerbort.app.databinding.FragmentPreviewBinding
 import com.gerbort.common.model.TreeNode
@@ -29,7 +26,6 @@ import com.gerbort.core_ui.drawer_helper.DrawerHelper
 import com.gerbort.core_ui.frame_holder.FrameConsumer
 import com.gerbort.core_ui.tap_flow.UserTap
 import com.gerbort.core_ui.tap_flow.UserTapConsumer
-import com.gerbort.node_graph.data.graph.GraphException
 import com.gerbort.path_correction.domain.PathCorrector
 import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.Config
@@ -40,7 +36,6 @@ import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.node.ArNode
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -162,7 +157,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
                         is MainUiEvent.GraphPositionChanged -> {
                             treeAdapter.changeParentPos(uiEvent.nodeGraphPosition.pivotPosition)
                             pathAdapter.changeParentPos(uiEvent.nodeGraphPosition.pivotPosition)
-                            uiEvent.initialEntry?.let {
+                            uiEvent.nodeGraphPosition.let {
 //                                pathAnalyzer = PathAnalyzer(debug = { s, w -> launch { withContext(Dispatchers.Main) { }}}) { t ->
 //                                    mainModel.onEvent(MainEvent.PivotTransform(t))
 //                                }
@@ -173,17 +168,6 @@ class PreviewFragment : Fragment(), SensorEventListener {
                             binding.sceneView.planeRenderer.isVisible = App.isAdmin
                         }
                         else -> {}
-                    }
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainModel.treePivot.collectLatest { pivot ->
-                    pivot?.let {
-                        treeAdapter.changeParentPos(it.position, it.orientation)
-                        pathAdapter.changeParentPos(it.position, it.orientation)
                     }
                 }
             }
