@@ -2,7 +2,6 @@ package com.gerbort.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gerbort.common.model.Record
 import com.gerbort.data.domain.repositories.RecordsRepository
 import com.gerbort.data.domain.repositories.getCurrentWeekTime
 import com.gerbort.node_graph.domain.use_cases.GetEntriesUseCase
@@ -17,9 +16,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
-class SearchViewModel(
+class SearchViewModel @Inject constructor(
     private val recordsRepository: RecordsRepository,
     private val pathManager: PathManager,
     private val getEntryUseCase: GetEntryUseCase,

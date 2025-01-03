@@ -32,7 +32,7 @@ object Libs {
         }
     }
     object Gradle {
-        const val version = "8.2.1"
+        const val version = "8.7.3"
         const val tools = "com.android.tools.build:gradle:$version"
     }
     object Kotlin {
