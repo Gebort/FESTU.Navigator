@@ -26,6 +26,8 @@ interface NodeGraph {
 
     fun getTreePivot(): Flow<OrientatedPosition?>
 
+    suspend fun updateTreePivot(transition: Quaternion)
+
     fun getNode(id: Int): TreeNode?
 
     fun getEntry(number: String): TreeNode.Entry?

@@ -27,6 +27,7 @@ import com.gerbort.core_ui.frame_holder.FrameConsumer
 import com.gerbort.core_ui.tap_flow.UserTap
 import com.gerbort.core_ui.tap_flow.UserTapConsumer
 import com.gerbort.path_correction.domain.PathCorrector
+import com.gerbort.pathfinding.domain.manager.PathManager
 import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.Config
 import com.google.ar.core.TrackingState
@@ -36,6 +37,7 @@ import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.node.ArNode
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -53,6 +55,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
     private lateinit var pathAdapter: PathAdapter
     private lateinit var treeAdapter: TreeAdapter
 
+    @Inject lateinit var pathManager: PathManager
     @Inject lateinit var pathCorrector: PathCorrector
     @Inject lateinit var frameConsumer: FrameConsumer
     @Inject lateinit var userTapConsumer: UserTapConsumer
@@ -64,7 +67,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
     private val mGravity = FloatArray(3)
     private val mGeomagnetic = FloatArray(3)
     private var azimuth = 0f
-    private var currectAzimuth = 0f
+    private var currentAzimuth = 0f
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -219,7 +222,9 @@ class PreviewFragment : Fragment(), SensorEventListener {
     private fun changeViewablePath(userPositionTrans: Float3){
         wayBuildingJob?.cancel()
         wayBuildingJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
-            val nodes = currentPathState?.pathDiffUtils?.getNearNodes(
+
+            //TODO move changeViewablePath to separate flow and combine it with pathManager.getPathState()
+            val nodes = pathManager.getPathState().first().pathDiffUtils?.getNearNodes(
                 number = VIEWABLE_PATH_NODES,
                 position = userPositionTrans
             ) ?: listOf()

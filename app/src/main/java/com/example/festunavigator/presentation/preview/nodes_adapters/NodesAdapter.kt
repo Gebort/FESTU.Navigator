@@ -30,7 +30,7 @@ abstract class NodesAdapter<T>(
 
     init {
         scope.launchWhenStarted {
-            parentNode = placeParentNode()
+            parentNode = drawerHelper.placeBlankNode()
             changesFlow.collect { change ->
                 when (change) {
                     is DiffOperation.Deleted -> {
@@ -77,10 +77,6 @@ abstract class NodesAdapter<T>(
             }
     }
 
-    private suspend fun placeParentNode(): ArNode {
-        return drawerHelper.placeBlankNode(previewView)
-    }
-
     open fun changeParentPos(newParentPos: Float3? = null, orientation: Quaternion? = null) {
         if (parentNode == null) {
             throw Exception("Parent node is not set")
@@ -116,5 +112,4 @@ abstract class NodesAdapter<T>(
         class Added<out T>(val item: T): DiffOperation<T>()
         class Deleted<out T>(val item: T): DiffOperation<T>()
     }
-
 }

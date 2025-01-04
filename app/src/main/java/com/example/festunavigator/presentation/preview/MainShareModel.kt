@@ -2,19 +2,12 @@ package com.example.festunavigator.presentation.preview
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gerbort.common.utils.multiply
-import com.gerbort.common.utils.rotateBy
 import com.gerbort.node_graph.domain.graph.NodeGraph
-import com.google.ar.sceneform.math.Vector3
+import com.gerbort.pathfinding.domain.manager.PathManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romainguy.kotlin.math.Float3
-import dev.romainguy.kotlin.math.Quaternion
-import dev.romainguy.kotlin.math.RotationsOrder
-import io.github.sceneview.ar.arcore.rotation
-import io.github.sceneview.math.toFloat3
-import io.github.sceneview.math.toQuaternion
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -44,26 +37,24 @@ class MainShareModel @Inject constructor(
     fun onEvent(event: MainEvent) {
         when (event){
             is MainEvent.NewAzimuth -> {
-                newNorthLocation(event.azimuthRadians)
+              //  newNorthLocation(event.azimuthRadians)
             }
             is MainEvent.PivotTransform -> {
                 viewModelScope.launch {
-                    _treePivot.value?.let { tp ->
-                        _treePivot.update { tp.copy(orientation = tp.orientation.multiply(event.transition)) }
-                    }
+                    nodeGraph.updateTreePivot(event.transition)
                 }
             }
         }
     }
 
-    private fun newNorthLocation(azimuth: Float) {
-        frame.value?.let {
-            val rotation = Quaternion.fromEuler(yaw = azimuth, order = RotationsOrder.ZYX)
-            val cameraDirection = it.camera.pose.rotation.copy(z = 0f).toQuaternion()
-            val northDirection = cameraDirection * rotation
-            this.northLocation = Vector3(Float.MAX_VALUE, 0f, 0f).rotateBy(northDirection).toFloat3()
-        }
-    }
+//    private fun newNorthLocation(azimuth: Float) {
+//        frame.value?.let {
+//            val rotation = Quaternion.fromEuler(yaw = azimuth, order = RotationsOrder.ZYX)
+//            val cameraDirection = it.camera.pose.rotation.copy(z = 0f).toQuaternion()
+//            val northDirection = cameraDirection * rotation
+//            this.northLocation = Vector3(Float.MAX_VALUE, 0f, 0f).rotateBy(northDirection).toFloat3()
+//        }
+//    }
 
 
     private fun preload(){

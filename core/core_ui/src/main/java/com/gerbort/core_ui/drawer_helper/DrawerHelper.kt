@@ -5,13 +5,14 @@ import com.gerbort.common.model.OrientatedPosition
 import com.gerbort.common.model.TreeNode
 import com.google.ar.core.Anchor
 import dev.romainguy.kotlin.math.Float3
+import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
 import io.github.sceneview.math.Position
 
 interface DrawerHelper {
 
     fun setParentNode(
-        parentNode: ArNode
+        arSceneView: ArSceneView
     )
 
     fun setFragment(

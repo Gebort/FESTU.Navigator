@@ -48,7 +48,7 @@ internal class NodeGraphImpl @Inject constructor(
 
     private val _positionData = MutableStateFlow(NodeGraphPosition())
 
-    val diffUtils: GraphDiffUtils by lazy { GraphDiffUtils(this, dispatcher) }
+    private val diffUtils: GraphDiffUtils by lazy { GraphDiffUtils(this, dispatcher) }
 
     private var _treePivot = MutableStateFlow<OrientatedPosition?>(null)
 
@@ -120,6 +120,12 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     override fun getTreePivot(): Flow<OrientatedPosition?> = _treePivot.asStateFlow()
+
+    override suspend fun updateTreePivot(transition: Quaternion) {
+        _treePivot.value?.let { tp ->
+            _treePivot.update { tp.copy(orientation = tp.orientation.multiply(transition)) }
+        }
+    }
 
     override fun getNode(id: Int): TreeNode? {
         if (!initialized){

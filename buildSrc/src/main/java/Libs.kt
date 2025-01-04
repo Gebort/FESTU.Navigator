@@ -111,7 +111,7 @@ object Libs {
 
     object BezierSpline {
         const val version = "1.2.0"
-        const val core = "dev.benedikt.math:bezier-spline:1.2.0"
+        const val core = "dev.benedikt.math:bezier-spline:$version"
     }
 
     object Bimap {

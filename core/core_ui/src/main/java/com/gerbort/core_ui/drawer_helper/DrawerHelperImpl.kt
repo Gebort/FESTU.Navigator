@@ -17,6 +17,7 @@ import com.google.ar.sceneform.rendering.ShapeFactory
 import com.google.ar.sceneform.rendering.ViewRenderable
 import com.google.ar.sceneform.rendering.ViewSizer
 import dev.romainguy.kotlin.math.Float3
+import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.ArNode
 import io.github.sceneview.ar.scene.destroy
@@ -24,7 +25,6 @@ import io.github.sceneview.math.Position
 import io.github.sceneview.math.Scale
 import io.github.sceneview.math.toNewQuaternion
 import io.github.sceneview.math.toVector3
-import io.github.sceneview.node.NodeParent
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
@@ -53,8 +53,13 @@ internal class DrawerHelperImpl: DrawerHelper {
     private val animationJobs = mutableMapOf<ArNode, Job>()
 
 
-    override fun setParentNode(parentNode: ArNode) {
-        this.parentNode = parentNode
+    override fun setParentNode(arSceneView: ArSceneView) {
+        createBlankNodeNoParent(
+            position = Float3(0f, 0f, 0f)
+        ).let { node ->
+            this.parentNode = node
+            arSceneView.addChild(node)
+        }
     }
 
     override fun setFragment(fragment: Fragment) {
@@ -367,20 +372,9 @@ internal class DrawerHelperImpl: DrawerHelper {
         position: Float3?,
         anchor: Anchor?
     ): ArNode {
-        val node = ArModelNode().apply {
-            position?.let {
-                this.position = it
-            }
-            followHitPosition = false
-            if (anchor != null){
-                this.anchor = anchor
-            }
-            else {
-                this.anchor = createAnchor()
-            }
+        return createBlankNodeNoParent(position, anchor).also { node ->
+            parentNode!!.addChild(node)
         }
-        parentNode!!.addChild(node)
-        return node
     }
 
     override suspend fun joinAnimation(node: ArNode) {
@@ -399,6 +393,25 @@ internal class DrawerHelperImpl: DrawerHelper {
                 parentNode?.addChild(arNode)
             }
         }
+    }
+
+    private fun createBlankNodeNoParent(
+        position: Float3? = null,
+        anchor: Anchor? = null
+    ): ArNode {
+        val node = ArModelNode().apply {
+            position?.let {
+                this.position = it
+            }
+            followHitPosition = false
+            if (anchor != null){
+                this.anchor = anchor
+            }
+            else {
+                this.anchor = createAnchor()
+            }
+        }
+        return node
     }
 
     private fun Vector3.addConst(xValue: Float, yValue: Float, zValue: Float, modifier: Int = 1): Vector3 {

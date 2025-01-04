@@ -1,20 +1,14 @@
 package com.gerbort.pathfinding.data.manager
 
-import androidx.lifecycle.viewModelScope
-import com.gerbort.common.di.AppDispatchers
-import com.gerbort.common.di.ApplicationScope
-import com.gerbort.common.di.Dispatcher
+ import com.gerbort.common.di.ApplicationScope
 import com.gerbort.common.model.Record
 import com.gerbort.common.model.TreeNode
 import com.gerbort.data.domain.repositories.RecordsRepository
 import com.gerbort.data.domain.repositories.getCurrentWeekTime
-import com.gerbort.node_graph.domain.graph.NodeGraph
 import com.gerbort.node_graph.domain.use_cases.GetEntryUseCase
-import com.gerbort.pathfinding.domain.Pathfinder
 import com.gerbort.pathfinding.domain.manager.PathManager
 import com.gerbort.pathfinding.domain.manager.PathState
 import com.gerbort.pathfinding.domain.use_cases.PathfindUseCase
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
