@@ -31,13 +31,20 @@ import com.gerbort.pathfinding.domain.manager.PathManager
 import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.Config
 import com.google.ar.core.TrackingState
-import com.google.ar.core.exceptions.*
+import com.google.ar.core.exceptions.CameraNotAvailableException
+import com.google.ar.core.exceptions.UnavailableApkTooOldException
+import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException
+import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
+import com.google.ar.core.exceptions.UnavailableSdkTooOldException
+import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
 import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.ar.arcore.ArFrame
 import io.github.sceneview.ar.node.ArNode
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -211,11 +218,11 @@ class PreviewFragment : Fragment(), SensorEventListener {
             lastPositionTime = System.currentTimeMillis()
             changeViewablePath(userPosTrans)
             changeViewableTree(userPosReal, userPosTrans)
-            if (App.isAdmin) {
-                mainModel.selectedNode.value?.let { node ->
-                    checkSelectedNode(node)
-                }
-            }
+//            if (App.isAdmin) {
+//                mainModel.selectedNode.value?.let { node ->
+//                    checkSelectedNode(node)
+//                }
+//            }
         }
     }
 
