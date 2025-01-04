@@ -13,7 +13,7 @@
 
     <fragment
         android:id="@+id/scannerFragment"
-        android:name="com.example.festunavigator.presentation.scanner.ScannerFragment"
+        android:name="com.gerbort.scanner.scanner.ScannerFragment"
         android:label="fragment_scanner"
         tools:layout="@layout/fragment_scanner" >
         <action
@@ -33,7 +33,7 @@
     </fragment>
     <fragment
         android:id="@+id/confirmFragment"
-        android:name="com.example.festunavigator.presentation.confirmer.ConfirmFragment"
+        android:name="com.gerbort.scanner.confirmer.ConfirmFragment"
         android:label="fragment_confirm"
         tools:layout="@layout/fragment_confirm" >
         <action
@@ -50,7 +50,7 @@
     </fragment>
     <fragment
         android:id="@+id/routerFragment"
-        android:name="com.example.festunavigator.presentation.router.RouterFragment"
+        android:name="com.gerbort.router.RouterFragment"
         android:label="fragment_router"
         tools:layout="@layout/fragment_router" >
         <action
@@ -69,7 +69,7 @@
     </fragment>
     <fragment
         android:id="@+id/searchFragment"
-        android:name="com.example.festunavigator.presentation.search.SearchFragment"
+        android:name="com.gerbort.search.SearchFragment"
         android:label="fragment_search"
         tools:layout="@layout/fragment_search" >
         <argument
