@@ -28,5 +28,4 @@
         <item name="startIconDrawable">@drawable/ic_search</item>
         <item name="startIconTint">?attr/colorControlNormal</item>
     </style>
-
 </resources>

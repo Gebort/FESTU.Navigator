@@ -84,9 +84,10 @@ internal class NodeGraphImpl @Inject constructor(
         newRotation: Quaternion
     ): Result<Unit> {
         initialized = false
+        //TODO check for empty entry points in user mode
         if (_entryPoints.isEmpty()) {
             clearTree()
-            initialized = false
+            initialized = true
             return Result.success(Unit)
         }
         else {

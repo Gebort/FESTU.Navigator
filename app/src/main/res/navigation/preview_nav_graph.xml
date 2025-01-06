@@ -8,7 +8,7 @@
     <include app:graph="@navigation/initialization_graph" />
     <include app:graph="@navigation/router_graph" />
     <include app:graph="@navigation/search_graph" />
-    <include app:graph="@navigation/search_graph" />
+    <include app:graph="@navigation/scanner_navigation" />
 
 
     <fragment
@@ -45,8 +45,6 @@
             app:popEnterAnim="@anim/slide_up"
             app:popExitAnim="@anim/slide_down"
             app:popUpToInclusive="true" />
-        <argument android:name="confirmType"
-            app:argType="integer" />
     </fragment>
     <fragment
         android:id="@+id/routerFragment"
@@ -66,6 +64,8 @@
             app:argType="string"
             app:nullable="true"
             android:defaultValue="NULL" />
+        <deepLink
+            app:uri="android-app://com.gerbort.app/router_fragment/{startLabel}" />
     </fragment>
     <fragment
         android:id="@+id/searchFragment"
@@ -75,6 +75,8 @@
         <argument
             android:name="changeType"
             app:argType="integer" />
+        <deepLink
+            app:uri="android-app://com.gerbort.app/search_fragment/{changeType}" />
     </fragment>
     <action
         android:id="@+id/action_global_scannerFragment"

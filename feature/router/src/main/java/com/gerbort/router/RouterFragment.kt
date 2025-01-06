@@ -2,12 +2,12 @@ package com.gerbort.router
 
 import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +18,8 @@ import com.gerbort.common.model_ext.getEntryLocation
 import com.gerbort.core_ui.drawer_helper.DrawerHelper
 import com.gerbort.core_ui.frame_holder.FrameProducer
 import com.gerbort.core_ui.tap_flow.UserTapProducer
+import com.gerbort.core_ui.utils.navigateFadeInSlideOut
+import com.gerbort.core_ui.utils.navigateWithSlide
 import com.gerbort.hit_test.HitTestResult
 import com.gerbort.hit_test.HitTestUseCase
 import com.gerbort.pathfinding.domain.manager.PathManager
@@ -26,10 +28,7 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
 import dev.romainguy.kotlin.math.Float3
-import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.arcore.ArFrame
-import io.github.sceneview.ar.node.ArNode
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -83,7 +82,7 @@ class RouterFragment: Fragment() {
         binding.entryButton.setOnClickListener {
             //entry = 1 init = 0
             val uri = Uri.parse("android-app://com.gerbort.app/scanner_fragment/1")
-            findNavController().navigate(uri)
+            findNavController().navigateFadeInSlideOut(uri)
         }
 
         binding.fromInput.setOnFocusChangeListener { _, b ->
@@ -193,7 +192,7 @@ class RouterFragment: Fragment() {
      */
     private fun search(type: Int){
         val uri = Uri.parse("android-app://com.gerbort.app/search_fragment/$type")
-        findNavController().navigate(uri)
+        findNavController().navigateWithSlide(uri)
     }
 
     private fun changeLinkPlacementMode(){

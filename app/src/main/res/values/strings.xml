@@ -10,7 +10,6 @@
     <string name="entry" translatable="false">Entry</string>
     <string name="path" translatable="false">Path</string>
     <string name="cancel" translatable="false">Cancel</string>
-    <string name="confirm_place">Text was placed correctly?</string>
     <string name="from">Start</string>
     <string name="to">End</string>
     <string name="main">Main building</string>
@@ -29,8 +28,6 @@
     <string name="camera_not_available">Camera not available. Try restarting the app</string>
     <string name="failed_to_create_session">Failed to create AR session</string>
     <string name="provide_camera_permission">Please, provide the camera permission</string>
-    <string name="accept">Accept</string>
-    <string name="reject">Reject</string>
     <string name="entry_already_exists" translatable="false">Entry already exists</string>
     <string name="link_already_exists" translatable="false">Link already exists</string>
     <string name="node_created" translatable="false">Node created</string>

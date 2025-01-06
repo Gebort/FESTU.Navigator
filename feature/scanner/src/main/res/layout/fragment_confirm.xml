@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="bottom"
-    tools:context=".presentation.confirmer.ConfirmFragment">
+    tools:context=".confirmer.ConfirmFragment">
 
     <LinearLayout
         android:layout_width="match_parent"

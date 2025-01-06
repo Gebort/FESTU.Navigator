@@ -14,18 +14,20 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.gerbort.core_ui.drawer_helper.DrawerHelper
+import com.gerbort.core_ui.utils.navigateWithSlide
 import com.gerbort.scanner.LabelObject
 import com.gerbort.scanner.R
 import com.gerbort.scanner.ScannerEvent
 import com.gerbort.scanner.ScannerUiEvents
 import com.gerbort.scanner.ScannerViewModel
 import com.gerbort.scanner.databinding.FragmentConfirmBinding
+import dagger.hilt.android.AndroidEntryPoint
 import io.github.sceneview.ar.node.ArNode
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
+@AndroidEntryPoint
 class ConfirmFragment : Fragment() {
 
     private var _binding: FragmentConfirmBinding? = null
@@ -131,8 +133,8 @@ class ConfirmFragment : Fragment() {
         confObjectNode?.let {
             drawerHelper.removeNode(it)
         }
-        val action = Uri.parse("android-app://com.gerbort.app/router_fragment")
-        findNavController().navigate(action)
+        val action = Uri.parse("android-app://com.gerbort.app/router_fragment/NULL")
+        findNavController().navigateWithSlide(action)
     }
 
     private fun setEnabled(enabled: Boolean) {

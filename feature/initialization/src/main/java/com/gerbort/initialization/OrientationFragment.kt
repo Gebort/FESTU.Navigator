@@ -4,17 +4,18 @@ import android.animation.ObjectAnimator
 import android.graphics.Path
 import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
 import androidx.core.view.doOnLayout
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.gerbort.core_ui.frame_holder.FrameProducer
+import com.gerbort.core_ui.utils.navigateWithFade
 import com.gerbort.initialization.databinding.FragmentOrientationBinding
 import com.google.ar.core.Plane
 import dagger.hilt.android.AndroidEntryPoint
@@ -55,7 +56,7 @@ class OrientationFragment : Fragment() {
                             if (!navigating){
                                 navigating = true
                                 val uri = Uri.parse("android-app://com.gerbort.app/scanner_fragment/0")
-                                findNavController().navigate(uri)
+                                findNavController().navigateWithFade(uri)
                             }
                         }
                     }

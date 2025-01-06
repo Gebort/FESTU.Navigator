@@ -4,7 +4,6 @@
     <string name="scan">Направьте камеру на номер аудитории</string>
     <string name="orientate_wall">Теперь медленно направьте телефон на номер аудитории</string>
     <string name="orientate_floor">Медленно перемещайте телефон, направляя его на пол</string>
-    <string name="confirm_place">Текст установлен корректно?</string>
     <string name="from">Начало</string>
     <string name="to">Конец</string>
     <string name="main">Главный корпус</string>
@@ -24,8 +23,6 @@
     <string name="camera_not_available">Камера недоступна. Попробуйте перезапустить приложение</string>
     <string name="failed_to_create_session">Не получилось создать AR сессию</string>
     <string name="provide_camera_permission">Пожалуйста, предоставьте разрешение на использование камеры</string>
-    <string name="accept">Accept</string>
-    <string name="reject">Reject</string>
     <string name="start_typing" >Начните вводить номер…</string>
 
 </resources>

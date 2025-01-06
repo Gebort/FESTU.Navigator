@@ -1,6 +1,7 @@
 plugins {
     id("project.android.library")
     id("project.android.library.ui")
+    id("org.jetbrains.kotlin.android")
 }
 
 android {

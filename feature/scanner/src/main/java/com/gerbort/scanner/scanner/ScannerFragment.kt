@@ -18,11 +18,10 @@ import com.gerbort.scanner.ConfirmType
 import com.gerbort.scanner.LabelObject
 import com.gerbort.scanner.ScannerEvent
 import com.gerbort.scanner.ScannerViewModel
-import com.gerbort.scanner.helpers.DisplayRotationHelper
 import com.gerbort.scanner.databinding.FragmentScannerBinding
+import com.gerbort.scanner.helpers.DisplayRotationHelper
 import com.gerbort.text_recognition.domain.DetectTextUseCase
 import com.google.ar.core.TrackingState
-import com.google.ar.core.exceptions.NotYetAvailableException
 import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
 import io.github.sceneview.ar.arcore.ArFrame
@@ -75,7 +74,6 @@ class ScannerFragment: Fragment() {
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
             vm.onEvent(ScannerEvent.NewScanType(
                 when (scanType) {
                     TYPE_INITIALIZE -> ConfirmType.INITIALIZE
@@ -94,7 +92,6 @@ class ScannerFragment: Fragment() {
         }
 
         override fun onResume() {
-
             lastDetectedObject = null
             scanningNow = false
             currentScanSmoothDelay = 0.0
@@ -233,10 +230,8 @@ class ScannerFragment: Fragment() {
 
         private fun ArFrame.tryAcquireCameraImage() = try {
             frame.acquireCameraImage()
-        } catch (e: NotYetAvailableException) {
-            null
         } catch (e: Throwable) {
-            throw e
+            null
         }
 
         companion object {
