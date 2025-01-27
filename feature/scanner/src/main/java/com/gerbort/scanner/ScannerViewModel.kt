@@ -69,7 +69,6 @@ internal class ScannerViewModel @Inject constructor(
                 }
 
                 ConfirmType.ENTRY -> {
-
                     //TODO North direction
                     createNodeUseCase(
                         number = it.label,

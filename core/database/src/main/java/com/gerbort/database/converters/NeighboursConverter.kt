@@ -9,6 +9,7 @@ class NeighboursConverter {
         fun storedStringToNeighbours(value: String): MutableList<Int> {
             return value
                 .split(",")
+                .filterNot { it.isEmpty() }
                 .map { it.toInt() }
                 .toMutableList()
         }

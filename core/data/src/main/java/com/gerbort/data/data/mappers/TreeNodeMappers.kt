@@ -26,7 +26,7 @@ fun Quaternion.toQuaternionWrapper(): QuaternionWrapper {
 }
 
 fun TreeNodeEntity.toCommon(): TreeNode {
-     return if (this.type == NodeType.PATH
+     return if (this.type == NodeType.ENTRY
         && this.number != null
         && this.forwardVector != null)
          TreeNode.Entry(
@@ -37,7 +37,6 @@ fun TreeNodeEntity.toCommon(): TreeNode {
              forwardVector = forwardVector!!.toQuaternion(),
              northDirection = northDirection?.toQuaternion()
         )
-
     else
         TreeNode.Path(
             id = id,
