@@ -1,11 +1,12 @@
 package com.gerbort.core_ui.utils
 
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.navigation.NavController
+import androidx.navigation.NavDeepLinkRequest
 import androidx.navigation.NavOptions
 import com.gerbort.core_ui.R
 
-fun NavController.navigateWithFade(deeplink: Uri) {
+fun NavController.navigateWithFade(uri: String) {
     val navOptions =
         NavOptions.Builder()
             .setEnterAnim(R.anim.fade_in)
@@ -13,10 +14,10 @@ fun NavController.navigateWithFade(deeplink: Uri) {
             .setPopEnterAnim(R.anim.fade_out)
             .setPopExitAnim(R.anim.fade_out)
             .build()
-    navigate(deeplink, navOptions)
+    navigateUri(uri, navOptions)
 }
 
-fun NavController.navigateWithSlide(deeplink: Uri) {
+fun NavController.navigateWithSlide(uri: String) {
     val navOptions =
         NavOptions.Builder()
             .setEnterAnim(R.anim.slide_up)
@@ -24,10 +25,10 @@ fun NavController.navigateWithSlide(deeplink: Uri) {
             .setPopEnterAnim(R.anim.slide_up)
             .setPopExitAnim(R.anim.slide_down)
             .build()
-    navigate(deeplink, navOptions)
+    navigateUri(uri, navOptions)
 }
 
-fun NavController.navigateSlideInFadeOut(deeplink: Uri) {
+fun NavController.navigateSlideInFadeOut(uri: String) {
     val navOptions =
         NavOptions.Builder()
             .setEnterAnim(R.anim.slide_up)
@@ -35,16 +36,22 @@ fun NavController.navigateSlideInFadeOut(deeplink: Uri) {
             .setPopEnterAnim(R.anim.fade_in)
             .setPopExitAnim(R.anim.fade_out)
             .build()
-    navigate(deeplink, navOptions)
+    navigateUri(uri, navOptions)
 }
 
-fun NavController.navigateFadeInSlideOut(deeplink: Uri) {
-    val navOptions =
-        NavOptions.Builder()
+fun NavController.navigateFadeInSlideOut(uri: String, navOptions: NavOptions.Builder = NavOptions.Builder()) {
+        navOptions
             .setEnterAnim(R.anim.fade_in)
             .setExitAnim(R.anim.slide_down)
             .setPopEnterAnim(R.anim.slide_up)
             .setPopExitAnim(R.anim.fade_out)
-            .build()
-    navigate(deeplink, navOptions)
+    navigateUri(uri, navOptions.build())
 }
+
+fun NavController.navigateUri(uri: String, navOptions: NavOptions? = null) {
+    val request = NavDeepLinkRequest.Builder
+        .fromUri(uri.toUri())
+        .build()
+    navigate(request, navOptions)
+}
+

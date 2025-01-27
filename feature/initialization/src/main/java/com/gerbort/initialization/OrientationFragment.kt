@@ -2,13 +2,13 @@ package com.gerbort.initialization
 
 import android.animation.ObjectAnimator
 import android.graphics.Path
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
 import androidx.core.view.doOnLayout
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -29,6 +29,8 @@ class OrientationFragment : Fragment() {
     private val binding get() = _binding!!
 
     @Inject lateinit var frameProducer: FrameProducer
+
+    private var phoneIconAnimation: ObjectAnimator? = null
 
     private var navigating = false
     private var scanningWall = false
@@ -55,8 +57,7 @@ class OrientationFragment : Fragment() {
                         if (frame.session.allPlanes.any { it.type == Plane.Type.VERTICAL }) {
                             if (!navigating){
                                 navigating = true
-                                val uri = Uri.parse("android-app://com.gerbort.app/scanner_fragment/0")
-                                findNavController().navigateWithFade(uri)
+                                findNavController().navigateWithFade("android-app://com.gerbort.app/scanner_fragment/0")
                             }
                         }
                     }
@@ -67,6 +68,8 @@ class OrientationFragment : Fragment() {
     }
 
     override fun onResume() {
+        super.onResume()
+        binding.imageView.isVisible = true
         binding.imageView.doOnLayout {
             val x = it.x
             val y = it.y
@@ -79,12 +82,17 @@ class OrientationFragment : Fragment() {
             }
             val animationDuration = 3000L
 
-            ObjectAnimator.ofFloat(it, View.X, View.Y, animationPath).apply {
+            phoneIconAnimation = ObjectAnimator.ofFloat(it, View.X, View.Y, animationPath).apply {
                 duration = animationDuration
                 repeatCount = Animation.INFINITE
                 start()
             }
         }
-        super.onResume()
+    }
+
+    override fun onPause() {
+        binding.imageView.isVisible = false
+        phoneIconAnimation?.pause()
+        super.onPause()
     }
 }

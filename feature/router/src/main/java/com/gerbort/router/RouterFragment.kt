@@ -1,6 +1,5 @@
 package com.gerbort.router
 
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +11,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import com.gerbort.common.model.TreeNode
 import com.gerbort.common.model_ext.getEntryLocation
@@ -81,8 +81,11 @@ class RouterFragment: Fragment() {
 
         binding.entryButton.setOnClickListener {
             //entry = 1 init = 0
-            val uri = Uri.parse("android-app://com.gerbort.app/scanner_fragment/1")
-            findNavController().navigateFadeInSlideOut(uri)
+            findNavController().navigateFadeInSlideOut(
+                uri = "android-app://com.gerbort.app/scanner_fragment/1",
+                navOptions = NavOptions.Builder()
+                    .setPopUpTo("fragment_router", false)
+            )
         }
 
         binding.fromInput.setOnFocusChangeListener { _, b ->
@@ -191,8 +194,7 @@ class RouterFragment: Fragment() {
      * Start = 0, end = 1
      */
     private fun search(type: Int){
-        val uri = Uri.parse("android-app://com.gerbort.app/search_fragment/$type")
-        findNavController().navigateWithSlide(uri)
+        findNavController().navigateWithSlide("android-app://com.gerbort.app/search_fragment/$type")
     }
 
     private fun changeLinkPlacementMode(){

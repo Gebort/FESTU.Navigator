@@ -1,6 +1,5 @@
 package com.gerbort.scanner.confirmer
 
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -133,8 +132,7 @@ class ConfirmFragment : Fragment() {
         confObjectNode?.let {
             drawerHelper.removeNode(it)
         }
-        val action = Uri.parse("android-app://com.gerbort.app/router_fragment/NULL")
-        findNavController().navigateWithSlide(action)
+        findNavController().navigateWithSlide("android-app://com.gerbort.app/router_fragment/NULL")
     }
 
     private fun setEnabled(enabled: Boolean) {

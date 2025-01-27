@@ -35,7 +35,7 @@ fun TreeNodeEntity.toCommon(): TreeNode {
              position = Float3(x, y, z),
              neighbours = neighbours,
              forwardVector = forwardVector!!.toQuaternion(),
-             northDirection = northDirection!!.toQuaternion()
+             northDirection = northDirection?.toQuaternion()
         )
 
     else
@@ -43,7 +43,7 @@ fun TreeNodeEntity.toCommon(): TreeNode {
             id = id,
             position = Float3(x, y, z),
             neighbours = neighbours,
-        northDirection = northDirection!!.toQuaternion()
+        northDirection = northDirection?.toQuaternion()
         )
 }
 
