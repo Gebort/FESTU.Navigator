@@ -34,6 +34,7 @@ class TreeAdapter(
                             node1.position - (parentNode?.position ?: Position(0f)),
                             node2.position,
                         ).let { node ->
+                            parentNode?.addChild(node)
                             modelsToLinkModels[Pair(node1, node2)] = node
                         }
                     }

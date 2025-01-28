@@ -286,17 +286,19 @@ internal class DrawerHelperImpl: DrawerHelper {
         val lineLength = Vector3.subtract(fromVector, toVector).length()
 
         // Prepare a color
-        val colorOrange = com.google.ar.sceneform.rendering.Color(Color.parseColor("#ffffff"))
+        val color = com.google.ar.sceneform.rendering.Color(Color.parseColor("#ffffff"))
 
         // 1. make a material by the color
         val node = ArNode()
-        MaterialFactory.makeOpaqueWithColor(fragment!!.requireContext(), fragment!!.lifecycle, colorOrange)
+        MaterialFactory.makeOpaqueWithColor(fragment!!.requireContext(), fragment!!.lifecycle, color)
             .thenAccept { material: Material? ->
                 // 2. make a model by the material
                 val model = ShapeFactory.makeCylinder(
                     fragment!!.lifecycle,
-                    0.01f, lineLength,
-                    Vector3(0f, lineLength / 2, 0f), material
+                    0.01f,
+                    lineLength,
+                    Vector3(0f, lineLength / 2, 0f),
+                    material
                 )
 
                 model.isShadowCaster = false

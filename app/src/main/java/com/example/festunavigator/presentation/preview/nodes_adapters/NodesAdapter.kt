@@ -84,6 +84,7 @@ abstract class NodesAdapter<T>(
         newParentPos?.let {
             val diff = it - parentNode!!.position
             if (diff != Float3(0f)) {
+                //TODO not changing positions of the links from TreeAdapter
                 nodes.values.forEach { arNode ->
                     arNode.position -= diff
                 }
