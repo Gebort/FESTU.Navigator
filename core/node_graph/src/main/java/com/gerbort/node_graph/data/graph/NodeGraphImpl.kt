@@ -30,7 +30,7 @@ import javax.inject.Inject
 internal class NodeGraphImpl @Inject constructor(
     private val nodeAdapter: NodeRepositoryAdapter,
     @Dispatcher(AppDispatchers.Default) private val dispatcher: CoroutineDispatcher
-): NodeGraph {
+) : NodeGraph {
 
     private val _entryPoints: MutableMap<String, TreeNode.Entry> = mutableMapOf()
     private val _allPoints: MutableMap<Int, TreeNode> = mutableMapOf()
@@ -41,7 +41,9 @@ internal class NodeGraphImpl @Inject constructor(
 
     private var availableId = 0
     private var availableRegion = 0
-        get() { return field.also { field++ } }
+        get() {
+            return field.also { field++ }
+        }
 
     private var initialized = false
     private var preloaded = false
@@ -58,20 +60,20 @@ internal class NodeGraphImpl @Inject constructor(
     override fun getPositionData(): Flow<NodeGraphPosition> = _positionData.asStateFlow()
 
     override suspend fun preload() = withContext(Dispatchers.IO) {
-        if (initialized){
+        if (initialized) {
             throw Exception("Already initialized, cant preload")
         }
         preloaded = false
         val rawNodesList = nodeAdapter.getNodes()
         //TODO заменить на потоковый метод
         for (node in rawNodesList) {
-            if (node is TreeNode.Entry ) {
+            if (node is TreeNode.Entry) {
                 _entryPoints[node.number] = node
             }
             _allPoints[node.id] = node
             _links[node.id] = node.neighbours
-            if (node.id+1 > availableId){
-                availableId = node.id+1
+            if (node.id + 1 > availableId) {
+                availableId = node.id + 1
             }
         }
         _allPoints.keys.forEach { id -> setRegion(id) }
@@ -89,8 +91,7 @@ internal class NodeGraphImpl @Inject constructor(
             clearTree()
             initialized = true
             return Result.success(Unit)
-        }
-        else {
+        } else {
             val entry = _entryPoints[entryNumber]
                 ?: return Result.failure(
                     exception = GraphException.WrongEntryException(_entryPoints.keys)
@@ -106,10 +107,12 @@ internal class NodeGraphImpl @Inject constructor(
                 )
             }
 
-            _treePivot.update { OrientatedPosition(
-                position = entry.position,
-                orientation = Quaternion()
-            ) }
+            _treePivot.update {
+                OrientatedPosition(
+                    position = entry.position,
+                    orientation = Quaternion()
+                )
+            }
 
             initialized = true
             return Result.success(Unit)
@@ -129,11 +132,11 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     override fun getNode(id: Int): TreeNode? {
-        if (!initialized){
+        if (!initialized) {
             throw GraphException.GraphIsntInitialized
         }
         val node = _allPoints[id]
-        return if (_translocatedPoints.containsKey(node)){
+        return if (_translocatedPoints.containsKey(node)) {
             node
         } else {
             if (node == null) {
@@ -146,7 +149,7 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     override fun getEntry(number: String): TreeNode.Entry? {
-        if (!initialized){
+        if (!initialized) {
             throw GraphException.GraphIsntInitialized
         }
         val entry = _entryPoints[number]
@@ -161,7 +164,7 @@ internal class NodeGraphImpl @Inject constructor(
 
     override fun getNodeFromEachRegion(): Map<Int, TreeNode> {
         return _regions.entries
-            .distinctBy { it.value}
+            .distinctBy { it.value }
             .filter { getNode(it.key) != null }
             .associate { it.value to getNode(it.key)!! }
     }
@@ -176,14 +179,14 @@ internal class NodeGraphImpl @Inject constructor(
         number: String?,
         forwardDirection: Quaternion?
     ): Result<TreeNode> {
-        if (!initialized){
+        if (!initialized) {
             return Result.failure(GraphException.GraphIsntInitialized)
         }
         if (_allPoints.values.find { it.position == position } != null) {
             return Result.failure(AddNodeException.PositionTaken)
         }
 
-        if (number != null && _entryPoints[number] != null){
+        if (number != null && _entryPoints[number] != null) {
             return Result.failure(AddNodeException.EntryAlreadyExists)
         }
         //we need to convert position, because if the admin placing new node when other nodes corrected,
@@ -192,20 +195,19 @@ internal class NodeGraphImpl @Inject constructor(
         val position2 = treePivot?.orientation?.reverseConvertPosition(
             position = position,
             pivotPosition = treePivot.position,
-            ) ?: position
+        ) ?: position
 
 
         //TODO ПОВОРАЧИВАТЬ СЕВЕР И FORWARD DIRECTION??
         val newNode: TreeNode
-        if (number == null){
+        if (number == null) {
             newNode = TreeNode.Path(
                 id = availableId,
                 position = position2,
-                northDirection =  northDirection
+                northDirection = northDirection
             )
-        }
-        else {
-            if (forwardDirection == null){
+        } else {
+            if (forwardDirection == null) {
                 return Result.failure(AddNodeException.NoForwardDirection)
             }
             newNode = TreeNode.Entry(
@@ -232,7 +234,7 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     override suspend fun removeNode(node: TreeNode) {
-        if (!initialized){
+        if (!initialized) {
             throw GraphException.GraphIsntInitialized
         }
         if (!_allPoints.containsKey(node.id)) {
@@ -249,21 +251,19 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     override suspend fun addLink(node1: TreeNode, node2: TreeNode): Boolean {
-        if (!initialized){
+        if (!initialized) {
             throw GraphException.GraphIsntInitialized
         }
         if (_links[node1.id] == null) {
             _links[node1.id] = mutableListOf()
-        }
-        else {
+        } else {
             if (_links[node1.id]!!.contains(node2.id)) {
                 return false
             }
         }
         if (_links[node2.id] == null) {
             _links[node2.id] = mutableListOf()
-        }
-        else {
+        } else {
             if (_links[node2.id]!!.contains(node1.id))
                 return false
         }
@@ -283,7 +283,7 @@ internal class NodeGraphImpl @Inject constructor(
     }
 
     private fun getNodes(nodes: List<Int>): List<TreeNode> {
-        if (!initialized){
+        if (!initialized) {
             throw GraphException.GraphIsntInitialized
         }
         return nodes.mapNotNull {
@@ -291,8 +291,8 @@ internal class NodeGraphImpl @Inject constructor(
         }
     }
 
-    private suspend fun removeAllLinks(node: TreeNode){
-        if (!initialized){
+    private suspend fun removeAllLinks(node: TreeNode) {
+        if (!initialized) {
             throw GraphException.GraphIsntInitialized
         }
         if (_links[node.id] == null) {
@@ -327,7 +327,12 @@ internal class NodeGraphImpl @Inject constructor(
         )
     }
 
-    private fun setRegion(nodeId: Int, region: Int? = null, overlap: Boolean = false, blacklist: List<Int> = listOf()) {
+    private fun setRegion(
+        nodeId: Int,
+        region: Int? = null,
+        overlap: Boolean = false,
+        blacklist: List<Int> = listOf()
+    ) {
         _regions[nodeId]?.let { r ->
             if (blacklist.contains(r) || !overlap) {
                 return
@@ -336,7 +341,7 @@ internal class NodeGraphImpl @Inject constructor(
         val reg = region ?: availableRegion
         _regions[nodeId] = reg
         //Not using getNode(), because translocation is not needed
-        _allPoints[nodeId]?.neighbours?.forEach { id -> setRegion(id, reg)}
+        _allPoints[nodeId]?.neighbours?.forEach { id -> setRegion(id, reg) }
     }
 
     private fun translocateNode(node: TreeNode) {
@@ -347,7 +352,7 @@ internal class NodeGraphImpl @Inject constructor(
             pivotPosition = _positionData.value.pivotPosition
         )
         node.northDirection = node.northDirection?.multiply(_positionData.value.rotation)
-        if (node is TreeNode.Entry){
+        if (node is TreeNode.Entry) {
             node.forwardVector = node.forwardVector.multiply(_positionData.value.rotation)
         }
         _translocatedPoints[node] = true
@@ -366,7 +371,7 @@ internal class NodeGraphImpl @Inject constructor(
         ).toFloat3() + pivotPosition) - translocation
     }
 
-    private suspend fun clearTree(){
+    private suspend fun clearTree() {
         Log.d(TAG, "Tree cleared")
         _links.clear()
         _allPoints.clear()
@@ -384,13 +389,15 @@ internal class NodeGraphImpl @Inject constructor(
 
 }
 
-sealed class AddNodeException(msg: String): Exception(msg) {
-    data object PositionTaken: GraphException("Position already taken")
-    data object EntryAlreadyExists: GraphException("Entry already exists")
-    data object NoForwardDirection: GraphException("No forward direction")
+sealed class AddNodeException(msg: String) : Exception(msg) {
+    data object PositionTaken : GraphException("Position already taken")
+    data object EntryAlreadyExists : GraphException("Entry already exists")
+    data object NoForwardDirection : GraphException("No forward direction")
 }
 
-sealed class GraphException(msg: String): Exception(msg) {
-    class WrongEntryException(val availableEntries: Set<String>): GraphException("Wrong entry number")
-    data object GraphIsntInitialized: GraphException("Tree isnt initialized")
+sealed class GraphException(msg: String) : Exception(msg) {
+    class WrongEntryException(val availableEntries: Set<String>) :
+        GraphException("Wrong entry number")
+
+    data object GraphIsntInitialized : GraphException("Tree isnt initialized")
 }
