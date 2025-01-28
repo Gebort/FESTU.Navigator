@@ -10,6 +10,7 @@ import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
 import io.github.sceneview.math.Position
+import kotlinx.coroutines.launch
 
 class TreeAdapter(
     drawerHelper: DrawerHelper,
@@ -29,15 +30,8 @@ class TreeAdapter(
         for (id in item.neighbours) {
             nodes.keys.firstOrNull { it.id == id }?.let { treeNode ->
                 nodes[treeNode]?.let { node2 ->
-                    if (modelsToLinkModels[Pair(node1, node2)] == null ){
-                        drawerHelper.drawLine(
-                            node1.position - (parentNode?.position ?: Position(0f)),
-                            node2.position,
-                        ).let { node ->
-                            parentNode?.addChild(node)
-                            modelsToLinkModels[Pair(node1, node2)] = node
-                        }
-                    }
+                    //position of node1 will be changed in NodesAdapter, so we need to adjust it accordingly
+                    drawNewLink(node1, node2, changeNode1Pos = true)
                 }
             }
         }
@@ -57,18 +51,27 @@ class TreeAdapter(
         drawerHelper.removeNode(node)
     }
 
-    suspend fun createLink(treeNode1: TreeNode, treeNode2: TreeNode) {
-        val node1 = nodes[treeNode1]
-        val node2 = nodes[treeNode2]
-        if (node1 != null && node2 != null) {
-            drawerHelper.drawLine(
-                node1.position,
-                node2.position,
-            ).let { node ->
-                modelsToLinkModels[Pair(node1, node2)] = node
-            }
+    fun newLinkAdded(treeNode1: TreeNode, treeNode2: TreeNode) {
+        scope.launch {
+            val arNode1 = nodes[treeNode1] ?: return@launch
+            val arNode2 = nodes[treeNode2] ?: return@launch
+            drawNewLink(arNode1, arNode2)
         }
+
     }
+
+//    suspend fun createLink(treeNode1: TreeNode, treeNode2: TreeNode) {
+//        val node1 = nodes[treeNode1]
+//        val node2 = nodes[treeNode2]
+//        if (node1 != null && node2 != null) {
+//            drawerHelper.drawLine(
+//                node1.position,
+//                node2.position,
+//            ).let { node ->
+//                modelsToLinkModels[Pair(node1, node2)] = node
+//            }
+//        }
+//    }
 
     override fun changeParentPos(newParentPos: Float3?, orientation: Quaternion?) {
         if (parentNode == null) {
@@ -89,12 +92,28 @@ class TreeAdapter(
         }
     }
 
-    fun getArNode(treeNode: TreeNode?): ArNode? = nodes[treeNode]
+//    fun getArNode(treeNode: TreeNode?): ArNode? = nodes[treeNode]
 
     fun getTreeNode(node: ArNode?): TreeNode? {
         node?.let {
             return nodes.entries.find { it.value == node }?.key
         }
         return null
+    }
+
+    private suspend fun drawNewLink(
+        node1: ArNode,
+        node2: ArNode,
+        changeNode1Pos: Boolean = false
+    ) {
+        if (modelsToLinkModels[Pair(node1, node2)] == null ){
+            drawerHelper.drawLine(
+                if (changeNode1Pos) node1.position - (parentNode?.position ?: Position(0f)) else node1.position,
+                node2.position,
+            ).let { linkArNode ->
+                parentNode?.addChild(linkArNode)
+                modelsToLinkModels[Pair(node1, node2)] = linkArNode
+            }
+        }
     }
 }

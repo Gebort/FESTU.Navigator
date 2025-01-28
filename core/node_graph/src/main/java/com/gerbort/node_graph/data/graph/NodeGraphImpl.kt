@@ -13,6 +13,7 @@ import com.gerbort.node_graph.domain.adapter.NodeRepositoryAdapter
 import com.gerbort.node_graph.domain.graph.NodeGraph
 import com.gerbort.node_graph.domain.graph.NodeGraphDiffUtils
 import com.gerbort.node_graph.domain.graph.NodeGraphPosition
+import com.gerbort.node_graph.domain.graph.SingleLinksChangeListener
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.math.toFloat3
@@ -53,6 +54,8 @@ internal class NodeGraphImpl @Inject constructor(
     private val diffUtils: GraphDiffUtils by lazy { GraphDiffUtils(this, dispatcher) }
 
     private var _treePivot = MutableStateFlow<OrientatedPosition?>(null)
+
+    private var changedLinksListener: SingleLinksChangeListener? = null
 
     override fun isPreloaded() = preloaded
 
@@ -279,8 +282,14 @@ internal class NodeGraphImpl @Inject constructor(
             rotation = _positionData.value.rotation,
             pivotPosition = _positionData.value.pivotPosition
         )
+        changedLinksListener?.onLinkAdded(node1, node2)
         return true
     }
+
+    override fun setChangedLinksListener(listener: SingleLinksChangeListener) {
+        changedLinksListener = listener
+    }
+
 
     private fun getNodes(nodes: List<Int>): List<TreeNode> {
         if (!initialized) {
@@ -303,9 +312,9 @@ internal class NodeGraphImpl @Inject constructor(
         nodesForUpdate.add(node)
 
         node.neighbours.forEach { id ->
-            _allPoints[id]?.let {
-                it.neighbours.remove(node.id)
-                _links[it.id] = it.neighbours
+            _allPoints[id]?.let { neighbour ->
+                neighbour.neighbours.remove(node.id)
+                _links[neighbour.id] = neighbour.neighbours
             }
         }
         node.neighbours.clear()

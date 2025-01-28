@@ -57,4 +57,13 @@ interface NodeGraph {
         node2: TreeNode
     ): Boolean
 
+    fun setChangedLinksListener(listener: SingleLinksChangeListener)
+
+}
+
+/**
+ * Needed to display new links on the screen without checking for each node neighbours change in Tree Adapter
+ */
+interface SingleLinksChangeListener {
+    fun onLinkAdded(nodeStart: TreeNode, nodeEnd: TreeNode)
 }

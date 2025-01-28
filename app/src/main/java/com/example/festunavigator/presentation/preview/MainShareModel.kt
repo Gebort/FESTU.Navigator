@@ -3,7 +3,7 @@ package com.example.festunavigator.presentation.preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gerbort.node_graph.domain.graph.NodeGraph
-import com.gerbort.pathfinding.domain.manager.PathManager
+import com.gerbort.node_graph.domain.graph.SingleLinksChangeListener
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.romainguy.kotlin.math.Float3
 import kotlinx.coroutines.channels.Channel
@@ -45,6 +45,10 @@ class MainShareModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun setSingleLinksChangeListener(listener: SingleLinksChangeListener) {
+        nodeGraph.setChangedLinksListener(listener)
     }
 
 //    private fun newNorthLocation(azimuth: Float) {

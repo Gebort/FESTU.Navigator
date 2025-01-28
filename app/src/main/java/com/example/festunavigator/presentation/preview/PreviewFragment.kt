@@ -26,6 +26,7 @@ import com.gerbort.core_ui.drawer_helper.DrawerHelper
 import com.gerbort.core_ui.frame_holder.FrameConsumer
 import com.gerbort.core_ui.tap_flow.UserTap
 import com.gerbort.core_ui.tap_flow.UserTapConsumer
+import com.gerbort.node_graph.domain.graph.SingleLinksChangeListener
 import com.gerbort.path_correction.domain.PathCorrector
 import com.gerbort.pathfinding.domain.manager.PathManager
 import com.google.android.material.snackbar.Snackbar
@@ -119,6 +120,11 @@ class PreviewFragment : Fragment(), SensorEventListener {
             scope = viewLifecycleOwner.lifecycleScope,
             onlyEntries = App.isUser
         )
+        mainModel.setSingleLinksChangeListener(object : SingleLinksChangeListener {
+            override fun onLinkAdded(nodeStart: TreeNode, nodeEnd: TreeNode) {
+                treeAdapter.newLinkAdded(nodeStart, nodeEnd)
+            }
+        })
 
         binding.sceneView.apply {
             planeRenderer.isVisible = true
