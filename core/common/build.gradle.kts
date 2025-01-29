@@ -4,6 +4,9 @@ plugins {
 
 android {
     namespace = "com.gerbort.common"
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {

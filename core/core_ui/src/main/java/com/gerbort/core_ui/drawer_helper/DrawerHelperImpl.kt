@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.gerbort.common.model.OrientatedPosition
 import com.gerbort.common.model.TreeNode
+import com.gerbort.common.utils.IS_ADMIN_MODE
 import com.gerbort.core_ui.R
 import com.google.ar.core.Anchor
 import com.google.ar.sceneform.math.Quaternion
@@ -20,6 +21,7 @@ import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.ArNode
+import io.github.sceneview.ar.node.EditableTransform
 import io.github.sceneview.ar.scene.destroy
 import io.github.sceneview.math.Position
 import io.github.sceneview.math.Scale
@@ -172,19 +174,18 @@ internal class DrawerHelperImpl: DrawerHelper {
             treeNode.number,
             OrientatedPosition(treeNode.position, treeNode.forwardVector),
         ).apply {
-//            if (App.isAdmin) {
-//                addChild(
-//                    drawArNode(
-//                        model = entryModel,
-//                        scale = entryScale,
-//                        position = Position(0f, -bias, 0f),
-//                        orientation = dev.romainguy.kotlin.math.Quaternion(),
-//                        parentNode = parentNode,
-//                        anchor = anchor,
-//                        northDirection = treeNode.northDirection
-//                    )
-//                )
-//            }
+            if (IS_ADMIN_MODE) {
+                addChild(
+                    drawArNode(
+                        model = entryModel,
+                        scale = entryScale,
+                        position = Position(0f, -bias, 0f),
+                        orientation = dev.romainguy.kotlin.math.Quaternion(),
+                        anchor = anchor,
+                        northDirection = treeNode.northDirection
+                    )
+                )
+            }
         }
 
     }
@@ -306,6 +307,7 @@ internal class DrawerHelperImpl: DrawerHelper {
 
                 // 3. make node
                 node.setModel(model)
+
                 //from.addChild(node)
                 //node.anchor = from.anchor
                 parentNode!!.addChild(node)
@@ -325,6 +327,8 @@ internal class DrawerHelperImpl: DrawerHelper {
 
                 node.quaternion = rotation.toNewQuaternion()
                 node.position = from
+                node.editableTransforms = EditableTransform.NONE
+                node.isFocusable = false
             }.await()
         return node
     }

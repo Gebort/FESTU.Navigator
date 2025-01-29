@@ -6,6 +6,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,12 +16,13 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.example.festunavigator.App
 import com.example.festunavigator.presentation.preview.nodes_adapters.PathAdapter
 import com.example.festunavigator.presentation.preview.nodes_adapters.TreeAdapter
 import com.gerbort.app.R
 import com.gerbort.app.databinding.FragmentPreviewBinding
 import com.gerbort.common.model.TreeNode
+import com.gerbort.common.utils.IS_ADMIN_MODE
+import com.gerbort.common.utils.IS_USER_MODE
 import com.gerbort.common.utils.reverseConvertPosition
 import com.gerbort.core_ui.drawer_helper.DrawerHelper
 import com.gerbort.core_ui.frame_holder.FrameConsumer
@@ -118,7 +120,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
             previewView = binding.sceneView,
             bufferSize = DEFAULT_BUFFER_SIZE,
             scope = viewLifecycleOwner.lifecycleScope,
-            onlyEntries = App.isUser
+            onlyEntries = IS_USER_MODE
         )
         mainModel.setSingleLinksChangeListener(object : SingleLinksChangeListener {
             override fun onLinkAdded(nodeStart: TreeNode, nodeEnd: TreeNode) {
@@ -142,6 +144,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
             onTap = { node, renderable, event ->
                 node?.let {
                     val treeNode = checkTreeNode(it as ArNode) ?: checkTreeNode(node.parentNode as ArNode?)
+                    Log.d("testing", "tapped node ${treeNode?.id}, number: ${(treeNode as? TreeNode.Entry)?.number}")
                     userTapConsumer.newTap(UserTap(
                         node = node,
                         treeNode = treeNode,
@@ -181,7 +184,7 @@ class PreviewFragment : Fragment(), SensorEventListener {
 //                                    mainModel.onEvent(MainEvent.PivotTransform(t))
 //                                }
                             }
-                            binding.sceneView.planeRenderer.isVisible = App.isAdmin
+                            binding.sceneView.planeRenderer.isVisible = IS_ADMIN_MODE
                         }
                         else -> {}
                     }
