@@ -77,17 +77,17 @@ abstract class NodesAdapter<T>(
             }
     }
 
-    open fun changeParentPos(newParentPos: Float3? = null, orientation: Quaternion? = null) {
+    fun changeParentPos(newParentPos: Float3? = null, orientation: Quaternion? = null) {
         if (parentNode == null) {
             throw Exception("Parent node is not set")
         }
         newParentPos?.let {
             val diff = it - parentNode!!.position
             if (diff != Float3(0f)) {
-                //TODO not changing positions of the links from TreeAdapter
                 nodes.values.forEach { arNode ->
                     arNode.position -= diff
                 }
+                onParentPosChange(diff)
                 parentNode?.position = it
             }
         }
@@ -108,6 +108,10 @@ abstract class NodesAdapter<T>(
 
     abstract suspend fun onInserted(item: T): ArNode
     abstract suspend fun onRemoved(item: T, node: ArNode)
+    /**
+    Used to change the position of the links from Tree Adapter, because they are stored in separate map
+     */
+    protected open fun onParentPosChange(posDifference: Float3) {}
 
     sealed class DiffOperation<out T> {
         class Added<out T>(val item: T): DiffOperation<T>()

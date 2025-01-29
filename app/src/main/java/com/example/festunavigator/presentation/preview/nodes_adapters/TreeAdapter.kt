@@ -6,7 +6,6 @@ import com.gerbort.core_ui.drawer_helper.DrawerHelper
 import com.uchuhimo.collections.MutableBiMap
 import com.uchuhimo.collections.mutableBiMapOf
 import dev.romainguy.kotlin.math.Float3
-import dev.romainguy.kotlin.math.Quaternion
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.node.ArNode
 import io.github.sceneview.math.Position
@@ -51,6 +50,12 @@ class TreeAdapter(
         drawerHelper.removeNode(node)
     }
 
+    override fun onParentPosChange(posDifference: Float3) {
+        modelsToLinkModels.values.forEach { arNode ->
+            arNode.position -= posDifference
+        }
+    }
+
     fun newLinkAdded(treeNode1: TreeNode, treeNode2: TreeNode) {
         scope.launch {
             val arNode1 = nodes[treeNode1] ?: return@launch
@@ -59,40 +64,6 @@ class TreeAdapter(
         }
 
     }
-
-//    suspend fun createLink(treeNode1: TreeNode, treeNode2: TreeNode) {
-//        val node1 = nodes[treeNode1]
-//        val node2 = nodes[treeNode2]
-//        if (node1 != null && node2 != null) {
-//            drawerHelper.drawLine(
-//                node1.position,
-//                node2.position,
-//            ).let { node ->
-//                modelsToLinkModels[Pair(node1, node2)] = node
-//            }
-//        }
-//    }
-
-    override fun changeParentPos(newParentPos: Float3?, orientation: Quaternion?) {
-        if (parentNode == null) {
-            throw Exception("Parent node is not set")
-        }
-        newParentPos?.let {
-            val diff = it - parentNode!!.position
-            nodes.values.forEach { arNode ->
-                arNode.position -= diff
-            }
-            modelsToLinkModels.values.forEach { arNode ->
-                arNode.position -= diff
-            }
-            parentNode?.position = it
-        }
-        orientation?.let { q ->
-            parentNode?.quaternion = q
-        }
-    }
-
-//    fun getArNode(treeNode: TreeNode?): ArNode? = nodes[treeNode]
 
     fun getTreeNode(node: ArNode?): TreeNode? {
         node?.let {
