@@ -26,6 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
 import io.github.sceneview.ar.arcore.ArFrame
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -83,7 +84,7 @@ class ScannerFragment: Fragment() {
             ))
             viewLifecycleOwner.lifecycleScope.launch {
                 viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    frameProducer.getFrames().collect { frame ->
+                    frameProducer.getFrames().collectLatest { frame ->
                         frame?.let { onFrame(it) }
                     }
                 }
@@ -238,6 +239,6 @@ class ScannerFragment: Fragment() {
             const val SCAN_TYPE = "scanType"
             const val TYPE_INITIALIZE = 0
             const val TYPE_ENTRY = 1
-            const val SMOOTH_DELAY = 0.5
+            const val SMOOTH_DELAY = 0.25
     }
     }
