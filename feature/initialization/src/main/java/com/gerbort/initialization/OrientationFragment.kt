@@ -13,10 +13,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import com.gerbort.core_ui.frame_holder.FrameProducer
-import com.gerbort.core_ui.utils.navigateWithFade
 import com.gerbort.initialization.databinding.FragmentOrientationBinding
+import com.gerbort.initialization.navigation.OrientationNavigator
 import com.google.ar.core.Plane
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -29,6 +28,7 @@ class OrientationFragment : Fragment() {
     private val binding get() = _binding!!
 
     @Inject lateinit var frameProducer: FrameProducer
+    @Inject lateinit var navigator: OrientationNavigator
 
     private var phoneIconAnimation: ObjectAnimator? = null
 
@@ -57,7 +57,7 @@ class OrientationFragment : Fragment() {
                         if (frame.session.allPlanes.any { it.type == Plane.Type.VERTICAL }) {
                             if (!navigating){
                                 navigating = true
-                                findNavController().navigateWithFade("android-app://com.gerbort.app/scanner_fragment/0")
+                                navigator.navigateOrientationToScanner()
                             }
                         }
                     }

@@ -10,8 +10,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import com.gerbort.core_ui.frame_holder.FrameProducer
 import com.gerbort.hit_test.HitTestUseCase
 import com.gerbort.scanner.ConfirmType
@@ -20,6 +18,7 @@ import com.gerbort.scanner.ScannerEvent
 import com.gerbort.scanner.ScannerViewModel
 import com.gerbort.scanner.databinding.FragmentScannerBinding
 import com.gerbort.scanner.helpers.DisplayRotationHelper
+import com.gerbort.scanner.navigation.ScannerNavigator
 import com.gerbort.text_recognition.domain.DetectTextUseCase
 import com.google.ar.core.TrackingState
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,20 +32,19 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class ScannerFragment: Fragment() {
 
-    @Inject
-    lateinit var hitTest: HitTestUseCase
-    @Inject
-    lateinit var analyzeImage: DetectTextUseCase
-    @Inject
-    lateinit var frameProducer: FrameProducer
+    @Inject lateinit var navigator: ScannerNavigator
+    @Inject lateinit var hitTest: HitTestUseCase
+    @Inject lateinit var analyzeImage: DetectTextUseCase
+    @Inject lateinit var frameProducer: FrameProducer
 
     private var _binding: FragmentScannerBinding? = null
     private val binding get() = _binding!!
 
     private val vm: ScannerViewModel by activityViewModels()
 
-    private val args: ScannerFragmentArgs by navArgs()
-    private val scanType by lazy { args.scanType }
+    private val scanType: Int by lazy {
+        arguments?.getInt(SCAN_TYPE) ?: throw IllegalStateException("no scanType")
+    }
 
     private lateinit var displayRotationHelper: DisplayRotationHelper
     private var lastDetectedObject: com.gerbort.text_recognition.domain.DetectedText? = null
@@ -164,8 +162,7 @@ class ScannerFragment: Fragment() {
         private fun toConfirm(){
             if (!navigating){
                 navigating = true
-                val action = ScannerFragmentDirections.actionScannerFragmentToConfirmFragment()
-                findNavController().navigate(action)
+                navigator.navigateFromScannerToConfirmer()
             }
         }
 
@@ -236,9 +233,16 @@ class ScannerFragment: Fragment() {
         }
 
         companion object {
-            const val SCAN_TYPE = "scanType"
-            const val TYPE_INITIALIZE = 0
-            const val TYPE_ENTRY = 1
+            private const val SCAN_TYPE = "scanType"
+
+            fun createBundleInitialize() =
+                Bundle().apply { putInt(SCAN_TYPE, TYPE_INITIALIZE) }
+            fun createBundleEntryCreation() =
+                Bundle().apply { putInt(SCAN_TYPE, TYPE_ENTRY) }
+
+            private const val TYPE_INITIALIZE = 0
+            private const val TYPE_ENTRY = 1
+
             const val SMOOTH_DELAY = 0.25
     }
     }

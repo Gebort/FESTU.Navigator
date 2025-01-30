@@ -5,12 +5,6 @@
     android:id="@+id/preview_nav_graph"
     app:startDestination="@id/orientationFragment">
 
-    <include app:graph="@navigation/initialization_graph" />
-    <include app:graph="@navigation/router_graph" />
-    <include app:graph="@navigation/search_graph" />
-    <include app:graph="@navigation/scanner_navigation" />
-
-
     <fragment
         android:id="@+id/scannerFragment"
         android:name="com.gerbort.scanner.scanner.ScannerFragment"
@@ -24,12 +18,6 @@
             app:popEnterAnim="@android:anim/fade_in"
             app:popExitAnim="@anim/slide_down"
             app:popUpToInclusive="false" />
-        <argument
-            android:name="scanType"
-            app:argType="integer"
-            android:defaultValue="0" />
-        <deepLink
-            app:uri="android-app://com.gerbort.app/scanner_fragment/{scanType}" />
     </fragment>
     <fragment
         android:id="@+id/confirmFragment"
@@ -59,24 +47,12 @@
             app:popEnterAnim="@anim/slide_up"
             app:popExitAnim="@anim/slide_down"
             app:popUpToInclusive="false" />
-        <argument
-            android:name="startLabel"
-            app:argType="string"
-            app:nullable="true"
-            android:defaultValue="NULL" />
-        <deepLink
-            app:uri="android-app://com.gerbort.app/router_fragment/{startLabel}" />
     </fragment>
     <fragment
         android:id="@+id/searchFragment"
         android:name="com.gerbort.search.SearchFragment"
         android:label="fragment_search"
         tools:layout="@layout/fragment_search" >
-        <argument
-            android:name="changeType"
-            app:argType="integer" />
-        <deepLink
-            app:uri="android-app://com.gerbort.app/search_fragment/{changeType}" />
     </fragment>
     <action
         android:id="@+id/action_global_scannerFragment"
@@ -97,7 +73,8 @@
             app:enterAnim="@android:anim/fade_in"
             app:exitAnim="@android:anim/fade_out"
             app:popEnterAnim="@android:anim/fade_in"
-            app:popExitAnim="@android:anim/fade_out" />
+            app:popExitAnim="@android:anim/fade_out"
+            app:popUpTo="@id/preview_nav_graph" />
     </fragment>
     <action
         android:id="@+id/action_global_orientationFragment"

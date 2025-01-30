@@ -4,7 +4,6 @@ plugins {
     id ("kotlin-kapt")
     id ("com.google.gms.google-services")
     id ("com.google.firebase.crashlytics")
-    id("androidx.navigation.safeargs")
     id ("dagger.hilt.android.plugin")
 }
 

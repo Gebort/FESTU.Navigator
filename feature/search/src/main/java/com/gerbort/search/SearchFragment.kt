@@ -1,9 +1,7 @@
 package com.gerbort.search
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
-import android.view.SearchEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -11,12 +9,11 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.festunavigator.presentation.search.adapters.EntryItem
 import com.gerbort.common.model_ext.getEntryLocation
@@ -24,11 +21,11 @@ import com.gerbort.core_ui.utils.viewHideInput
 import com.gerbort.core_ui.utils.viewRequestInput
 import com.gerbort.search.adapters.EntriesAdapter
 import com.gerbort.search.databinding.FragmentSearchBinding
+import com.gerbort.search.navigation.SearchNavigator
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SearchFragment: Fragment() {
@@ -38,12 +35,15 @@ class SearchFragment: Fragment() {
 
     private val vm: SearchViewModel by activityViewModels()
 
+    @Inject lateinit var navigator: SearchNavigator
+
     private val adapter = EntriesAdapter(
         onItemClick = { number -> processSearchResult(number) },
     )
 
-    private val args: SearchFragmentArgs by navArgs()
-    private val searchType by lazy { SearchType.fromInt(args.changeType) }
+    private val searchType: SearchType by lazy {
+        SearchType.fromInt(arguments?.getInt(SEARCH_TYPE) ?: throw IllegalStateException("no searchType"))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,7 +51,7 @@ class SearchFragment: Fragment() {
         val callback: OnBackPressedCallback =
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    findNavController().popBackStack()
+                    navigator.popBackStack()
                 }
             }
         requireActivity().onBackPressedDispatcher.addCallback(this, callback)
@@ -105,7 +105,7 @@ class SearchFragment: Fragment() {
                         is SearchUiEvent.SearchSuccess -> {
                             binding.searchLayout.error = null
                             binding.searchInput.viewHideInput()
-                            findNavController().popBackStack()
+                            navigator.popBackStack()
                         }
                         is SearchUiEvent.SearchInvalid -> {
                             binding.searchLayout.error = resources.getString(R.string.incorrect_number)
@@ -157,6 +157,15 @@ class SearchFragment: Fragment() {
 
     private fun processSearchResult(number: String) {
         vm.onEvent(SearchEvents.TrySearch(number, searchType))
+    }
+
+    companion object {
+        private const val SEARCH_TYPE = "searchType"
+
+        fun createBundleStart() =
+            Bundle().apply { putInt(SEARCH_TYPE, SearchType.START.value) }
+        fun createBundleEnd() =
+            Bundle().apply { putInt(SEARCH_TYPE, SearchType.END.value) }
     }
 
 }

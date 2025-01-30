@@ -11,19 +11,17 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.NavOptions
-import androidx.navigation.fragment.findNavController
 import com.gerbort.common.model.TreeNode
 import com.gerbort.common.model_ext.getEntryLocation
+import com.gerbort.common.utils.IS_ADMIN_MODE
 import com.gerbort.core_ui.drawer_helper.DrawerHelper
 import com.gerbort.core_ui.frame_holder.FrameProducer
 import com.gerbort.core_ui.tap_flow.UserTapProducer
-import com.gerbort.core_ui.utils.navigateFadeInSlideOut
-import com.gerbort.core_ui.utils.navigateWithSlide
 import com.gerbort.hit_test.HitTestResult
 import com.gerbort.hit_test.HitTestUseCase
 import com.gerbort.pathfinding.domain.manager.PathManager
 import com.gerbort.router.databinding.FragmentRouterBinding
+import com.gerbort.router.navigation.RouterNavigator
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import dev.romainguy.kotlin.math.Float2
@@ -36,6 +34,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class RouterFragment: Fragment() {
 
+    @Inject lateinit var navigator: RouterNavigator
     @Inject lateinit var hitTest: HitTestUseCase
     @Inject lateinit var frameProducer: FrameProducer
     @Inject lateinit var tapProducer: UserTapProducer
@@ -59,7 +58,7 @@ class RouterFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        if (BuildConfig.FLAVOR == "admin") {
+        if (IS_ADMIN_MODE) {
             binding.adminPanel.isVisible = true
         } else {
             binding.adminPanel.isGone = true
@@ -80,19 +79,14 @@ class RouterFragment: Fragment() {
         }
 
         binding.entryButton.setOnClickListener {
-            //entry = 1 init = 0
-            findNavController().navigateFadeInSlideOut(
-                uri = "android-app://com.gerbort.app/scanner_fragment/1",
-                navOptions = NavOptions.Builder()
-                    .setPopUpTo("fragment_router", false)
-            )
+            navigator.navigateRouterToEntryCreation()
         }
 
         binding.fromInput.setOnFocusChangeListener { _, b ->
             if (b) {
                 binding.fromInput.isActivated = false
                 binding.fromInput.clearFocus()
-                search(0)
+                search(startLocation = true)
             }
         }
 
@@ -100,7 +94,7 @@ class RouterFragment: Fragment() {
             if (b) {
                 binding.toInput.isActivated = false
                 binding.toInput.clearFocus()
-                search(1)
+                search(startLocation = false)
             }
         }
 
@@ -174,7 +168,7 @@ class RouterFragment: Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 tapProducer.getUserTaps().collect { tap ->
-                    if (BuildConfig.FLAVOR == "admin") {
+                    if (IS_ADMIN_MODE) {
                         tap.treeNode?.let { treeNode ->
                             if (!vm.state.value.linkPlacement) {
                                 vm.onEvent(RouterEvent.NewSelectedNode(treeNode))
@@ -193,8 +187,8 @@ class RouterFragment: Fragment() {
     /**
      * Start = 0, end = 1
      */
-    private fun search(type: Int){
-        findNavController().navigateWithSlide("android-app://com.gerbort.app/search_fragment/$type")
+    private fun search(startLocation: Boolean){
+        navigator.navigateRouterToSearch(startLocation)
     }
 
     private fun changeLinkPlacementMode(){

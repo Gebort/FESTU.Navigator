@@ -72,10 +72,6 @@ object Libs {
         const val version = "2.5.0"
         const val fragments = "androidx.navigation:navigation-fragment-ktx:${version}"
         const val ui = "androidx.navigation:navigation-ui-ktx:${version}"
-
-        object SafeArgs {
-            const val gradle = "androidx.navigation:navigation-safe-args-gradle-plugin:$version"
-        }
     }
 
     object Firebase {

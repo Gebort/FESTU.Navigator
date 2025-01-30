@@ -1,6 +1,6 @@
 package com.gerbort.search
 
-sealed interface SearchEvents {
+internal sealed interface SearchEvents {
 
     class TrySearch(val number: String, val searchType: SearchType): SearchEvents
     class Filter(val filter: String): SearchEvents
@@ -8,7 +8,7 @@ sealed interface SearchEvents {
 
 }
 
-enum class SearchType(val value: Int) {
+internal enum class SearchType(val value: Int) {
     START(0),
     END(1);
 

@@ -11,15 +11,14 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import com.gerbort.core_ui.drawer_helper.DrawerHelper
-import com.gerbort.core_ui.utils.navigateWithSlide
 import com.gerbort.scanner.LabelObject
 import com.gerbort.scanner.R
 import com.gerbort.scanner.ScannerEvent
 import com.gerbort.scanner.ScannerUiEvents
 import com.gerbort.scanner.ScannerViewModel
 import com.gerbort.scanner.databinding.FragmentConfirmBinding
+import com.gerbort.scanner.navigation.ScannerNavigator
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.sceneview.ar.node.ArNode
 import kotlinx.coroutines.Job
@@ -38,6 +37,7 @@ class ConfirmFragment : Fragment() {
     private var confObjectNode: ArNode? = null
     private var confObjectJob: Job? = null
 
+    @Inject lateinit var navigator: ScannerNavigator
     @Inject lateinit var drawerHelper: DrawerHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +47,7 @@ class ConfirmFragment : Fragment() {
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     vm.onEvent(ScannerEvent.RejectObject)
-                    findNavController().popBackStack()
+                    navigator.popBackStack()
                 }
             }
         requireActivity().onBackPressedDispatcher.addCallback(this, callback)
@@ -73,7 +73,7 @@ class ConfirmFragment : Fragment() {
         binding.rejectButton.setOnClickListener {
             setEnabled(false)
             vm.onEvent(ScannerEvent.RejectObject)
-            findNavController().popBackStack()
+            navigator.popBackStack()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -108,7 +108,7 @@ class ConfirmFragment : Fragment() {
                                     getString(R.string.init_failed),
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                findNavController().popBackStack()
+                                navigator.popBackStack()
                             }
                             is ScannerUiEvents.InitSuccess -> onSuccess()
                             is ScannerUiEvents.EntryCreated -> onSuccess()
@@ -132,7 +132,7 @@ class ConfirmFragment : Fragment() {
         confObjectNode?.let {
             drawerHelper.removeNode(it)
         }
-        findNavController().navigateWithSlide("android-app://com.gerbort.app/router_fragment/NULL")
+        navigator.navigateOnEntryCreationSuccess()
     }
 
     private fun setEnabled(enabled: Boolean) {

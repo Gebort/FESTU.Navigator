@@ -5,10 +5,6 @@ plugins {
 
 android {
     namespace = "com.gerbort.router"
-
-    buildFeatures {
-        buildConfig = true
-    }
 }
 
 dependencies {

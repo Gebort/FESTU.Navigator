@@ -1,5 +1,6 @@
 package plugins
 
+import Libs
 import com.android.build.gradle.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -9,9 +10,6 @@ class LibraryUiPlugin: Plugin<Project> {
 
     override fun apply(project: Project) {
         setProjectConfig(project)
-        project.apply {
-            plugin("androidx.navigation.safeargs")
-        }
         with(project) {
             dependencies {
                 add("implementation", Libs.Android.material)
@@ -21,8 +19,6 @@ class LibraryUiPlugin: Plugin<Project> {
                 add("implementation", Libs.AndroidX.Lifecycle.common)
                 add("implementation", Libs.AndroidX.Lifecycle.runtime)
                 add("implementation", Libs.AndroidX.Lifecycle.viewModel)
-                add("implementation", Libs.Navigation.ui)
-                add("implementation", Libs.Navigation.fragments)
             }
         }
     }
