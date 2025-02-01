@@ -11,6 +11,7 @@ object Modules {
         const val TextRecognition = ":core:text_recognition"
         const val HitTest = ":core:hit_test"
         const val PathCorrection = ":core:path_correction"
+        const val SensorHandling = ":core:sensor_handling"
     }
     object Feature {
         const val Initialization = ":feature:initialization"

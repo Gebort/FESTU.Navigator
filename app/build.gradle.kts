@@ -139,6 +139,7 @@ dependencies {
     implementation(project(Modules.Core.NodeGraph))
     implementation(project(Modules.Core.Data))
     implementation(project(Modules.Core.PathCorrection))
+    implementation(project(Modules.Core.SensorHandling))
 
     implementation(project(Modules.Feature.Initialization))
     implementation(project(Modules.Feature.Router))

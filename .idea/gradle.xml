@@ -32,6 +32,7 @@
             <option value="$PROJECT_DIR$/core/node_graph" />
             <option value="$PROJECT_DIR$/core/path_correction" />
             <option value="$PROJECT_DIR$/core/pathfinding" />
+            <option value="$PROJECT_DIR$/core/sensor_handling" />
             <option value="$PROJECT_DIR$/core/smoothing" />
             <option value="$PROJECT_DIR$/core/text_recognition" />
             <option value="$PROJECT_DIR$/feature" />

@@ -1,10 +1,5 @@
 package com.example.festunavigator.presentation.preview
 
-import android.content.Context
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -31,6 +26,7 @@ import com.gerbort.core_ui.tap_flow.UserTapConsumer
 import com.gerbort.node_graph.domain.graph.SingleLinksChangeListener
 import com.gerbort.path_correction.domain.PathCorrector
 import com.gerbort.pathfinding.domain.manager.PathManager
+import com.gerbort.sensor_handling.SensorHandler
 import com.google.android.material.snackbar.Snackbar
 import com.google.ar.core.Config
 import com.google.ar.core.TrackingState
@@ -51,10 +47,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class PreviewFragment : Fragment(), SensorEventListener {
+class PreviewFragment : Fragment() {
 
     private val mainModel: MainShareModel by activityViewModels()
-
     private var _binding: FragmentPreviewBinding? = null
     private val binding get() = _binding!!
 
@@ -65,19 +60,12 @@ class PreviewFragment : Fragment(), SensorEventListener {
     private lateinit var pathAdapter: PathAdapter
     private lateinit var treeAdapter: TreeAdapter
 
+    @Inject lateinit var sensorHandler: SensorHandler
     @Inject lateinit var pathManager: PathManager
     @Inject lateinit var pathCorrector: PathCorrector
     @Inject lateinit var frameConsumer: FrameConsumer
     @Inject lateinit var userTapConsumer: UserTapConsumer
     @Inject lateinit var drawerHelper: DrawerHelper
-
-    private lateinit var sensorManager: SensorManager
-    private lateinit var gsensor: Sensor
-    private lateinit var msensor: Sensor
-    private val mGravity = FloatArray(3)
-    private val mGeomagnetic = FloatArray(3)
-    private var azimuth = 0f
-    private var currentAzimuth = 0f
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -91,16 +79,13 @@ class PreviewFragment : Fragment(), SensorEventListener {
     override fun onResume() {
         super.onResume()
         binding.sceneView.onResume(this)
-        sensorManager.registerListener(this, gsensor,
-            SensorManager.SENSOR_DELAY_GAME)
-        sensorManager.registerListener(this, msensor,
-            SensorManager.SENSOR_DELAY_GAME)
+        sensorHandler.register(requireActivity())
     }
 
     override fun onPause() {
         super.onPause()
         binding.sceneView.onPause(this)
-        sensorManager.unregisterListener(this)
+        sensorHandler.unregister()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -186,16 +171,11 @@ class PreviewFragment : Fragment(), SensorEventListener {
                             }
                             binding.sceneView.planeRenderer.isVisible = IS_ADMIN_MODE
                         }
-                        else -> {}
                     }
                 }
             }
         }
-
-        sensorManager = requireActivity()
-            .getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        gsensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        msensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+       // sensorHandler.startHandling(requireContext())
     }
 
 
@@ -291,46 +271,5 @@ class PreviewFragment : Fragment(), SensorEventListener {
         const val VIEWABLE_ADMIN_NODES_DISTANCE = 8f
         //how often the check for path and tree redraw will be
         const val POSITION_DETECT_DELAY = 100L
-    }
-
-    override fun onSensorChanged(event: SensorEvent) {
-        val alpha = 0.97f
-
-        if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
-                mGravity[0] = alpha * mGravity[0] + (1 - alpha) * event.values[0]
-                mGravity[1] = alpha * mGravity[1] + (1 - alpha) * event.values[1]
-                mGravity[2] = alpha * mGravity[2] + (1 - alpha) * event.values[2]
-                // mGravity = event.values;
-//                Log.d(TAG, "GravityRaw: "+event.values.contentToString()+ " filtered: "+mGravity.contentToString());
-            }
-
-            if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
-                // mGeomagnetic = event.values;
-                mGeomagnetic[0] = alpha * mGeomagnetic[0] + (1 - alpha) * event.values[0]
-                mGeomagnetic[1] = alpha * mGeomagnetic[1] + (1 - alpha) * event.values[1]
-                mGeomagnetic[2] = alpha * mGeomagnetic[2] + (1 - alpha) * event.values[2]
-//                Log.d(TAG,"MagneticRaw: "+event.values.contentToString()+ " Filtered: "+mGeomagnetic.contentToString());
-            }
-
-            val R = FloatArray(9)
-            val I = FloatArray(9)
-            val success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic)
-//            Log.d(TAG,"Gravity: "+mGravity.contentToString()+ " Magnetic: "+mGeomagnetic.contentToString()
-//            + " R: "+ R.contentToString() +" I: "+ I.contentToString());
-            if (success) {
-//                Log.d(TAG,"Gravity: "+mGravity.contentToString()+ " Magnetic: "+mGeomagnetic.contentToString())
-                val orientation = FloatArray(3)
-                SensorManager.getOrientation(R, orientation)
-                // Log.d(TAG, "azimuth (rad): " + azimuth);
-                azimuth = Math.toDegrees(orientation[0].toDouble()).toFloat() // orientation
-                azimuth = (azimuth + 360) % 360
-                debug(String.format("%.0f", azimuth), 1)
-
-                mainModel.onEvent(MainEvent.NewAzimuth(orientation[0]))
-            }
-    }
-
-    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
-
     }
 }
